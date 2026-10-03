@@ -227,15 +227,23 @@ class Command(BaseCommand):
         games = {g.slug: g for g in Game.objects.all()}
         listings = []
         for i, (slug, title, price, platform, level, attrs, first_owner) in enumerate(LISTINGS):
+            _capp = ["telegram", "", "whatsapp", "", "discord", ""][i % 6]
+            _cid = ["arash_fn_shop", "", "989121110003", "", "sina.cs", ""][i % 6]
+            # نمونه چندتایی: بعضی آگهی‌ها دو پلتفرم و دو راه ارتباطی دارند
+            _platforms = [platform, "cross"] if i % 5 == 0 and platform != "cross" else [platform]
+            _contacts = [{"app": _capp, "id": _cid}] if _capp and _cid else []
+            if i % 7 == 0 and _contacts:
+                _contacts = _contacts + [{"app": "instagram", "id": "looti.demo"}]
             l = Listing.objects.create(
                 seller=sellers[i % len(sellers)], game=games[slug], title=title, description=DESCRIPTION,
-                price=price, platform=platform, level=level, attrs=attrs, region=random.choice(["", "EU", "ME", "Asia"]),
+                price=price, platform=platform, platforms=_platforms, level=level, attrs=attrs, region=random.choice(["", "EU", "ME", "Asia"]),
                 first_owner=first_owner, ban_free=i % 7 != 3, has_2fa=i % 3 == 0,
                 email_access=random.choice(list(Listing.EmailAccess.values)[:2]) if first_owner else Listing.EmailAccess.CHANGEABLE,
                 negotiable=i % 4 == 1, fee_payer=random.choice(["buyer", "buyer", "split", "seller"]),
                 status=Listing.Status.ACTIVE, views=random.randint(20, 900),
-                contact_app=["telegram", "", "whatsapp", "", "discord", ""][i % 6],
-                contact_id=["arash_fn_shop", "", "989121110003", "", "sina.cs", ""][i % 6],
+                contact_app=_capp,
+                contact_id=_cid,
+                contacts=_contacts,
             )
             Listing.objects.filter(pk=l.pk).update(created_at=now - timedelta(hours=i * 9 + 2), bumped_at=now - timedelta(hours=i * 9 + 1))
             l.refresh_from_db()
@@ -300,7 +308,7 @@ class Command(BaseCommand):
         Report.objects.create(listing=listings[15], reporter=buyers[2], reason=Report.Reason.PRICE, text="قیمت خیلی پایین‌تر از بازار است.")
         Listing.objects.create(
             seller=sellers[1], game=games["valorant"], title="والورانت دایموند ۲ با واندال ریور", description=DESCRIPTION,
-            price=4_200_000, platform="pc", attrs={"rank": "Diamond", "agents": 22, "skins": 19}, first_owner=True,
+            price=4_200_000, platform="pc", platforms=["pc", "xbox"], attrs={"rank": "Diamond", "agents": 22, "skins": 19}, first_owner=True,
         )
         self.stdout.write(self.style.SUCCESS(
             f"داده نمایشی ساخته شد. واسط: {MEDIATOR[0]} · خریدار: {BUYERS[0][0]} · فروشنده: {SELLERS[0][0]} (ورود با کد پیامکی نمایشی)"

@@ -125,6 +125,8 @@ class Listing(models.Model):
     open_to_trade = models.BooleanField("مایل به معاوضه هستم", default=False)
     trade_with = models.CharField("با چی معاوضه می‌کنم؟", max_length=200, blank=True)
     platform = models.CharField("پلتفرم", max_length=20, choices=PLATFORM_CHOICES)
+    # چندپلتفرمی — پلتفرم‌های انتخاب‌شده؛ `platform` پلتفرم اصلی (اولی) است و برای سازگاری نگه داشته شده
+    platforms = models.JSONField("پلتفرم‌ها (آگهی)", default=list, blank=True)
     region = models.CharField("ریجن / سرور", max_length=40, blank=True)
     level = models.PositiveIntegerField("لول / رنک عددی", null=True, blank=True)
     attrs = models.JSONField(default=dict, blank=True)
@@ -133,8 +135,10 @@ class Listing(models.Model):
     ban_free = models.BooleanField("سابقه بن ندارد", default=True)
     has_2fa = models.BooleanField("تأیید دومرحله‌ای قابل انتقال", default=False)
     # راه ارتباط مستقیم (اختیاری) — فقط به کاربران واردشده و بعد از هشدار امنیتی نمایش داده می‌شود
+    # `contact_app/contact_id` راه اول است (سازگاری)؛ `contacts` همه راه‌ها: [{"app":..., "id":...}]
     contact_app = models.CharField("پیام‌رسان", max_length=10, choices=ContactApp.choices, blank=True)
     contact_id = models.CharField("آیدی / شماره", max_length=64, blank=True)
+    contacts = models.JSONField("راه‌های ارتباطی", default=list, blank=True)
     fee_payer = models.CharField("پرداخت کارمزد", max_length=8, choices=FeePayer.choices, default=FeePayer.BUYER)
     status = models.CharField(max_length=10, choices=Status.choices, default=Status.PENDING, db_index=True)
     reject_reason = models.CharField(max_length=200, blank=True)
@@ -164,29 +168,98 @@ class Listing(models.Model):
         "bale": "https://ble.ir/{}",
         "rubika": "https://rubika.ir/{}",
     }
-    CONTACT_ICONS = {"telegram": "send", "whatsapp": "phone", "instagram": "at-sign", "discord": "headphones"}
+    CONTACT_ICONS = {
+        "telegram": "send", "whatsapp": "phone", "instagram": "at-sign", "discord": "headphones",
+        "eitaa": "message-circle", "bale": "message-circle", "rubika": "message-circle",
+    }
+    CONTACT_APPS = dict(ContactApp.choices)
+    PLATFORM_LABELS = dict(PLATFORM_CHOICES)
+
+    # --- پلتفرم چندتایی -------------------------------------------------
+    @property
+    def platform_list(self):
+        """کدهای پلتفرم: اگر `platforms` پر باشد همان، وگرنه `platform` تکی قدیمی."""
+        if self.platforms:
+            return [p for p in self.platforms if p in self.PLATFORM_LABELS]
+        return [self.platform] if self.platform in self.PLATFORM_LABELS else []
+
+    @property
+    def platform_labels(self):
+        """[(code, label, icon)] برای نمایش چیپ‌ها."""
+        return [(c, self.PLATFORM_LABELS.get(c, c), PLATFORM_ICONS.get(c, "gamepad-2")) for c in self.platform_list]
+
+    @property
+    def platform_display_multi(self):
+        return "، ".join(label for _, label, _ in self.platform_labels) or self.get_platform_display()
+
+    # --- راه ارتباطی چندتایی ---------------------------------------------
+    @property
+    def contacts_list(self):
+        """[{'app':..., 'id':...}] — اگر `contacts` پر باشد همان، وگرنه تک‌فیلد قدیمی."""
+        if self.contacts:
+            out = []
+            for c in self.contacts:
+                if isinstance(c, dict) and c.get("app") in self.CONTACT_APPS and c.get("id"):
+                    out.append({"app": c["app"], "id": c["id"]})
+            if out:
+                return out
+        if self.contact_app and self.contact_id:
+            return [{"app": self.contact_app, "id": self.contact_id}]
+        return []
+
+    @staticmethod
+    def _contact_display(app, cid):
+        if app == "whatsapp":
+            return "+" + cid
+        if app == "discord":
+            return cid
+        return "@" + cid
+
+    @staticmethod
+    def _contact_url(app, cid):
+        tpl = Listing.CONTACT_LINKS.get(app)
+        return tpl.format(cid) if tpl and cid else ""
+
+    @property
+    def contacts_enriched(self):
+        """[{'app','id','label','display','url','icon'}] برای قالب‌ها."""
+        rows = []
+        for c in self.contacts_list:
+            app, cid = c["app"], c["id"]
+            rows.append({
+                "app": app, "id": cid,
+                "label": self.CONTACT_APPS.get(app, app),
+                "display": self._contact_display(app, cid),
+                "url": self._contact_url(app, cid),
+                "icon": self.CONTACT_ICONS.get(app, "message-circle"),
+            })
+        return rows
 
     @property
     def has_contact(self):
-        return bool(self.contact_app and self.contact_id)
+        return bool(self.contacts_list)
 
     @property
     def contact_url(self):
-        """لینک مستقیم پیام‌رسان؛ دیسکورد لینک عمومی ندارد."""
-        tpl = self.CONTACT_LINKS.get(self.contact_app)
-        return tpl.format(self.contact_id) if tpl and self.contact_id else ""
+        """لینک مستقیم پیام‌رسان اول؛ دیسکورد لینک عمومی ندارد."""
+        first = self.contacts_list[:1]
+        if not first:
+            return ""
+        return self._contact_url(first[0]["app"], first[0]["id"])
 
     @property
     def contact_display(self):
-        if self.contact_app == "whatsapp":
-            return "+" + self.contact_id
-        if self.contact_app == "discord":
-            return self.contact_id
-        return "@" + self.contact_id
+        first = self.contacts_list[:1]
+        if not first:
+            return ""
+        return self._contact_display(first[0]["app"], first[0]["id"])
 
     @property
     def contact_icon(self):
-        return self.CONTACT_ICONS.get(self.contact_app, "message-circle")
+        first = self.contacts_list[:1]
+        if not first:
+            return "message-circle"
+        return self.CONTACT_ICONS.get(first[0]["app"], "message-circle")
 
     @property
     def cover(self):

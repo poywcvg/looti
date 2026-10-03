@@ -26,7 +26,7 @@
     {% for l in listings %}
       <a data-pal-item href="{{ l.get_absolute_url }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 outline-none hover:bg-sand focus:bg-sand">
         <span class="grid size-8 place-items-center rounded-lg bg-sand text-espresso-500">{% icon l.game.icon "size-4" %}</span>
-        <span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ l.title }}</span><span class="block text-xs text-espresso-400">{{ l.game.name }}<span class="sep" aria-hidden="true"></span>{{ l.get_platform_display }}</span></span>
+        <span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ l.title }}</span><span class="block text-xs text-espresso-400">{{ l.game.name }}<span class="sep" aria-hidden="true"></span>{{ l.platform_display_multi }}</span></span>
         <span class="text-xs font-semibold fa-num text-espresso-700">{{ l.price|toman }}</span>
       </a>
     {% endfor %}

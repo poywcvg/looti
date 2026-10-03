@@ -20,7 +20,7 @@
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex flex-wrap items-center gap-2 text-xs text-espresso-400">
-          <span class="inline-flex items-center gap-1 font-medium" style="color: {{ l.game.tone }}">{% icon l.game.icon "size-3.5" %}{{ l.game.name }}</span><span class="sep" aria-hidden="true"></span><span>{{ l.get_platform_display }}</span><span class="sep" aria-hidden="true"></span><span class="code">{{ l.code }}</span><span class="sep" aria-hidden="true"></span><span>{{ l.created_at|ago }}</span>
+          <span class="inline-flex items-center gap-1 font-medium" style="color: {{ l.game.tone }}">{% icon l.game.icon "size-3.5" %}{{ l.game.name }}</span><span class="sep" aria-hidden="true"></span><span>{{ l.platform_display_multi }}</span><span class="sep" aria-hidden="true"></span><span class="code">{{ l.code }}</span><span class="sep" aria-hidden="true"></span><span>{{ l.created_at|ago }}</span>
         </div>
         <a href="{{ l.get_absolute_url }}" target="_blank" rel="noopener" class="mt-1 block font-semibold hover:text-ember">{{ l.title }}</a>
         <p class="mt-1 line-clamp-2 text-sm leading-6 text-espresso-500">{{ l.description }}</p>
@@ -28,7 +28,7 @@
           <span class="chip is-muted fa-num">{{ l.price|toman }} تومان</span>
           <a href="{% url 'panel:user' l.seller_id %}" class="chip is-muted hover:!text-ember">{% icon "user-round" "size-3.5" %}{{ l.seller }}<span class="sep" aria-hidden="true"></span>اعتماد <span class="fa-num">{{ l.seller.trust_score|fa }}</span></a>
           {% with v=l.price_verdict %}{% if v %}<span class="chip is-{{ v.tone }}">{{ v.label }}</span>{% endif %}{% endwith %}
-          {% if l.has_contact %}<span class="chip is-saffron">{% icon l.contact_icon "size-3.5" %}{{ l.get_contact_app_display }}: <span class="ltr latin">{{ l.contact_display }}</span></span>{% endif %}
+          {% if l.has_contact %}<span class="chip is-saffron">{% icon l.contact_icon "size-3.5" %}{{ l.contacts_enriched.0.label }}: <span class="ltr latin">{{ l.contacts_enriched.0.display }}</span>{% if l.contacts_enriched|length > 1 %} <span class="fa-num">+{{ l.contacts_enriched|length|add:"-1"|fa }}</span>{% endif %}</span>{% endif %}
         </div>
       </div>
     </div>

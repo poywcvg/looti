@@ -17,10 +17,14 @@ class ImageInline(admin.TabularInline):
 
 @admin.register(Listing)
 class ListingAdmin(admin.ModelAdmin):
-    list_display = ["code", "title", "game", "seller", "price", "open_to_trade", "status", "created_at"]
+    list_display = ["code", "title", "game", "seller", "price", "platform_display_multi", "open_to_trade", "status", "created_at"]
     list_filter = ["status", "game", "platform", "open_to_trade"]
     search_fields = ["code", "title", "seller__phone"]
     inlines = [ImageInline]
+
+    @admin.display(description="پلتفرم‌ها")
+    def platform_display_multi(self, obj):
+        return obj.platform_display_multi
 
 
 admin.site.register([Bookmark, SavedSearch, Offer])

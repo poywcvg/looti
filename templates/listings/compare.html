@@ -46,7 +46,7 @@
         </tr>
         <tr>
           <th class="text-right font-normal text-espresso-500">پلتفرم</th>
-          {% for it in items %}<td><span class="inline-flex items-center gap-1.5">{% icon it.platform_icon "size-4 text-espresso-400" %}{{ it.get_platform_display }}</span></td>{% endfor %}
+          {% for it in items %}<td><span class="inline-flex flex-wrap items-center gap-1.5">{% for code, label, ic in it.platform_labels %}<span class="inline-flex items-center gap-1">{% icon ic "size-4 text-espresso-400" %}{{ label }}</span>{% empty %}<span class="inline-flex items-center gap-1">{% icon it.platform_icon "size-4 text-espresso-400" %}{{ it.get_platform_display }}</span>{% endfor %}</span></td>{% endfor %}
         </tr>
         <tr>
           <th class="text-right font-normal text-espresso-500">لول</th>

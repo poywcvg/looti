@@ -32,7 +32,8 @@ def apply_filters(qs, params):
             chips.append(("game", game.name))
     platform = params.get("platform")
     if platform in dict(PLATFORM_CHOICES):
-        qs = qs.filter(platform=platform)
+        # آگهی چندپلتفرمی: اگر در لیست platforms باشد یا پلتفرم اصلی همان باشد
+        qs = qs.filter(Q(platform=platform) | Q(platforms__contains=[platform]))
         chips.append(("platform", dict(PLATFORM_CHOICES)[platform]))
     pmin = parse_int(en_digits(params.get("min", "")).replace(",", ""))
     pmax = parse_int(en_digits(params.get("max", "")).replace(",", ""))

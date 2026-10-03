@@ -52,7 +52,7 @@
       <div class="mt-6">
         <div class="flex flex-wrap gap-2">
           <span class="chip" style="background: {{ l.game.tone }}1a; color: {{ l.game.tone }}">{% icon l.game.icon "size-3.5" %}{{ l.game.name }}</span>
-          <span class="chip is-muted">{% icon l.platform_icon "size-3.5" %}{{ l.get_platform_display }}</span>
+          {% for code, label, ic in l.platform_labels %}<span class="chip is-muted">{% icon ic "size-3.5" %}{{ label }}</span>{% empty %}<span class="chip is-muted">{% icon l.platform_icon "size-3.5" %}{{ l.get_platform_display }}</span>{% endfor %}
           {% if l.region %}<span class="chip is-muted">{% icon "globe" "size-3.5" %}{{ l.region }}</span>{% endif %}
           {% if l.open_to_trade %}<span class="chip is-sage">{% icon "arrow-left-right" "size-3.5" %}قابل معاوضه</span>{% endif %}
           {% if l.is_boosted %}<span class="chip is-saffron">{% icon "rocket" "size-3.5" %}نردبان</span>{% endif %}
@@ -189,10 +189,14 @@
         {% if l.has_contact %}
         <div class="mt-4 border-t border-sand-200 pt-4" x-data="{ open: false }">
           {% if is_owner %}
-            <div class="flex items-center gap-2 text-xs text-espresso-500">{% icon l.contact_icon "size-4" %}راه ارتباطی تو: {{ l.get_contact_app_display }} <span class="ltr latin">{{ l.contact_display }}</span></div>
+            <div class="space-y-1.5 text-xs text-espresso-500">
+              {% for c in l.contacts_enriched %}
+              <div class="flex items-center gap-2">{% icon c.icon "size-4" %}راه ارتباطی تو: {{ c.label }} <span class="ltr latin">{{ c.display }}</span></div>
+              {% endfor %}
+            </div>
           {% elif user.is_authenticated %}
             <button type="button" class="btn-ghost w-full" @click="open = !open" :aria-expanded="open">
-              {% icon l.contact_icon "size-4" %}<span x-text="open ? 'بستن' : 'گفتگو در {{ l.get_contact_app_display }}'">گفتگو در {{ l.get_contact_app_display }}</span>
+              {% icon l.contact_icon "size-4" %}<span x-text="open ? 'بستن' : 'گفتگو در {{ l.contacts_enriched.0.label }}'">گفتگو در {{ l.contacts_enriched.0.label }}</span>{% if l.contacts_enriched|length > 1 %}<span class="chip is-muted !py-0 text-[10px] fa-num">{{ l.contacts_enriched|length|fa }} راه</span>{% endif %}
             </button>
             <div x-show="open" x-collapse x-cloak>
               {% alert variant="warning" appearance="light" size="sm" icon_name="shield-alert" title="قبل از پیام دادن بخوان" cls="mt-3" %}
@@ -201,16 +205,21 @@
                   <li>برای پرداخت، همیشه از دکمه «خرید امن با واسط» همین آگهی استفاده کن.</li>
                 </ul>
               {% endalert %}
-              <div class="mt-3 flex items-center gap-2 rounded-xl bg-cream p-2 ps-3">
-                <span class="ltr latin min-w-0 flex-1 truncate text-sm">{{ l.contact_display }}</span>
-                <button type="button" x-data="copy('{{ l.contact_display|escapejs }}')" @click="run()" class="grid size-9 place-items-center rounded-lg text-espresso-500 transition hover:bg-sand hover:text-espresso" :aria-label="done ? 'کپی شد' : 'کپی'">
-                  <span x-show="!done">{% icon "copy" "size-4" %}</span><span x-show="done" x-cloak>{% icon "check" "size-4 text-sage-700" %}</span>
-                </button>
-                {% if l.contact_url %}<a href="{{ l.contact_url }}" target="_blank" rel="noopener noreferrer nofollow" class="btn-grad is-sm">{% icon "external-link" "size-4" %}باز کردن</a>{% endif %}
+              <div class="mt-3 space-y-2">
+                {% for c in l.contacts_enriched %}
+                <div class="flex items-center gap-2 rounded-xl bg-cream p-2 ps-3">
+                  <span class="grid size-8 shrink-0 place-items-center rounded-lg bg-surface text-espresso-500">{% icon c.icon "size-4" %}</span>
+                  <span class="min-w-0 flex-1"><span class="block text-[11px] text-espresso-400">{{ c.label }}</span><span class="ltr latin block truncate text-sm">{{ c.display }}</span></span>
+                  <button type="button" x-data="copy('{{ c.display|escapejs }}')" @click="run()" class="grid size-9 place-items-center rounded-lg text-espresso-500 transition hover:bg-sand hover:text-espresso" :aria-label="done ? 'کپی شد' : 'کپی'">
+                    <span x-show="!done">{% icon "copy" "size-4" %}</span><span x-show="done" x-cloak>{% icon "check" "size-4 text-sage-700" %}</span>
+                  </button>
+                  {% if c.url %}<a href="{{ c.url }}" target="_blank" rel="noopener noreferrer nofollow" class="btn-grad is-sm">{% icon "external-link" "size-4" %}باز کردن</a>{% endif %}
+                </div>
+                {% endfor %}
               </div>
             </div>
           {% else %}
-            <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="flex items-center justify-center gap-2 rounded-xl border border-dashed border-sand-300 py-2.5 text-xs text-espresso-500 transition hover:border-ember hover:text-ember">{% icon l.contact_icon "size-4" %}برای دیدن آیدی {{ l.get_contact_app_display }} وارد شو</a>
+            <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="flex items-center justify-center gap-2 rounded-xl border border-dashed border-sand-300 py-2.5 text-xs text-espresso-500 transition hover:border-ember hover:text-ember">{% icon l.contact_icon "size-4" %}برای دیدن آیدی {{ l.contacts_enriched.0.label }}{% if l.contacts_enriched|length > 1 %} و {{ l.contacts_enriched|length|add:"-1"|fa }} راه دیگر{% endif %} وارد شو</a>
           {% endif %}
         </div>
         {% endif %}

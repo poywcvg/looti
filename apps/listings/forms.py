@@ -13,18 +13,46 @@ MAX_IMAGE_MB = 4
 
 class ListingForm(forms.ModelForm):
     price = forms.CharField(label="قیمت (تومان)")
+    platforms = forms.MultipleChoiceField(label="پلتفرم‌ها", required=True)
+    # تا ۳ راه ارتباطی — هر ردیف: پیام‌رسان + آیدی. خالی یعنی «ندارم».
+    MAX_CONTACTS = 3
+    contact_app_0 = forms.ChoiceField(label="پیام‌رسان ۱", required=False)
+    contact_id_0 = forms.CharField(label="آیدی / شماره ۱", max_length=64, required=False)
+    contact_app_1 = forms.ChoiceField(label="پیام‌رسان ۲", required=False)
+    contact_id_1 = forms.CharField(label="آیدی / شماره ۲", max_length=64, required=False)
+    contact_app_2 = forms.ChoiceField(label="پیام‌رسان ۳", required=False)
+    contact_id_2 = forms.CharField(label="آیدی / شماره ۳", max_length=64, required=False)
 
     class Meta:
         model = Listing
         fields = [
-            "title", "description", "price", "negotiable", "open_to_trade", "trade_with", "platform", "region", "level",
-            "email_access", "first_owner", "ban_free", "has_2fa", "fee_payer", "contact_app", "contact_id",
+            "title", "description", "price", "negotiable", "open_to_trade", "trade_with", "platforms", "region", "level",
+            "email_access", "first_owner", "ban_free", "has_2fa", "fee_payer",
         ]
 
     def __init__(self, *args, game, **kwargs):
         super().__init__(*args, **kwargs)
+        from .models import Listing as _Listing
         self.game = game
-        self.fields["platform"].choices = game.platform_choices
+        self.fields["platforms"].choices = game.platform_choices
+        # گزینه‌های پیام‌رسان برای هر ۳ ردیف
+        contact_choices = [("", "انتخاب کنید")] + list(_Listing.ContactApp.choices)
+        for i in range(self.MAX_CONTACTS):
+            self.fields[f"contact_app_{i}"].choices = contact_choices
+        # مقدار اولیه پلتفرم‌ها: ویرایش → مقادیر ذخیره‌شده؛ جدید → همه پلتفرم‌های بازی اگر تکی است
+        if self.instance.pk:
+            initial_platforms = self.instance.platform_list or ([self.instance.platform] if getattr(self.instance, "platform", "") else [])
+            if initial_platforms:
+                self.initial["platforms"] = initial_platforms
+            contacts = self.instance.contacts_list
+            for i in range(self.MAX_CONTACTS):
+                if i < len(contacts):
+                    self.initial[f"contact_app_{i}"] = contacts[i]["app"]
+                    self.initial[f"contact_id_{i}"] = contacts[i]["id"]
+        else:
+            # پیش‌فرض: اگر بازی فقط یک پلتفرم دارد همان تیک بخورد
+            if len(game.platforms) == 1:
+                self.initial["platforms"] = list(game.platforms)
         self.attr_fields = []
         current = (self.instance.attrs or {}) if self.instance.pk else {}
         for spec in game.attribute_schema:
@@ -67,24 +95,65 @@ class ListingForm(forms.ModelForm):
     def clean_trade_with(self):
         return (self.cleaned_data.get("trade_with") or "").strip()
 
+    def clean_platforms(self):
+        values = self.cleaned_data.get("platforms") or []
+        # request.POST.getlist در بایندینگ چندتایی می‌آید؛ اگر تک‌رشته آمد لیستش کن
+        if isinstance(values, str):
+            values = [values]
+        allowed = {k for k, _ in self.game.platform_choices}
+        values = [v for v in values if v in allowed]
+        if not values:
+            raise forms.ValidationError("حداقل یک پلتفرم انتخاب کنید.")
+        # ترتیب گزینه‌های بازی حفظ شود تا «اصلی» قابل پیش‌بینی باشد
+        order = [k for k, _ in self.game.platform_choices]
+        values.sort(key=lambda v: order.index(v) if v in order else 99)
+        return values
+
     def clean(self):
         data = super().clean()
         # اگر تیک معاوضه خاموش است، توضیح معاوضه ذخیره نشود
         if not data.get("open_to_trade"):
             data["trade_with"] = self.instance.trade_with = ""
-        app, raw = data.get("contact_app") or "", (data.get("contact_id") or "").strip()
-        if app and not raw:
-            self.add_error("contact_id", "آیدی یا شماره را بنویس، یا پیام‌رسان را روی «ندارم» بگذار.")
-        elif raw and not app:
-            self.add_error("contact_app", "پیام‌رسان را انتخاب کن.")
-        elif app:
+        # --- پلتفرم چندتایی: همگام‌سازی فیلد تکی قدیمی (اصلی = اولی) ---
+        platforms = data.get("platforms") or []
+        if platforms:
+            self.instance.platforms = platforms
+            self.instance.platform = platforms[0]
+            data["platforms"] = platforms
+        elif self.instance.pk and not self.errors.get("platforms"):
+            # ویرایش بدون تغییر؟ مقدار قبلی بماند
+            pass
+        # --- راه‌های ارتباطی چندتایی (حداکثر ۳، تکراری ممنوع) ---
+        contacts = []
+        seen_apps = set()
+        for i in range(self.MAX_CONTACTS):
+            app = (data.get(f"contact_app_{i}") or "").strip()
+            raw = (data.get(f"contact_id_{i}") or "").strip()
+            if not app and not raw:
+                continue
+            if app and not raw:
+                self.add_error(f"contact_id_{i}", "آیدی یا شماره را بنویس.")
+                continue
+            if raw and not app:
+                self.add_error(f"contact_app_{i}", "پیام‌رسان را انتخاب کن.")
+                continue
+            if app in seen_apps:
+                self.add_error(f"contact_app_{i}", "این پیام‌رسان را قبلاً اضافه کرده‌ای.")
+                continue
             value, error = clean_contact(app, raw)
             if error:
-                self.add_error("contact_id", error)
-            else:
-                data["contact_id"] = self.instance.contact_id = value
+                self.add_error(f"contact_id_{i}", error)
+                continue
+            seen_apps.add(app)
+            contacts.append({"app": app, "id": value})
+        self.instance.contacts = contacts
+        # سازگاری: فیلدهای تکی = راه اول
+        if contacts:
+            self.instance.contact_app = contacts[0]["app"]
+            self.instance.contact_id = contacts[0]["id"]
         else:
-            data["contact_id"] = self.instance.contact_id = ""
+            self.instance.contact_app = ""
+            self.instance.contact_id = ""
         attrs = {}
         for n in self.attr_fields:
             val = data.get(n)

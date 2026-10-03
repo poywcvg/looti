@@ -25,7 +25,7 @@
       <h3 class="line-clamp-1 font-sans text-[0.95rem] font-semibold">{{ l.title }}</h3>
       <p class="go-desc mt-1.5 text-xs leading-6 text-espresso-500">{{ l.description|truncatechars:180 }}</p>
       <div class="go-chips mt-2 flex flex-wrap gap-1.5 text-[11px]">
-        <span class="chip is-muted">{% icon l.platform_icon "size-3" %}{{ l.get_platform_display }}</span>
+        {% for code, label, ic in l.platform_labels|slice:":2" %}<span class="chip is-muted">{% icon ic "size-3" %}{{ label }}</span>{% empty %}<span class="chip is-muted">{% icon l.platform_icon "size-3" %}{{ l.get_platform_display }}</span>{% endfor %}{% if l.platform_labels|length > 2 %}<span class="chip is-muted fa-num">+{{ l.platform_labels|length|add:"-2"|fa }}</span>{% endif %}
         {% if l.first_owner %}<span class="chip is-sage">{% icon "user-round-check" "size-3" %}مالک اول</span>{% endif %}
         {% if l.email_access == 'full' %}<span class="chip is-sage">{% icon "mail-check" "size-3" %}ایمیل اصلی</span>{% endif %}
         {% if l.open_to_trade %}<span class="chip is-sage">{% icon "arrow-left-right" "size-3" %}قابل معاوضه</span>{% endif %}

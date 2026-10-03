@@ -48,14 +48,14 @@
       <section class="panel p-6">
         <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۲</span>مشخصات</h2>
         <div class="mt-6">
-          <div class="mb-2 text-sm text-espresso-500">پلتفرم</div>
-          {# Radio — uiverse.io/00Kubi/smooth-termite-31 #}
+          <div class="mb-2 flex items-center justify-between text-sm text-espresso-500"><span>پلتفرم <span class="text-xs text-espresso-400">(می‌توانی چندتا انتخاب کنی)</span></span><span class="text-xs text-espresso-400">اولی = اصلی</span></div>
+          {# چک‌باکس چندتایی با همان استایل seg — یک یا چند انتخاب #}
           <div class="seg">
-            {% for k, v in form.fields.platform.choices %}{% if k %}
-            <label class="seg-item"><input type="radio" name="platform" value="{{ k }}" {% if form.platform.value == k or not form.platform.value and forloop.first %}checked{% endif %}><span class="seg-name">{{ v }}</span></label>
+            {% for k, v in form.fields.platforms.choices %}{% if k %}
+            <label class="seg-item"><input type="checkbox" name="platforms" value="{{ k }}" {% if k in form.platforms.value %}checked{% endif %}><span class="seg-name">{{ v }}</span></label>
             {% endif %}{% endfor %}
           </div>
-          {% for e in form.platform.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+          {% for e in form.platforms.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">اگر اکانت روی چند دستگاه قابل بازی است، همه را بزن.</p>{% endfor %}
         </div>
         <div class="mt-6 grid gap-5 sm:grid-cols-2">
           <div>
@@ -214,27 +214,74 @@
         </div>
       </section>
 
-      {# ۶. راه ارتباط مستقیم (اختیاری) #}
-      <section class="panel p-6" x-data="{ app: '{{ form.contact_app.value|default:'' }}',
+      {# ۶. راه ارتباط مستقیم (اختیاری، تا ۳ راه) #}
+      <section class="panel p-6" x-data="{
           hints: { telegram: 'مثل @looti_shop یا لینک t.me', whatsapp: 'شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷', instagram: 'مثل @gamanat.shop',
                    discord: 'نام کاربری دیسکورد', eitaa: 'آیدی ایتا', bale: 'آیدی بله', rubika: 'آیدی روبیکا' } }">
-        <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۶</span>راه ارتباط مستقیم <span class="text-xs font-light text-espresso-400">(اختیاری)</span></h2>
-        <p class="mt-1 text-sm font-light leading-7 text-espresso-500">اگر می‌خواهی خریدار در پیوی هم با تو صحبت کند، پیام‌رسانت را بگذار. فقط کاربران واردشده و بعد از دیدن هشدار امنیتی آن را می‌بینند.</p>
-        <div class="seg mt-5" role="radiogroup" aria-label="پیام‌رسان">
-          <label class="seg-item"><input type="radio" name="contact_app" value="" x-model="app"><span class="seg-name">ندارم</span></label>
-          {% for v, t in form.fields.contact_app.choices %}{% if v %}
-          <label class="seg-item"><input type="radio" name="contact_app" value="{{ v }}" x-model="app"><span class="seg-name">{{ t }}</span></label>
-          {% endif %}{% endfor %}
-        </div>
-        {% for e in form.contact_app.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
-        <div class="mt-5" x-show="app" x-collapse {% if not form.contact_app.value %}x-cloak{% endif %}>
-          <div class="field">
-            <input class="field-input ltr text-left {% if form.contact_id.errors %}is-invalid{% endif %}" name="contact_id" id="f-contact" placeholder=" " maxlength="64" autocapitalize="none" spellcheck="false" value="{{ form.contact_id.value|default:'' }}" :disabled="!app">
-            <label class="field-label" for="f-contact">آیدی یا شماره</label>
+        <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۶</span>راه ارتباط مستقیم <span class="text-xs font-light text-espresso-400">(اختیاری، تا ۳ راه)</span></h2>
+        <p class="mt-1 text-sm font-light leading-7 text-espresso-500">می‌توانی یک یا چند راه بگذاری، یا هیچ‌کدام. فقط کاربران واردشده و بعد از دیدن هشدار امنیتی آن‌ها را می‌بینند.</p>
+        <div class="mt-5 space-y-4">
+          <div class="grid gap-3 rounded-2xl border border-sand-200 p-4 sm:grid-cols-[10rem_1fr]" x-data="{ app: '' }" x-init="app = $el.querySelector('select').value">
+            <div class="field">
+              <select class="field-input" name="contact_app_0" id="f-contact-app-0" x-model="app">
+                <option value="">ندارم</option>
+                {% for v, t in form.fields.contact_app_0.choices %}{% if v %}<option value="{{ v }}" {% if form.contact_app_0.value == v %}selected{% endif %}>{{ t }}</option>{% endif %}{% endfor %}
+              </select>
+              <label class="field-label" for="f-contact-app-0">پیام‌رسان اصلی</label>
+            </div>
+            <div>
+              <div class="field">
+                <input class="field-input ltr text-left {% if form.contact_id_0.errors %}is-invalid{% endif %}" name="contact_id_0" id="f-contact-0" placeholder=" " maxlength="64" autocapitalize="none" spellcheck="false" value="{{ form.contact_id_0.value|default:'' }}" :disabled="!app">
+                <label class="field-label" for="f-contact-0">آیدی یا شماره</label>
+              </div>
+              <p class="field-hint" x-show="app" x-text="hints[app] || ''"></p>
+            </div>
           </div>
-          {% for e in form.contact_id.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint" x-text="hints[app] || ''"></p>{% endfor %}
-          {% alert variant="warning" appearance="light" size="sm" cls="mt-4" %}پولی که بیرون از لوطی جابه‌جا شود، دیگر امن نیست. اگر خریدار خواست مستقیم پرداخت کند، او را به «خرید امن» همین آگهی راهنمایی کن.{% endalert %}
+          <div class="grid gap-3 rounded-2xl border border-sand-200 p-4 sm:grid-cols-[10rem_1fr]" x-data="{ app: '' }" x-init="app = $el.querySelector('select').value">
+            <div class="field">
+              <select class="field-input" name="contact_app_1" id="f-contact-app-1" x-model="app">
+                <option value="">ندارم</option>
+                {% for v, t in form.fields.contact_app_0.choices %}{% if v %}<option value="{{ v }}" {% if form.contact_app_1.value == v %}selected{% endif %}>{{ t }}</option>{% endif %}{% endfor %}
+              </select>
+              <label class="field-label" for="f-contact-app-1">پیام‌رسان دوم</label>
+            </div>
+            <div>
+              <div class="field">
+                <input class="field-input ltr text-left {% if form.contact_id_1.errors %}is-invalid{% endif %}" name="contact_id_1" id="f-contact-1" placeholder=" " maxlength="64" autocapitalize="none" spellcheck="false" value="{{ form.contact_id_1.value|default:'' }}" :disabled="!app">
+                <label class="field-label" for="f-contact-1">آیدی یا شماره</label>
+              </div>
+              <p class="field-hint" x-show="app" x-text="hints[app] || ''"></p>
+            </div>
+          </div>
+          <div class="grid gap-3 rounded-2xl border border-sand-200 p-4 sm:grid-cols-[10rem_1fr]" x-data="{ app: '' }" x-init="app = $el.querySelector('select').value">
+            <div class="field">
+              <select class="field-input" name="contact_app_2" id="f-contact-app-2" x-model="app">
+                <option value="">ندارم</option>
+                {% for v, t in form.fields.contact_app_0.choices %}{% if v %}<option value="{{ v }}" {% if form.contact_app_2.value == v %}selected{% endif %}>{{ t }}</option>{% endif %}{% endfor %}
+              </select>
+              <label class="field-label" for="f-contact-app-2">پیام‌رسان سوم</label>
+            </div>
+            <div>
+              <div class="field">
+                <input class="field-input ltr text-left {% if form.contact_id_2.errors %}is-invalid{% endif %}" name="contact_id_2" id="f-contact-2" placeholder=" " maxlength="64" autocapitalize="none" spellcheck="false" value="{{ form.contact_id_2.value|default:'' }}" :disabled="!app">
+                <label class="field-label" for="f-contact-2">آیدی یا شماره</label>
+              </div>
+              <p class="field-hint" x-show="app" x-text="hints[app] || ''"></p>
+            </div>
+          </div>
         </div>
+        {# خطاهای هر ردیف — نام فیلد داینامیک است، پس همه خطاهای فرم مرتبط را همین‌جا نشان بده #}
+        {% if form.contact_app_0.errors or form.contact_id_0.errors or form.contact_app_1.errors or form.contact_id_1.errors or form.contact_app_2.errors or form.contact_id_2.errors %}
+        <div class="mt-3 space-y-1">
+          {% for e in form.contact_app_0.errors %}<p class="field-error">راه ۱: {{ e }}</p>{% endfor %}
+          {% for e in form.contact_id_0.errors %}<p class="field-error">راه ۱: {{ e }}</p>{% endfor %}
+          {% for e in form.contact_app_1.errors %}<p class="field-error">راه ۲: {{ e }}</p>{% endfor %}
+          {% for e in form.contact_id_1.errors %}<p class="field-error">راه ۲: {{ e }}</p>{% endfor %}
+          {% for e in form.contact_app_2.errors %}<p class="field-error">راه ۳: {{ e }}</p>{% endfor %}
+          {% for e in form.contact_id_2.errors %}<p class="field-error">راه ۳: {{ e }}</p>{% endfor %}
+        </div>
+        {% endif %}
+        {% alert variant="warning" appearance="light" size="sm" cls="mt-4" %}پولی که بیرون از لوطی جابه‌جا شود، دیگر امن نیست. اگر خریدار خواست مستقیم پرداخت کند، او را به «خرید امن» همین آگهی راهنمایی کن.{% endalert %}
       </section>
     </div>
 
