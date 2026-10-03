@@ -1,0 +1,36 @@
+{# نوار نتایج: در موبایل هم یک ردیف (تعداد · خبرم کن · نمای ستونی · مرتب‌سازی) #}
+<div class="res-bar flex items-center gap-2">
+  <p class="me-auto min-w-0 whitespace-nowrap text-sm text-espresso-500"><span class="me-1 font-display text-lg font-bold text-espresso fa-num">{{ count|fa }}</span>آگهی<span class="max-sm:hidden"> پیدا شد</span></p>
+  {% if user.is_authenticated and query %}
+    {% if saved %}
+    <a href="{% url 'accounts:dashboard' %}?tab=searches" class="chip is-sage !px-2.5 !py-2" title="هشدار این جستجو فعال است">{% icon "bell-ring" "size-4" %}<span class="max-sm:hidden">هشدار فعال است</span></a>
+    {% else %}
+    <form method="post" action="{% url 'listings:save_search' %}">
+      {% csrf_token %}<input type="hidden" name="query" value="{{ query }}">
+      <button class="btn-ghost is-sm max-sm:!px-2.5" title="آگهی جدید مطابق این فیلترها که آمد خبرت می‌کنیم" aria-label="خبرم کن">{% icon "bell-plus" "size-4" %}<span class="max-sm:hidden">خبرم کن</span></button>
+    </form>
+    {% endif %}
+  {% endif %}
+  <div class="seg view-seg shrink-0" x-data="viewToggle" role="radiogroup" aria-label="نمایش آگهی‌ها">
+    <label class="seg-item" title="چند ستونه"><input type="radio" name="listing-view" value="grid" x-model="v" aria-label="چند ستونه"><span class="seg-name">{% icon "layout-grid" "size-4" %}</span></label>
+    <label class="seg-item" title="تک ستونه"><input type="radio" name="listing-view" value="list" x-model="v" aria-label="تک ستونه"><span class="seg-name">{% icon "rows-3" "size-4" %}</span></label>
+  </div>
+  {% include "components/dd_select.html" with name="sort" form="filters" options=sorts value=params.sort|default:"new" icon_name="arrow-down-up" label="مرتب‌سازی" cls="shrink-0" %}
+</div>
+
+{% if chips %}
+<div class="no-scrollbar -mx-4 mt-3 flex gap-2 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+  {% for label, href in chips %}
+  <a href="{{ href }}" class="chip is-ember shrink-0 !py-1.5 transition hover:bg-ember-100">{{ label }}{% icon "x" "size-3.5" %}</a>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if page.object_list %}
+<div class="lgrid mt-5">
+  {% include "listings/_cards_page.html" %}
+</div>
+{% else %}
+  {% url 'listings:list' as list_url %}
+  {% empty_state "چیزی با این فیلترها پیدا نشد" "چند فیلتر را بردار، یا «خبرم کن» را بزن تا آگهی مطابق که ثبت شد اعلان بگیری." "searching" list_url "دیدن همه آگهی‌ها" %}
+{% endif %}

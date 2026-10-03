@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}{% if game %}خرید اکانت {{ game.name }}{% else %}آگهی‌های اکانت بازی{% endif %} — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="wrap pt-6" x-data="{ filters: false }" @keydown.escape.window="filters = false">
+
+  {# ─── سرصفحه و جستجو ─── #}
+  <div class="ads-top flex flex-wrap items-end justify-between gap-3 md:gap-4">
+    <div>
+      <h1 class="font-display text-xl font-bold sm:text-2xl md:text-3xl">{% if game %}اکانت {{ game.name }}{% else %}همه آگهی‌ها{% endif %}</h1>
+      <p class="mt-1 text-xs text-espresso-500 sm:text-sm">{% if game %}{{ game.tagline }}{% else %}هر خرید با واسط امن؛ پول تا تأیید تو پیش لوطی می‌ماند.{% endif %}</p>
+    </div>
+    <div class="flex w-full gap-2 md:w-[26rem]">
+      <div class="gsearch ads-search flex-1">
+        <label for="gs-list">جستجو در آگهی‌ها</label>
+        {% icon "search" "ads-search-ic size-[18px]" %}
+        <input id="gs-list" class="input" type="search" name="q" form="filters" value="{{ params.q }}" placeholder="عنوان، اسکین یا کد آگهی…" autocomplete="off" enterkeyhint="search">
+        <span class="caret" aria-hidden="true"></span>
+      </div>
+      <button type="button" class="ads-filter-btn btn-ghost relative lg:hidden" @click="filters = true" aria-label="فیلترها">{% icon "sliders-horizontal" "size-4" %}<span class="max-sm:hidden">فیلتر</span>{% if chips %}<span class="ads-filter-n fa-num">{{ chips|length|fa }}</span>{% endif %}</button>
+    </div>
+  </div>
+
+  {# ─── انتخاب بازی ─── #}
+  <nav class="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mt-6">
+    <a href="{% url 'listings:list' %}" class="chip shrink-0 !px-3.5 !py-2 {% if not game %}is-ember{% else %}is-muted{% endif %}">{% icon "layout-grid" "size-4" %}همه</a>
+    {% for g in games %}
+    <a href="?game={{ g.slug }}" class="chip shrink-0 !px-3.5 !py-2 {% if game == g %}text-white{% else %}is-muted{% endif %}" {% if game == g %}style="background: {{ g.tone }}"{% endif %}>{% icon g.icon "size-4" %}{{ g.name }}</a>
+    {% endfor %}
+  </nav>
+
+  <div class="mt-4 grid gap-8 sm:mt-6 lg:grid-cols-[264px_1fr]">
+    {# ─── فیلترها: ستون کناری در دسکتاپ، کشو در موبایل ─── #}
+    <div x-show="filters" x-transition.opacity class="fixed inset-0 z-40 bg-ink/40 lg:hidden" @click="filters = false" x-cloak></div>
+    <form id="filters" action="{% url 'listings:list' %}" method="get"
+          hx-get="{% url 'listings:list' %}" hx-target="#results" hx-push-url="true" hx-trigger="change delay:200ms, submit" hx-indicator="#results, #top-loader"
+          class="fixed inset-y-0 right-0 z-50 w-[85%] max-w-xs translate-x-full overflow-y-auto bg-cream p-5 transition-transform duration-300 lg:static lg:z-auto lg:w-auto lg:max-w-none lg:translate-x-0 lg:self-start lg:overflow-visible lg:bg-transparent lg:p-0 lg:transition-none"
+          :class="filters && '!translate-x-0 shadow-lift'">
+      {% if game %}<input type="hidden" name="game" value="{{ game.slug }}">{% endif %}
+      <div class="mb-5 flex items-center justify-between lg:hidden">
+        <span class="font-display text-lg font-bold">فیلترها</span>
+        <button type="button" class="grid size-9 place-items-center rounded-full hover:bg-sand" @click="filters = false" aria-label="بستن">{% icon "x" "size-5" %}</button>
+      </div>
+
+      <div class="space-y-6 lg:sticky lg:top-24 hdr-follow">
+        <section>
+          <h3 class="mb-3 text-sm font-semibold text-espresso-500">پلتفرم</h3>
+          {% include "components/dd_select.html" with name="platform" options=platforms value=params.platform placeholder="همه پلتفرم‌ها" icon_name="gamepad-2" label="پلتفرم" cls="is-block" %}
+        </section>
+
+        <section>
+          <h3 class="mb-3 text-sm font-semibold text-espresso-500">بازه قیمت (تومان)</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <div x-data="moneyInput('{{ params.min|default:'' }}')">
+              <input type="hidden" name="min" :value="raw">
+              <div class="field"><input class="field-input fa-num ltr text-left !h-11 !text-sm" id="f-min" placeholder=" " inputmode="numeric" :value="shown" @input="set($event.target.value); $event.target.value = shown"><label class="field-label" for="f-min">از</label></div>
+            </div>
+            <div x-data="moneyInput('{{ params.max|default:'' }}')">
+              <input type="hidden" name="max" :value="raw">
+              <div class="field"><input class="field-input fa-num ltr text-left !h-11 !text-sm" id="f-max" placeholder=" " inputmode="numeric" :value="shown" @input="set($event.target.value); $event.target.value = shown"><label class="field-label" for="f-max">تا</label></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="space-y-3">
+          <h3 class="text-sm font-semibold text-espresso-500">اطمینان بیشتر</h3>
+          {# Checkbox — uiverse.io/Cobp/tidy-mule-91 #}
+          <div>
+            <input type="checkbox" class="gm-check" id="f-first" name="first_owner" value="1" {% if params.first_owner == "1" %}checked{% endif %}>
+            <label class="gm-check-label" for="f-first"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>فقط مالک اول</label>
+          </div>
+          <div>
+            <input type="checkbox" class="gm-check" id="f-email" name="email" value="1" {% if params.email == "1" %}checked{% endif %}>
+            <label class="gm-check-label" for="f-email"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>با دسترسی ایمیل</label>
+          </div>
+          <div>
+            <input type="checkbox" class="gm-check" id="f-photos" name="photos" value="1" {% if params.photos == "1" %}checked{% endif %}>
+            <label class="gm-check-label" for="f-photos"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>فقط آگهی‌های عکس‌دار</label>
+          </div>
+        </section>
+
+        <section class="flex items-center justify-between gap-3 rounded-xl border border-sand-200 bg-surface px-4 py-3">
+          <span class="text-sm">قیمت قابل مذاکره</span>
+          {# Switch — uiverse.io/Galahhad/strong-squid-82 #}
+          <label class="gm-switch">
+            <input type="checkbox" name="negotiable" value="1" {% if params.negotiable == "1" %}checked{% endif %}>
+            <span class="slider"><span class="circle">{% icon "x" "i-cross" "3" %}{% icon "check" "i-check" "3" %}</span></span>
+          </label>
+        </section>
+
+        <section class="flex items-center justify-between gap-3 rounded-xl border border-sand-200 bg-surface px-4 py-3">
+          <span class="text-sm">فقط قابل معاوضه</span>
+          <label class="gm-switch">
+            <input type="checkbox" name="trade" value="1" {% if params.trade == "1" %}checked{% endif %}>
+            <span class="slider"><span class="circle">{% icon "x" "i-cross" "3" %}{% icon "check" "i-check" "3" %}</span></span>
+          </label>
+        </section>
+
+        {% if game and game.attribute_schema %}
+        <section class="space-y-3">
+          <h3 class="flex items-center gap-1.5 text-sm font-semibold text-espresso-500">{% icon game.icon "size-4" %}ویژه {{ game.name }}</h3>
+          {% for f in game.attribute_schema %}
+            {% if f.type == "select" %}
+            <div class="field">
+              <select name="a_{{ f.key }}" id="a-{{ f.key }}" class="field-input">
+                <option value="">{{ f.label }}: همه</option>
+                {% for o in f.options %}<option value="{{ o }}" {% with pk="a_"|add:f.key %}{% if params|get_item:pk == o %}selected{% endif %}{% endwith %}>{{ o }}</option>{% endfor %}
+              </select>
+            </div>
+            {% elif f.type == "bool" %}
+            {% with pk="a_"|add:f.key %}
+            <div>
+              <input type="checkbox" class="gm-check" id="a-{{ f.key }}" name="{{ pk }}" value="1" {% if params|get_item:pk == "1" %}checked{% endif %}>
+              <label class="gm-check-label" for="a-{{ f.key }}"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>{{ f.label }}</label>
+            </div>
+            {% endwith %}
+            {% endif %}
+          {% endfor %}
+        </section>
+        {% endif %}
+
+        <div class="flex gap-2 lg:hidden">
+          <button type="button" class="btn-grad flex-1" @click="filters = false">نمایش نتایج</button>
+        </div>
+        <a href="{% url 'listings:list' %}{% if game %}?game={{ game.slug }}{% endif %}" class="flex items-center justify-center gap-1.5 text-sm text-espresso-400 hover:text-ember">{% icon "rotate-ccw" "size-4" %}پاک کردن فیلترها</a>
+      </div>
+    </form>
+
+    {# ─── نتایج ─── #}
+    <div id="results" class="min-w-0 transition-opacity [&.htmx-request]:opacity-50">
+      {% include "listings/_results.html" %}
+    </div>
+  </div>
+</div>
+{% endblock %}

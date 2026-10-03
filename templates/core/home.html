@@ -1,0 +1,275 @@
+{% extends "base.html" %}{% load static %}
+{% block footer %}{% include "partials/mini_footer.html" with flush=True %}{% endblock %}
+{% block content %}
+
+{# ─── Hero: یک حرف روشن، جستجو، سه عدد واقعی، و بازار همین حالا — صحنه‌ی تمام‌عرض با صندوق لوطی؛ رنگ‌ها با حالت روشن/تاریک ─── #}
+<section class="hero home-band">
+  <div class="hero-stage" x-data="heroSpot" @pointermove="move($event)">
+  <div class="wrap relative grid gap-10 pt-8 sm:pt-12 lg:grid-cols-[1.1fr_1fr] lg:gap-[clamp(3rem,6vw,7rem)] lg:pt-0">
+    <div class="self-center lg:py-16">
+      <h1 class="font-display text-[clamp(2.2rem,1.4rem+3vw,4.4rem)] font-black leading-[1.32] tracking-tight">
+        <span class="hero-in block" style="--d:0">پول پیش لوطی می‌ماند</span>
+        <span class="hero-in block" style="--d:1"><span class="hero-headline-glow">تا اکانت دستت برسد.</span></span>
+      </h1>
+      <p class="hero-in mt-5 max-w-xl text-[1.05rem] leading-8 text-espresso-600" style="--d:2">
+        فروشنده می‌بیند پول واریز شده؛ خریدار اکانتی می‌گیرد که واسط قبلاً واردش شده و با آگهی تطبیقش داده. اگر نخواند، پول برمی‌گردد.
+      </p>
+
+      <form action="{% url 'listings:list' %}" class="hero-in mt-8 flex max-w-xl flex-col gap-3 sm:flex-row" style="--d:3" role="search">
+        <div class="gsearch flex-1">
+          <label for="gs-home">جستجو در آگهی‌ها</label>
+          <input id="gs-home" class="input" type="search" name="q" placeholder="اسم بازی، اسکین، رنک یا کد آگهی…" autocomplete="off" enterkeyhint="search">
+          <span class="caret" aria-hidden="true"></span>
+        </div>
+        <button class="btn-push is-sm shrink-0"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "search" "size-4" %}پیدا کن</span></button>
+      </form>
+
+      <dl class="hero-facts hero-in mt-8 max-w-xl" style="--d:4">
+        <div><dt>کارمزد واسط</dt><dd class="fa-num">{{ FEE_PERCENT|fa }}٪</dd></div>
+        <div><dt>مهلت تحویل فروشنده</dt><dd class="fa-num">{{ seller_hours|fa }} ساعت</dd></div>
+        <div><dt>وقت امتحان خریدار</dt><dd class="fa-num">{{ inspection_hours|fa }} ساعت</dd></div>
+      </dl>
+      <a href="{% url 'core:how' %}" class="hero-in mt-4 inline-flex items-center gap-1 text-sm text-espresso-500 underline-offset-4 hover:text-ember hover:underline" style="--d:5">روند معامله و ماشین‌حساب کارمزد{% icon "chevron-left" "size-4" %}</a>
+    </div>
+
+    {# بازار همین حالا: بازی‌های پرآگهی، تعداد آگهی و ارزان‌ترین قیمت؛ هر ردیف به صفحه همان بازی می‌رود #}
+    <div class="hero-loot w-full max-w-xl self-end lg:max-w-[38rem] lg:justify-self-end lg:pt-10">
+      {# صندوق بزرگ لوطی (همان هندسه‌ی نشان): درش آرام نفس می‌کشد، نور از لای آن بالا می‌زند و سکه‌ها بیرون می‌پرند #}
+    <div class="hero-vault" aria-hidden="true">
+      <div class="hero-beam"></div>
+      {# همان لوطیِ نشان، بزرگ: کلاه مخملی کج که هر چند ثانیه به سلام برداشته می‌شود و از زیرش نور و سکه بیرون می‌زند #}
+      <svg viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="hl-stache" x1="0" y1="0" x2="0" y2="1"><stop offset="0" style="stop-color: var(--hero-chest-top)"/><stop offset="1" style="stop-color: var(--hero-chest-bottom)"/></linearGradient>
+          <linearGradient id="hl-crown" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#D8664C"/><stop offset="1" stop-color="#8E3B29"/></linearGradient>
+          <filter id="hl-blur" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="1.2"/></filter>
+        </defs>
+        <g transform="rotate(-10 24 21)">
+          <ellipse class="hc-light" cx="24" cy="20.6" rx="11" ry="1.9" fill="#F2C681" filter="url(#hl-blur)"/>
+          <g class="hc-hat">
+            <path d="M15.2 19.1L16.6 12.1C16.9 10.7 18.2 9.9 19.6 10.2C21.3 10.6 22.6 11.7 24 11.7S26.7 10.6 28.4 10.2C29.8 9.9 31.1 10.7 31.4 12.1L32.8 19.1Z" fill="url(#hl-crown)"/>
+            <path d="M15.75 16.1H32.25L32.6 17.9H15.4Z" fill="#EBAA4A"/>
+            <path d="M9.5 20.7C9.5 19.4 10.6 18.7 12 18.7H36C37.4 18.7 38.5 19.4 38.5 20.7C38.5 22 37.4 22.4 36 22.4H12C10.6 22.4 9.5 22 9.5 20.7Z" fill="#7A3324"/>
+          </g>
+        </g>
+        <path class="hc-stache" d="M24 27.4C26.2 25 30.4 24.6 33.4 26.8C35.2 28.1 36.9 28.1 38.1 26.7C38.9 25.7 38.7 24.2 37.6 23.8C40.4 23.1 42.4 25.5 41.6 28.6C40.6 32.6 35.2 35.2 30.4 34C27.7 33.3 25.5 31.9 24 31.6C22.5 31.9 20.3 33.3 17.6 34C12.8 35.2 7.4 32.6 6.4 28.6C5.6 25.5 7.6 23.1 10.4 23.8C9.3 24.2 9.1 25.7 9.9 26.7C11.1 28.1 12.8 28.1 14.6 26.8C17.6 24.6 21.8 25 24 27.4Z"/>
+      </svg>
+      <span class="hero-coin" style="--x:-30px;--dx:-70px;--h:300px;--t:6.5s;--d:0s"></span>
+      <span class="hero-coin" style="--x:12px;--dx:40px;--h:340px;--t:7s;--d:1.6s;--s:11px"></span>
+      <span class="hero-coin" style="--x:-6px;--dx:-20px;--h:260px;--t:5.5s;--d:3.1s;--s:16px"></span>
+      <span class="hero-coin" style="--x:34px;--dx:90px;--h:280px;--t:6.8s;--d:4.4s;--s:9px"></span>
+      <span class="hero-coin" style="--x:-50px;--dx:-30px;--h:360px;--t:7.6s;--d:2.4s;--s:12px"></span>
+    </div>
+        <div class="hero-market hero-in" style="--d:3">
+      <div class="flex items-baseline justify-between gap-3 px-5 pb-3 pt-5">
+        <h2 class="font-display text-lg font-bold">بازار همین حالا</h2>
+        <span class="fa-num text-xs text-espresso-400">{{ stats.listings|fa }} آگهی فعال</span>
+      </div>
+      <ul>
+        {% for g in market %}
+        <li>
+          <a href="{{ g.get_absolute_url }}" class="hero-market-row">
+            <span class="hero-market-thumb" style="background: {{ g.tone }}22">
+              {% if g.cover_url %}<img src="{{ g.cover_url }}" alt="" width="44" height="44">{% else %}<span style="color: {{ g.tone }}">{% icon g.icon "size-5" %}</span>{% endif %}
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block truncate font-semibold">{{ g.name }}</span>
+              <span class="fa-num block text-xs text-espresso-400">{{ g.active_count|fa }} آگهی</span>
+            </span>
+            <span class="shrink-0 text-xs text-espresso-400">از <b class="fa-num font-display text-[0.95rem] font-bold text-espresso">{{ g.min_price|toman }}</b> تومان</span>
+            {% icon "chevron-left" "size-4 text-espresso-300 hero-market-go" %}
+          </a>
+        </li>
+        {% empty %}
+        <li class="px-5 pb-5 text-sm text-espresso-400">هنوز آگهی فعالی نیست؛ اولین فروشنده باش.</li>
+        {% endfor %}
+      </ul>
+      <div class="flex gap-2 border-t border-sand-200 p-3">
+        <a href="{% url 'listings:list' %}" class="btn-ghost is-sm h-10 flex-1">همه آگهی‌ها</a>
+        <a href="{% url 'listings:create_pick' %}" class="btn-ghost is-sm h-10 flex-1">{% icon "plus" "size-4" %}فروش اکانت</a>
+      </div>
+    </div>
+    </div>
+  </div>
+  </div>
+</section>
+
+{# ─── آمار اعتماد ─── #}
+<section class="home-band is-tight">
+<div class="wrap">
+  <div class="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-sand-200 bg-sand-200 md:grid-cols-4">
+    <div class="bg-surface p-5"><div class="font-display text-2xl font-bold fa-num">{{ stats.deals|fa }}</div><div class="mt-1 flex items-center gap-1.5 text-sm text-espresso-500">{% icon "handshake" "size-4 text-sage" %}معامله امن تکمیل‌شده</div></div>
+    <div class="bg-surface p-5"><div class="font-display text-2xl font-bold fa-num">{{ stats.volume|toman }}</div><div class="mt-1 flex items-center gap-1.5 text-sm text-espresso-500">{% icon "vault" "size-4 text-saffron-600" %}امانت‌داری شده</div></div>
+    <div class="bg-surface p-5"><div class="font-display text-2xl font-bold fa-num">{{ stats.listings|fa }}</div><div class="mt-1 flex items-center gap-1.5 text-sm text-espresso-500">{% icon "megaphone" "size-4 text-ember" %}آگهی فعال</div></div>
+    <div class="bg-surface p-5"><div class="font-display text-2xl font-bold fa-num">{{ stats.sellers|fa }}</div><div class="mt-1 flex items-center gap-1.5 text-sm text-espresso-500">{% icon "users-round" "size-4 text-espresso-400" %}فروشنده فعال</div></div>
+  </div>
+</div>
+</section>
+
+{# ─── بازی‌ها ─── #}
+<section class="home-band">
+<div class="wrap">
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h2 class="font-display text-2xl font-bold">بازی‌ات را انتخاب کن</h2>
+      <p class="mt-1 text-sm text-espresso-500">هر بازی فیلترهای مخصوص خودش را دارد؛ از رنک تا تعداد اسکین.</p>
+    </div>
+  </div>
+  <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 xl:gap-5">
+    {% for g in games %}
+      {# Card — uiverse.io/Prince4fff/slippery-baboon-37 (card1: پر شدن از گوشه) #}
+      <a href="{{ g.get_absolute_url }}" class="go-card go-fill game-card" style="--tone: {{ g.tone }}">
+        {% include "components/game_cover.html" %}
+        <div class="px-4 pb-4 sm:px-5 sm:pb-5">
+          <span class="go-icon relative -mt-6 grid size-11 place-items-center rounded-xl transition">{% icon g.icon "size-6" %}</span>
+          <h3 class="go-tint mt-3 font-display text-base font-semibold transition sm:text-lg">{{ g.name }}</h3>
+          <p class="go-tint-soft mt-1 line-clamp-1 text-xs text-espresso-400 transition">{{ g.tagline }}</p>
+        </div>
+        <span class="go-corner" aria-hidden="true">{% icon "arrow-up-left" %}</span>
+      </a>
+    {% endfor %}
+  </div>
+</div>
+</section>
+
+{# ─── چطور امن است ─── #}
+<section class="home-band">
+<div class="wrap">
+  <div class="panel overflow-hidden">
+    <div class="grid md:grid-cols-[1fr_1.4fr]">
+      <div class="bg-sage-50 p-8 md:p-10">
+        <span class="chip bg-surface text-sage-700">{% icon "scale" "size-3.5" %}خرید امن لوطی</span>
+        <h2 class="mt-4 font-display text-2xl font-bold leading-10">پول تا تأیید شما<br>دست هیچ‌کس نمی‌رسد.</h2>
+        <p class="mt-3 text-sm leading-7 text-sage-700">کارمزد واسط فقط {{ FEE_PERCENT|fa }}٪ است و در قبالش یک کارشناس، اکانت را قبل از رسیدن به دست شما امتحان می‌کند.</p>
+        <img src="{% static 'img/illustrations/safe.svg' %}" alt="" class="mt-8 hidden h-36 md:block">
+        <a href="{% url 'core:how' %}" class="btn-arrow mt-8">
+          ببین چطور کار می‌کند
+          <span class="btn-arrow__icon">{% icon "arrow-up-left" %}{% icon "arrow-up-left" %}</span>
+        </a>
+      </div>
+      <ol class="relative space-y-7 p-8 md:p-10">
+        <li class="flex gap-4">
+          <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-saffron-50 text-saffron-700">{% icon "wallet" %}</span>
+          <div><h3 class="font-sans font-semibold">۱. خریدار پول را به لوطی می‌دهد</h3><p class="mt-1 text-sm leading-7 text-espresso-500">مبلغ به کیف پول امانی می‌رود، نه حساب فروشنده.</p></div>
+        </li>
+        <li class="flex gap-4">
+          <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-ember-50 text-ember">{% icon "package" %}</span>
+          <div><h3 class="font-sans font-semibold">۲. فروشنده اطلاعات اکانت را به واسط می‌دهد</h3><p class="mt-1 text-sm leading-7 text-espresso-500">اطلاعات رمزنگاری می‌شود و فقط واسط و در نهایت خریدار آن را می‌بینند.</p></div>
+        </li>
+        <li class="flex gap-4">
+          <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-sage-50 text-sage-700">{% icon "scan-search" %}</span>
+          <div><h3 class="font-sans font-semibold">۳. واسط اکانت را امتحان می‌کند</h3><p class="mt-1 text-sm leading-7 text-espresso-500">ورود، مشخصات و تطابق با آگهی بررسی می‌شود.</p></div>
+        </li>
+        <li class="flex gap-4">
+          <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-sand text-espresso-700">{% icon "badge-check" %}</span>
+          <div><h3 class="font-sans font-semibold">۴. شما {{ INSPECTION_HOURS|fa }} ساعت فرصت بررسی دارید</h3><p class="mt-1 text-sm leading-7 text-espresso-500">اگر مشکلی بود، «گزارش مشکل» را بزنید؛ بررسی می‌کنیم و اگر حق با شما بود، پول برمی‌گردد.</p></div>
+        </li>
+      </ol>
+    </div>
+  </div>
+</div>
+</section>
+
+{# ─── تازه‌ترین آگهی‌ها ─── #}
+<section class="home-band">
+<div class="wrap">
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h2 class="font-display text-2xl font-bold">تازه‌ترین آگهی‌ها</h2>
+      <p class="mt-1 text-sm text-espresso-500">همه آگهی‌ها قبل از انتشار توسط تیم لوطی بررسی شده‌اند.</p>
+    </div>
+    <a href="{% url 'listings:list' %}" class="btn-arrow hidden sm:inline-flex">
+      همه آگهی‌ها
+      <span class="btn-arrow__icon">{% icon "arrow-up-left" %}{% icon "arrow-up-left" %}</span>
+    </a>
+  </div>
+  {% if fresh %}
+    {# ۱۲ آگهی: ۳، ۴ و ۶ ستون همه ردیف کامل می‌شوند؛ زیر md فقط ۶ تا #}
+    <div class="mt-6 grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 xl:gap-5 2xl:grid-cols-6 max-md:[&>*:nth-child(n+7)]:hidden">
+      {% for l in fresh %}{% include "components/listing_card.html" %}{% endfor %}
+    </div>
+    <a href="{% url 'listings:list' %}" class="btn-ghost mt-6 w-full sm:hidden">همه آگهی‌ها {% icon "arrow-left" "size-4" %}</a>
+  {% else %}
+    {% url 'listings:create_pick' as new_url %}
+    {% empty_state "هنوز آگهی‌ای منتشر نشده" "اولین نفری باش که اکانتش را با خیال راحت می‌فروشد." "add-post" new_url "ثبت اولین آگهی" %}
+  {% endif %}
+</div>
+</section>
+
+{% if deals %}
+{# ─── به‌صرفه‌ها ─── #}
+<section class="home-band">
+<div class="wrap">
+  <h2 class="font-display text-xl font-bold">ارزان‌ترین‌های همین حالا</h2>
+  <div class="no-scrollbar -mx-[var(--gutter)] mt-4 flex snap-x gap-3 overflow-x-auto px-[var(--gutter)] pb-2 lg:mx-0 lg:grid lg:grid-cols-4 lg:gap-4 lg:overflow-visible lg:px-0">
+    {% for l in deals %}
+      <a href="{{ l.get_absolute_url }}" class="flex min-w-[260px] snap-start items-center lg:min-w-0 gap-3 rounded-2xl border border-sand-200 bg-surface p-3 transition hover:border-sand-300 hover:shadow-soft">
+        <span class="grid size-12 shrink-0 place-items-center rounded-xl" style="background: {{ l.game.tone }}1a; color: {{ l.game.tone }}">{% icon l.game.icon "size-6" %}</span>
+        <span class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-medium">{{ l.title }}</span>
+          <span class="mt-0.5 block text-sm font-bold fa-num text-sage-700">{{ l.price|toman }}</span>
+        </span>
+        {% icon "chevron-left" "size-4 text-espresso-400" %}
+      </a>
+    {% endfor %}
+  </div>
+</div>
+</section>
+{% endif %}
+
+{# ─── چرا لوطی ─── #}
+<section class="home-band">
+<div class="wrap">
+  <h2 class="text-center font-display text-2xl font-bold">ریزه‌کاری‌هایی که خیالت را راحت می‌کند</h2>
+  <div class="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:gap-5">
+    <div class="rounded-2xl border border-sand-200 bg-surface p-6">
+      {% icon "heart-pulse" "size-6 text-ember" %}
+      <h3 class="mt-3 font-sans font-semibold">شناسنامه سلامت اکانت</h3>
+      <p class="mt-1.5 text-sm leading-7 text-espresso-500">مالک اول؟ ایمیل اصلی؟ سابقه بن؟ هر آگهی یک امتیاز سلامت شفاف دارد.</p>
+    </div>
+    <div class="rounded-2xl border border-sand-200 bg-surface p-6">
+      {% icon "gauge" "size-6 text-saffron-600" %}
+      <h3 class="mt-3 font-sans font-semibold">قیمت‌سنج بازار</h3>
+      <p class="mt-1.5 text-sm leading-7 text-espresso-500">کنار هر قیمت می‌بینی نسبت به آگهی‌های مشابه گران است یا منصفانه.</p>
+    </div>
+    <div class="rounded-2xl border border-sand-200 bg-surface p-6">
+      {% icon "message-square-lock" "size-6 text-sage" %}
+      <h3 class="mt-3 font-sans font-semibold">محافظ گفتگو</h3>
+      <p class="mt-1.5 text-sm leading-7 text-espresso-500">اگر کسی شماره یا آیدی بدهد تا بیرون از لوطی معامله کنید، خودکار پوشانده می‌شود.</p>
+    </div>
+    <div class="rounded-2xl border border-sand-200 bg-surface p-6">
+      {% icon "bell-ring" "size-6 text-ember" %}
+      <h3 class="mt-3 font-sans font-semibold">خبرم کن</h3>
+      <p class="mt-1.5 text-sm leading-7 text-espresso-500">جستجویت را ذخیره کن؛ به محض آمدن آگهی مطابق، اعلان می‌گیری.</p>
+    </div>
+    <div class="rounded-2xl border border-sand-200 bg-surface p-6">
+      {% icon "git-compare" "size-6 text-saffron-600" %}
+      <h3 class="mt-3 font-sans font-semibold">مقایسه کنار هم</h3>
+      <p class="mt-1.5 text-sm leading-7 text-espresso-500">تا سه آگهی را کنار هم بگذار و تفاوت‌ها را یک‌جا ببین.</p>
+    </div>
+    <div class="rounded-2xl border border-sand-200 bg-surface p-6">
+      {% icon "hand-coins" "size-6 text-sage" %}
+      <h3 class="mt-3 font-sans font-semibold">پیشنهاد قیمت</h3>
+      <p class="mt-1.5 text-sm leading-7 text-espresso-500">در آگهی‌های توافقی، قیمت پیشنهادی‌ات را بفرست؛ اگر پذیرفت، با همان قیمت امن بخر.</p>
+    </div>
+  </div>
+</div>
+</section>
+
+{# ─── دعوت به فروش ─── #}
+<section class="home-band">
+<div class="wrap">
+  <div class="relative overflow-hidden rounded-3xl bg-ink px-8 py-10 text-paper md:px-12">
+    <div class="absolute -left-20 -top-20 size-72 rounded-full bg-ember/25 blur-3xl"></div>
+    <div class="relative grid items-center gap-8 md:grid-cols-[1.4fr_1fr]">
+      <div>
+        <h2 class="font-display text-2xl font-bold leading-10 md:text-3xl">اکانتی داری که دیگر بازی‌اش نمی‌کنی؟</h2>
+        <p class="mt-3 max-w-md leading-8 text-paper/75">ثبت آگهی رایگان است. پولت را بعد از تأیید خریدار، مستقیم به کیف پولت واریز می‌کنیم و هر وقت خواستی به حساب بانکی‌ات برداشت کن.</p>
+        <a href="{% url 'listings:create_pick' %}" class="btn-push mt-7"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "plus" "size-5" %}ثبت آگهی رایگان</span></a>
+      </div>
+      <img src="{% static 'img/illustrations/add-post.svg' %}" alt="" class="mx-auto hidden h-48 md:block">
+    </div>
+  </div>
+</div>
+</section>
+{% endblock %}

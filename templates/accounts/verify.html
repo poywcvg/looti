@@ -1,0 +1,35 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}کد تأیید — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-5xl items-center justify-center px-4 py-10">
+  {# Form — uiverse.io/vinodjangid07/ordinary-stingray-51 #}
+  <form method="post" class="otp-form" x-data="otp(4)" autocomplete="off">{% csrf_token %}
+    <a href="{% url 'accounts:login' %}" class="otp-exit" aria-label="تغییر شماره">{% icon "x" "size-4" %}</a>
+    <img src="{% static 'img/illustrations/security-on.svg' %}" alt="" class="h-24">
+    <span class="otp-heading">کد تأیید را وارد کن</span>
+    <p class="otp-sub">کد ۴ رقمی به <span class="ltr inline-block font-semibold text-espresso">{{ phone|fa }}</span> فرستاده شد.
+      <a href="{% url 'accounts:login' %}" class="text-ember">ویرایش شماره</a></p>
+    <div class="otp-inputs" @paste="onPaste($event)">
+      {% for i in "0123" %}
+      <input class="otp-input fa-num" name="d" type="text" inputmode="numeric" maxlength="1" required aria-label="رقم {{ forloop.counter|fa }}"
+             @input="onInput($event, {{ i }})" @keydown="onKey($event, {{ i }})">
+      {% endfor %}
+    </div>
+    {% if debug_code %}
+    <div class="flex w-full items-center justify-between gap-3 rounded-xl border border-dashed border-saffron-600/40 bg-saffron-50 px-4 py-2.5 text-xs text-espresso-600">
+      <span class="flex items-center gap-1.5">{% icon "flask-conical" "size-4 text-saffron-700" %}نسخه آزمایشی — کد: <b class="fa-num text-sm tracking-widest">{{ debug_code|fa }}</b></span>
+      <button type="button" class="btn-ghost is-sm" @click="fill('{{ debug_code }}')">پر کن</button>
+    </div>
+    {% endif %}
+    {% if error %}<p class="field-error flex items-center gap-1.5 !mt-0">{% icon "circle-alert" "size-4" %}{{ error }}</p>{% endif %}
+    <button class="btn-push is-block"><span class="shadow"></span><span class="edge"></span><span class="front">ورود به لوطی</span></button>
+    <div class="otp-resend">
+      <span>کد را دریافت نکردی؟</span>
+      <button class="otp-resend-btn" name="resend" value="1" formnovalidate :disabled="resendIn > 0">
+        <span x-show="resendIn > 0">ارسال دوباره تا <span x-text="resendLabel"></span> ثانیه</span>
+        <span x-show="resendIn === 0" x-cloak>ارسال دوباره کد</span>
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}

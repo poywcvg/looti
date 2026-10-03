@@ -1,0 +1,16 @@
+{# نشان اعتماد فروشنده: حلقه پیشرفت امتیاز + سطح #}
+{% with s=u.trust_score lv=u.trust_level %}
+<div class="flex items-center gap-2.5" title="امتیاز اعتماد {{ s|fa }} از ۱۰۰">
+  <div class="relative size-11 shrink-0">
+    <svg viewBox="0 0 36 36" class="size-11 -rotate-90">
+      <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-sand-200)" stroke-width="3"/>
+      <circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-{% if lv.1 == 'sand' %}espresso-400{% else %}{{ lv.1 }}{% endif %})" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="{{ s }} 100"/>
+    </svg>
+    <span class="absolute inset-0 grid place-items-center text-xs font-bold fa-num">{{ s|fa }}</span>
+  </div>
+  <div class="leading-tight">
+    <div class="text-xs text-espresso-400">اعتماد</div>
+    <div class="text-sm font-semibold {% if lv.1 == 'sage' %}text-sage-700{% elif lv.1 == 'saffron' %}text-saffron-700{% else %}text-espresso-700{% endif %}">{{ lv.0 }}</div>
+  </div>
+</div>
+{% endwith %}

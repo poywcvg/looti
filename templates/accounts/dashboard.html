@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+{% block title %}داشبورد — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="wrap pt-8">
+  {# ─── خوشامد و خلاصه ─── #}
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-4">
+      {% include "components/avatar.html" with u=request.user size="size-14" %}
+      <div>
+        <h1 class="font-display text-2xl font-bold">سلام {{ request.user.display_name }}</h1>
+        <p class="mt-1 text-sm text-espresso-500">همه آگهی‌ها، خریدها و فروش‌هایت این‌جاست.</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="{% url 'accounts:wallet' %}" class="btn-ghost">{% icon "wallet" "size-4" %}<span class="fa-num">{{ request.user.wallet_balance|toman }}</span> تومان</a>
+      <a href="{% url 'listings:create_pick' %}" class="btn-grad is-sm">{% icon "plus" "size-4" %}آگهی تازه</a>
+    </div>
+  </div>
+
+  {# ─── معامله‌های باز ─── #}
+  {% if open_orders %}
+  <section class="mt-8">
+    <div class="mb-3 flex items-center gap-2 text-sm font-semibold text-espresso-500">{% icon "vault" "size-4 text-saffron-700" %}معامله‌های در جریان</div>
+    <div class="no-scrollbar -mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
+      {% for o in open_orders %}
+      <a href="{{ o.get_absolute_url }}" class="w-72 shrink-0 snap-start rounded-2xl border border-sand-200 bg-surface p-4 transition hover:shadow-soft">
+        <div class="flex items-center justify-between gap-2">
+          <span class="chip is-{{ o.status_tone }}">{% if o.buyer_id == request.user.pk %}خرید{% else %}فروش{% endif %}</span>
+          <span class="ltr latin text-xs text-espresso-400">{{ o.code }}</span>
+        </div>
+        <div class="mt-3 line-clamp-1 font-medium">{{ o.listing.title }}</div>
+        <div class="mt-1 text-xs text-espresso-500">{{ o.get_status_display }}</div>
+        <div class="mt-3 flex gap-1">{% for s in o.steps %}<span class="h-1 flex-1 rounded-full {% if s.done %}bg-sage{% elif s.current %}{% if o.status == 'disputed' %}bg-danger{% else %}bg-warn{% endif %}{% else %}bg-sand-200{% endif %}"></span>{% endfor %}</div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  {# ─── زبانه‌ها ─── #}
+  <nav class="no-scrollbar hdr-follow is-flush sticky top-[4.5rem] z-20 -mx-4 mt-8 flex gap-1 overflow-x-auto border-b border-sand-200 bg-cream/95 px-4 backdrop-blur">
+    {% for key, label, ic in tabs %}
+    <a href="?tab={{ key }}" class="relative flex shrink-0 items-center gap-2 px-3 py-3.5 text-sm transition {% if tab == key %}font-semibold text-ember{% else %}text-espresso-500 hover:text-espresso{% endif %}">
+      {% icon ic "size-4" %}{{ label }}
+      {% if tab == key %}<span class="absolute inset-x-2 -bottom-px h-0.5 rounded-full bg-ember"></span>{% endif %}
+    </a>
+    {% endfor %}
+  </nav>
+
+  <div class="mt-6 animate-fade-up">
+  {% if tab == "listings" %}
+    <div class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
+      <a href="?tab=listings" class="chip {% if not status_filter %}is-ember{% else %}is-muted{% endif %} shrink-0 !px-3 !py-1.5">همه</a>
+      {% for s, label, count in statuses %}{% if count %}
+      <a href="?tab=listings&status={{ s }}" class="chip {% if status_filter == s %}is-ember{% else %}is-muted{% endif %} shrink-0 !px-3 !py-1.5">{{ label }} <span class="fa-num opacity-70">{{ count|fa }}</span></a>
+      {% endif %}{% endfor %}
+    </div>
+    <div class="mt-5 space-y-3">
+      {% for l in items %}
+      <div class="flex flex-col gap-4 rounded-2xl border border-sand-200 bg-surface p-4 sm:flex-row sm:items-center">
+        <a href="{{ l.get_absolute_url }}" class="flex min-w-0 flex-1 items-center gap-4">
+          {% with c=l.cover %}
+          {% if c %}<img src="{{ c.image.url }}" alt="" class="size-16 shrink-0 rounded-xl object-cover">
+          {% else %}<span class="grid size-16 shrink-0 place-items-center rounded-xl" style="background: {{ l.game.tone }}1a; color: {{ l.game.tone }}">{% icon l.game.icon "size-7" "1.5" %}</span>{% endif %}
+          {% endwith %}
+          <div class="min-w-0">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="truncate font-medium">{{ l.title }}</span>
+              <span class="chip {% if l.status == 'active' %}is-sage{% elif l.status == 'rejected' %}is-danger{% elif l.status == 'pending' or l.status == 'reserved' %}is-warn{% else %}is-muted{% endif %}">{{ l.get_status_display }}</span>
+              {% if l.is_boosted %}<span class="chip is-saffron">{% icon "rocket" "size-3" %}نردبان</span>{% endif %}
+            </div>
+            <div class="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-espresso-400">
+              <span class="fa-num font-semibold text-espresso">{{ l.price|toman }} تومان</span>
+              <span class="flex items-center gap-1">{% icon "eye" "size-3.5" %}<span class="fa-num">{{ l.views|fa }}</span> بازدید</span>
+              <span class="flex items-center gap-1">{% icon "bookmark" "size-3.5" %}<span class="fa-num">{{ l.bookmarks.count|fa }}</span></span>
+              <span>{{ l.bumped_at|ago }}</span>
+            </div>
+            {% if l.status == 'rejected' and l.reject_reason %}<p class="mt-2 flex items-start gap-1.5 text-xs text-ember-700">{% icon "info" "size-3.5 mt-0.5 shrink-0" %}{{ l.reject_reason }}</p>{% endif %}
+          </div>
+        </a>
+        <div class="flex shrink-0 flex-wrap items-center gap-2">
+          {% if l.status == 'active' %}
+          <form method="post" action="{% url 'listings:boost' l.code %}" data-confirm="نردبان این آگهی؟" data-confirm-text="{{ boost_price|toman }} تومان از کیف پول کم می‌شود و آگهی به بالای فهرست می‌رود." data-confirm-ok="نردبان کن">
+            {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn-ghost is-sm">{% icon "rocket" "size-4" %}نردبان</button>
+          </form>
+          {% endif %}
+          {% if l.status == 'active' or l.status == 'pending' or l.status == 'rejected' %}
+          <a href="{% url 'listings:edit' l.code %}" class="btn-ghost is-sm">{% icon "pencil" "size-4" %}ویرایش</a>
+          {% endif %}
+          {% if l.status == 'active' or l.status == 'archived' %}
+          <form method="post" action="{% url 'listings:archive' l.code %}">
+            {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <button class="btn-ghost is-sm" title="{% if l.status == 'active' %}پنهان کردن{% else %}فعال‌سازی دوباره{% endif %}">{% if l.status == 'active' %}{% icon "eye-off" "size-4" %}پنهان{% else %}{% icon "archive-restore" "size-4" %}فعال کن{% endif %}</button>
+          </form>
+          {% endif %}
+        </div>
+      </div>
+      {% empty %}
+        {% url 'listings:create_pick' as new_url %}
+        {% empty_state "هنوز آگهی‌ای اینجا نیست" "اکانتی داری که دیگر بازی‌اش نمی‌کنی؟ در دو دقیقه آگهی‌اش کن." "add-post" new_url "ثبت اولین آگهی" %}
+      {% endfor %}
+    </div>
+
+  {% elif tab == "purchases" %}
+    <div class="space-y-3">
+      {% for o in items %}{% include "components/order_row.html" with other=o.seller other_label="فروشنده" %}
+      {% empty %}{% url 'listings:list' as list_url %}{% empty_state "هنوز خریدی نکرده‌ای" "هر خرید در لوطی با واسط امن انجام می‌شود؛ پولت تا تأیید خودت پیش ما می‌ماند." "video-games" list_url "دیدن آگهی‌ها" %}{% endfor %}
+    </div>
+
+  {% elif tab == "sales" %}
+    <div class="space-y-3">
+      {% for o in items %}{% include "components/order_row.html" with other=o.buyer other_label="خریدار" %}
+      {% empty %}{% url 'listings:create_pick' as new_url %}{% empty_state "هنوز فروشی ثبت نشده" "وقتی کسی اکانتت را بخرد، مراحل تحویل امن از همین‌جا پیگیری می‌شود." "winners" new_url "ثبت آگهی" %}{% endfor %}
+    </div>
+
+  {% elif tab == "offers" %}
+    <div class="grid gap-8 lg:grid-cols-2">
+      <section>
+        <h2 class="mb-3 flex items-center gap-2 font-sans font-bold">{% icon "inbox" "size-5 text-ember" %}پیشنهادهای دریافتی</h2>
+        <div class="space-y-3">
+          {% for o in received %}
+          <div class="rounded-2xl border border-sand-200 bg-surface p-4">
+            <div class="flex items-center justify-between gap-3">
+              <a href="{{ o.listing.get_absolute_url }}" class="truncate text-sm text-espresso-500 hover:text-ember">{{ o.listing.title }}</a>
+              <span class="chip {% if o.status == 'accepted' %}is-sage{% elif o.status == 'declined' %}is-muted{% else %}is-warn{% endif %}">{{ o.get_status_display }}</span>
+            </div>
+            <div class="mt-3 flex items-end justify-between gap-3">
+              <div>
+                <div class="text-xs text-espresso-400">{{ o.buyer.display_name }}<span class="sep" aria-hidden="true"></span>{{ o.created_at|ago }}</div>
+                <div class="mt-1 font-display text-xl font-bold fa-num">{{ o.amount|toman }} <span class="text-xs font-normal text-espresso-400">تومان</span></div>
+                <div class="text-[11px] text-espresso-400">قیمت آگهی: <span class="fa-num">{{ o.listing.price|toman }}</span><span class="sep" aria-hidden="true"></span><span class="fa-num">{{ o.amount|percent_of:o.listing.price|fa }}٪</span></div>
+              </div>
+              {% if o.status == 'pending' %}
+              <div class="flex gap-2">
+                <form method="post" action="{% url 'listings:offer_respond' o.pk %}">{% csrf_token %}<input type="hidden" name="decision" value="decline"><button class="btn-ghost is-sm is-danger">رد</button></form>
+                <form method="post" action="{% url 'listings:offer_respond' o.pk %}" data-confirm="پیشنهاد را می‌پذیری؟" data-confirm-text="خریدار می‌تواند آگهی را با همین مبلغ از طریق معامله امن بخرد." data-confirm-tone="sage" data-confirm-ok="بپذیر">{% csrf_token %}<input type="hidden" name="decision" value="accept"><button class="btn-grad is-sage is-sm">{% icon "check" "size-4" %}بپذیر</button></form>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% empty %}
+          <p class="rounded-2xl border border-dashed border-sand-300 p-6 text-center text-sm text-espresso-400">برای آگهی‌های «قابل مذاکره» پیشنهاد قیمت دریافت می‌کنی.</p>
+          {% endfor %}
+        </div>
+      </section>
+      <section>
+        <h2 class="mb-3 flex items-center gap-2 font-sans font-bold">{% icon "send" "size-5 text-sage-700" %}پیشنهادهای من</h2>
+        <div class="space-y-3">
+          {% for o in sent %}
+          <a href="{{ o.listing.get_absolute_url }}" class="flex items-center justify-between gap-3 rounded-2xl border border-sand-200 bg-surface p-4 transition hover:shadow-soft">
+            <div class="min-w-0">
+              <div class="truncate text-sm">{{ o.listing.title }}</div>
+              <div class="mt-1 font-display font-bold fa-num">{{ o.amount|toman }} <span class="text-xs font-normal text-espresso-400">تومان</span></div>
+            </div>
+            <span class="chip {% if o.status == 'accepted' %}is-sage{% elif o.status == 'declined' %}is-muted{% else %}is-warn{% endif %}">{% if o.status == 'accepted' %}{% icon "shopping-cart" "size-3.5" %}الان بخر{% else %}{{ o.get_status_display }}{% endif %}</span>
+          </a>
+          {% empty %}
+          <p class="rounded-2xl border border-dashed border-sand-300 p-6 text-center text-sm text-espresso-400">هنوز پیشنهادی نداده‌ای.</p>
+          {% endfor %}
+        </div>
+      </section>
+    </div>
+
+  {% elif tab == "bookmarks" %}
+    <div class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
+      {% for l in items %}{% include "components/listing_card.html" with show_actions=True bookmarked=True %}
+      {% empty %}<div class="col-span-full">{% url 'listings:list' as list_url %}{% empty_state "هنوز چیزی ذخیره نکردی" "روی دکمه ذخیره در هر آگهی بزن تا این‌جا بیاید." "select-character" list_url "دیدن آگهی‌ها" %}</div>{% endfor %}
+    </div>
+
+  {% elif tab == "searches" %}
+    <div class="space-y-3">
+      {% for s in items %}
+      <div class="flex items-center gap-4 rounded-2xl border border-sand-200 bg-surface p-4">
+        <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-saffron-50 text-saffron-700">{% icon "bell-ring" "size-5" %}</span>
+        <a href="{{ s.get_absolute_url }}" class="min-w-0 flex-1">
+          <div class="truncate font-medium">{{ s.title }}</div>
+          <div class="text-xs text-espresso-400">از {{ s.created_at|ago }}<span class="sep" aria-hidden="true"></span>آگهی‌های تازه را خبر می‌دهیم</div>
+        </a>
+        <a href="{{ s.get_absolute_url }}" class="btn-ghost is-sm hidden sm:inline-flex">{% icon "search" "size-4" %}نتایج</a>
+        <form method="post" action="{% url 'listings:delete_search' s.pk %}" data-confirm="این هشدار حذف شود؟" data-confirm-tone="ember" data-confirm-ok="حذف کن">
+          {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button class="btn-ghost is-sm is-danger" aria-label="حذف">{% icon "trash-2" "size-4" %}</button>
+        </form>
+      </div>
+      {% empty %}
+        {% url 'listings:list' as list_url %}
+        {% empty_state "هشدار جستجویی نداری" "در صفحه آگهی‌ها فیلترهایت را بچین و «خبرم کن» را بزن؛ آگهی مطابق که آمد، اعلان می‌گیری." "notifications" list_url "رفتن به جستجو" %}
+      {% endfor %}
+    </div>
+  {% endif %}
+  </div>
+</div>
+{% endblock %}

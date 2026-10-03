@@ -1,0 +1,22 @@
+{# ردیف سفارش امانی؛ other = طرف مقابل #}
+<a href="{{ o.get_absolute_url }}" class="flex items-center gap-4 rounded-2xl border border-sand-200 bg-surface p-4 transition hover:border-sand-300 hover:shadow-soft">
+  <span class="grid size-12 shrink-0 place-items-center rounded-xl" style="background: {{ o.listing.game.tone }}1a; color: {{ o.listing.game.tone }}">{% icon o.listing.game.icon "size-6" %}</span>
+  <div class="min-w-0 flex-1">
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="truncate font-medium">{{ o.listing.title }}</span>
+      <span class="chip is-{{ o.status_tone }}">{{ o.get_status_display }}</span>
+    </div>
+    <div class="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-espresso-400">
+      <span class="ltr latin">{{ o.code }}</span>
+      {% if other %}<span>{{ other_label }}: {{ other.display_name }}</span>{% endif %}
+      <span>{{ o.created_at|ago }}</span>
+    </div>
+    {% if o.is_open %}
+    <div class="mt-2.5 flex max-w-xs gap-1">{% for s in o.steps %}<span class="h-1 flex-1 rounded-full {% if s.done %}bg-sage{% elif s.current %}{% if o.status == 'disputed' %}bg-danger{% else %}bg-warn{% endif %}{% else %}bg-sand-200{% endif %}"></span>{% endfor %}</div>
+    {% endif %}
+  </div>
+  <div class="text-left">
+    <div class="font-display font-bold fa-num">{% if other_label == "خریدار" %}{{ o.seller_payout|toman }}{% else %}{{ o.buyer_total|toman }}{% endif %}</div>
+    <div class="text-[11px] text-espresso-400">تومان</div>
+  </div>
+</a>

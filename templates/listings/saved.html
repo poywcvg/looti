@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}ذخیره‌ها — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="wrap pt-6">
+  <div class="flex items-end justify-between gap-3">
+    <div>
+      <h1 class="flex items-center gap-2 font-display text-xl font-bold sm:text-2xl md:text-3xl">{% icon "bookmark" "size-6 text-ember" %}ذخیره‌ها</h1>
+      <p class="mt-1 text-xs text-espresso-500 sm:text-sm">هر آگهی که ذخیره کنی، این‌جا می‌ماند.</p>
+    </div>
+    {% if count %}<p class="shrink-0 text-sm text-espresso-500"><span class="me-1 font-display text-lg font-bold text-espresso fa-num">{{ count|fa }}</span>آگهی</p>{% endif %}
+  </div>
+
+  {% if games|length > 1 %}
+  <nav class="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4 pb-1">
+    <a href="{% url 'listings:saved' %}" class="chip shrink-0 !px-3.5 !py-2 {% if not game %}is-ember{% else %}is-muted{% endif %}">{% icon "layout-grid" "size-4" %}همه</a>
+    {% for g in games %}
+    <a href="?game={{ g.slug }}" class="chip shrink-0 !px-3.5 !py-2 {% if game == g %}text-white{% else %}is-muted{% endif %}" {% if game == g %}style="background: {{ g.tone }}"{% endif %}>{% icon g.icon "size-4" %}{{ g.name }}</a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+
+  {% if items %}
+  <div class="lgrid mt-5">
+    {% for l in items %}{% include "components/listing_card.html" with show_actions=True %}{% endfor %}
+  </div>
+  {% elif not closed %}
+    {% url 'listings:list' as list_url %}
+    {% empty_state "هنوز چیزی ذخیره نکردی" "روی دکمه ذخیره در هر آگهی بزن تا این‌جا بیاید." "select-character" list_url "دیدن آگهی‌ها" %}
+  {% endif %}
+
+  {% if closed %}
+  <h2 class="mt-10 flex items-center gap-2 text-sm font-semibold text-espresso-500">{% icon "archive" "size-4" %}دیگر در دسترس نیست</h2>
+  <div class="lgrid mt-3 opacity-60 grayscale-[.6]">
+    {% for l in closed %}{% include "components/listing_card.html" with show_actions=True %}{% endfor %}
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

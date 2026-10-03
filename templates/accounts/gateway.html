@@ -1,0 +1,30 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}درگاه پرداخت — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="mx-auto grid max-w-md px-4 pt-12">
+  <div class="panel overflow-hidden">
+    <div class="flex items-center justify-between bg-ink px-6 py-4 text-paper">
+      <span class="flex items-center gap-2 font-semibold">{% icon "landmark" "size-5" %}درگاه پرداخت آزمایشی</span>
+      <span class="chip bg-white/10 text-paper">{% icon "lock" "size-3.5" %}امن</span>
+    </div>
+    <div class="p-6">
+      <img src="{% static 'img/illustrations/online-payments.svg' %}" alt="" class="mx-auto h-32">
+      <dl class="mt-6 space-y-3 text-sm">
+        <div class="flex justify-between"><dt class="text-espresso-400">پذیرنده</dt><dd class="font-medium">{{ SITE_NAME }}</dd></div>
+        <div class="flex justify-between"><dt class="text-espresso-400">بابت</dt><dd class="font-medium">{% if pay.order %}سفارش امانی <span class="ltr latin">{{ pay.order.code }}</span>{% else %}شارژ کیف پول{% endif %}</dd></div>
+        {% if pay.order %}<div class="flex justify-between gap-4"><dt class="shrink-0 text-espresso-400">اکانت</dt><dd class="truncate">{{ pay.order.listing.title }}</dd></div>{% endif %}
+      </dl>
+      <div class="mt-5 rounded-2xl bg-cream p-4 text-center">
+        <div class="text-xs text-espresso-400">مبلغ قابل پرداخت</div>
+        <div class="mt-1 font-display text-3xl font-black fa-num">{{ pay.amount|toman }} <span class="text-sm font-normal text-espresso-400">تومان</span></div>
+      </div>
+      <p class="mt-4 flex items-start gap-2 text-xs leading-6 text-espresso-500">{% icon "info" "size-4 shrink-0 text-saffron-700" %}این نسخه نمایشی است و پولی جابه‌جا نمی‌شود. در نسخه عملیاتی، این صفحه درگاه بانکی شاپرکی است.</p>
+      <form method="post" class="mt-6 grid grid-cols-[1fr_auto] gap-3" x-data="{ busy: false }" @submit="busy ? $event.preventDefault() : (busy = true)">
+        {% csrf_token %}
+        <button name="result" value="ok" class="btn-push is-sage is-block" :class="busy && 'pointer-events-none opacity-60'"><span class="shadow"></span><span class="edge"></span><span class="front"><span x-show="!busy" class="flex items-center gap-2">{% icon "circle-check" "size-5" %}پرداخت موفق</span><span x-show="busy" x-cloak class="flex">{% include "components/loader.html" with cls="text-[.5rem] text-white" label="در حال پرداخت" %}</span></span></button>
+        <button name="result" value="cancel" class="btn-ghost is-danger" :class="busy && 'pointer-events-none opacity-60'">انصراف</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

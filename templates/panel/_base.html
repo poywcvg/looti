@@ -1,0 +1,82 @@
+{% extends "base.html" %}{% load adm %}
+{% block title %}{% block page_title %}پنل مدیریت{% endblock %} — پنل مدیریت {{ SITE_NAME }}{% endblock %}
+{% block body_class %}min-h-dvh adm-body{% endblock %}
+{% block header %}{% endblock %}
+{% block footer %}{% endblock %}
+{% block tabbar %}{% endblock %}
+{% block content %}
+<div class="adm" x-data="{ side: false }" @keydown.escape.window="side = false">
+
+  {# ═══ نوار کناری — روی دسکتاپ ثابت، روی موبایل کشوی کناری ═══ #}
+  <aside id="adm-side" class="adm-side" :class="{ 'is-open': side }" aria-label="ناوبری پنل مدیریت">
+    <div class="adm-brand">
+      <a href="{% url 'panel:dashboard' %}" class="adm-brand-mark" aria-label="نمای کلی پنل">{% logo_mark "size-9" %}</a>
+      <div class="flex min-w-0 flex-col">
+        <span class="font-display text-lg font-black leading-7 text-[#FFF6EE]">{{ SITE_NAME }}</span>
+        <span class="adm-pill">{% icon "shield-check" "size-3" %}پنل مدیریت</span>
+      </div>
+      <button type="button" class="adm-user-act ms-auto lg:hidden" @click="side = false" aria-label="بستن منو">{% icon "x" "size-5" %}</button>
+    </div>
+
+    <nav class="adm-nav">
+      <div class="adm-nav-label">نمای کلی</div>
+      {% adm_link "dashboard" "داشبورد" "layout-dashboard" %}
+      {% adm_link "stats" "آمار و گزارش" "chart-no-axes-column" %}
+
+      <div class="adm-nav-label">کارهای منتظر</div>
+      {% adm_link "verify" "بررسی اکانت" "scan-search" badge=counts.verify tone="warn" %}
+      {% adm_link "disputes" "حل مشکل" "scale" badge=counts.disputes tone="danger" %}
+      {% adm_link "listings" "تأیید آگهی" "megaphone" badge=counts.listings tone="warn" %}
+      {% adm_link "reports" "گزارش‌های کاربران" "flag" badge=counts.reports %}
+
+      <div class="adm-nav-label">مدیریت</div>
+      {% adm_link "orders" "معامله‌ها" "receipt-text" match="order" %}
+      {% adm_link "users" "کاربران" "users-round" match="user" %}
+      {% adm_link "listings_all" "همه آگهی‌ها" "layout-grid" %}
+
+      <div class="adm-nav-label">سایت</div>
+      {% adm_link "settings" "تنظیمات و بازی‌ها" "sliders-horizontal" %}
+      {% adm_link "activity" "فعالیت کارشناسان" "history" %}
+    </nav>
+
+    <div class="adm-user">
+      <div class="flex items-center gap-3">
+        {% include "components/avatar.html" with u=request.user size="size-9" %}
+        <div class="min-w-0 flex-1">
+          <div class="truncate text-sm font-semibold text-[#FFF6EE]">{{ request.user.display_name|default:request.user }}</div>
+          <div class="text-[11px] text-[#9C887B]">{% if request.user.is_superuser %}مدیر کل{% else %}کارشناس واسط{% endif %}</div>
+        </div>
+      </div>
+      <div class="mt-3 flex items-center gap-1 border-t border-white/[.07] pt-3">
+        <a href="{% url 'core:home' %}" class="adm-user-act !w-auto flex-1 !grid-flow-col gap-1.5 px-2 text-xs" title="مشاهده سایت">{% icon "external-link" "size-4" %}مشاهده سایت</a>
+        <a href="{% url 'accounts:dashboard' %}" class="adm-user-act" title="حساب من" aria-label="حساب من">{% icon "circle-user-round" "size-[18px]" %}</a>
+        <form method="post" action="{% url 'accounts:logout' %}">{% csrf_token %}
+          <button class="adm-user-act" title="خروج" aria-label="خروج">{% icon "log-out" "size-[18px]" %}</button>
+        </form>
+      </div>
+    </div>
+  </aside>
+  <div class="adm-scrim" x-show="side" x-transition.opacity x-cloak @click="side = false"></div>
+
+  {# ═══ ستون محتوا ═══ #}
+  <div class="flex min-w-0 flex-col">
+    <header class="adm-top">
+      <button type="button" class="icon-btn lg:hidden" @click="side = true" aria-label="باز کردن منو" aria-controls="adm-side" :aria-expanded="side">{% icon "menu" "size-5" %}</button>
+      <div class="adm-crumb hidden md:flex">
+        <a href="{% url 'panel:dashboard' %}" class="hover:text-ember">پنل مدیریت</a>{% icon "chevron-left" "size-3.5" %}<b>{% block crumb %}داشبورد{% endblock %}</b>
+      </div>
+      <form action="{% url 'panel:search' %}" class="adm-search md:ms-auto" role="search" x-data
+            @keydown.window="if ($event.key === '/' && !['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) { $event.preventDefault(); $refs.q.focus() }">
+        {% icon "search" "size-4 shrink-0" %}
+        <input x-ref="q" type="search" name="q" value="{{ q|default:'' }}" placeholder="کد سفارش، موبایل، نام کاربری یا آگهی…" aria-label="جستجو در پنل" autocomplete="off">
+        <span class="kbd hidden sm:inline-grid" aria-hidden="true">/</span>
+      </form>
+      {% include "components/theme_switch.html" with cls="hidden sm:inline-block shrink-0" %}
+    </header>
+
+    <div class="adm-content adm-enter">
+      {% block panel %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}

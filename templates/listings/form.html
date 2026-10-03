@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}{% if listing %}ویرایش آگهی{% else %}آگهی اکانت {{ game.name }}{% endif %} — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="wrap pt-8">
+  {% if listing %}
+  <a href="{{ listing.get_absolute_url }}" class="inline-flex items-center gap-1.5 text-sm text-espresso-500 hover:text-ember">{% icon "arrow-right" "size-4" %}بازگشت به آگهی</a>
+  {% else %}
+  <a href="{% url 'listings:create_pick' %}" class="inline-flex items-center gap-1.5 text-sm text-espresso-500 hover:text-ember">{% icon "arrow-right" "size-4" %}تغییر بازی</a>
+  {% endif %}
+  <div class="mt-3 flex items-center gap-3">
+    <span class="grid size-12 place-items-center rounded-2xl" style="background: {{ game.tone }}1a; color: {{ game.tone }}">{% icon game.icon "size-6" %}</span>
+    <div>
+      {% if not listing %}<span class="chip is-ember">مرحله ۲ از ۲</span>{% endif %}
+      <h1 class="mt-1 font-display text-2xl font-bold">{% if listing %}ویرایش آگهی{% else %}آگهی اکانت {{ game.name }}{% endif %}</h1>
+    </div>
+  </div>
+
+  {% if form.errors or image_error %}
+  {% alert variant="destructive" appearance="light" title="چند مورد نیاز به اصلاح دارد" close=True cls="mt-6" %}فیلدهای قرمز را ببین و دوباره ثبت کن.{% if form.non_field_errors %} {{ form.non_field_errors|join:" " }}{% endif %}{% endalert %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" novalidate class="mt-8 grid gap-8 lg:grid-cols-[1fr_340px]"
+        x-data="feeCalc({ percent: {{ fee_percent }}, min: 30000, max: 2000000, price: 0, payer: '{{ form.fee_payer.value|default:'buyer' }}' })">
+    {% csrf_token %}
+    <div class="space-y-6">
+      {# ۱. معرفی #}
+      <section class="panel p-6">
+        <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۱</span>معرفی اکانت</h2>
+        <div class="mt-6 space-y-5">
+          <div x-data="{ n: {{ form.title.value|default:''|length }} }">
+            <div class="field">
+              <input class="field-input {% if form.title.errors %}is-invalid{% endif %}" name="title" id="f-title" placeholder=" " maxlength="80" value="{{ form.title.value|default:'' }}" @input="n = $event.target.value.length; $dispatch('title-change', $event.target.value)">
+              <label class="field-label" for="f-title">عنوان آگهی</label>
+            </div>
+            {% for e in form.title.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint flex justify-between"><span>مهم‌ترین ویژگی را بنویس؛ مثلاً «لول ۲۰۰ با ۸۵ اسکین و بتل‌پس کامل»</span><span class="fa-num" x-text="gm.toFa(n) + '/۸۰'"></span></p>{% endfor %}
+          </div>
+          <div>
+            <div class="field">
+              <textarea class="field-input !min-h-[160px] {% if form.description.errors %}is-invalid{% endif %}" name="description" id="f-desc" placeholder=" " maxlength="3000">{{ form.description.value|default:'' }}</textarea>
+              <label class="field-label" for="f-desc">توضیحات</label>
+            </div>
+            {% for e in form.description.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">اسکین‌های کمیاب، تاریخ ساخت، دلیل فروش. شماره تماس و آیدی ننویس؛ خودکار حذف می‌شود.</p>{% endfor %}
+          </div>
+        </div>
+      </section>
+
+      {# ۲. مشخصات #}
+      <section class="panel p-6">
+        <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۲</span>مشخصات</h2>
+        <div class="mt-6">
+          <div class="mb-2 text-sm text-espresso-500">پلتفرم</div>
+          {# Radio — uiverse.io/00Kubi/smooth-termite-31 #}
+          <div class="seg">
+            {% for k, v in form.fields.platform.choices %}{% if k %}
+            <label class="seg-item"><input type="radio" name="platform" value="{{ k }}" {% if form.platform.value == k or not form.platform.value and forloop.first %}checked{% endif %}><span class="seg-name">{{ v }}</span></label>
+            {% endif %}{% endfor %}
+          </div>
+          {% for e in form.platform.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+        </div>
+        <div class="mt-6 grid gap-5 sm:grid-cols-2">
+          <div>
+            <div class="field">
+              <input class="field-input fa-num ltr text-left" type="number" min="0" name="level" id="f-level" placeholder=" " value="{{ form.level.value|default:'' }}">
+              <label class="field-label" for="f-level">لول / رنک عددی</label>
+            </div>
+            {% for e in form.level.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+          </div>
+          <div>
+            <div class="field">
+              <input class="field-input" name="region" id="f-region" placeholder=" " maxlength="40" value="{{ form.region.value|default:'' }}">
+              <label class="field-label" for="f-region">ریجن / سرور</label>
+            </div>
+          </div>
+          {% for bf in form.bound_attr_fields %}{% with spec=bf.field.spec %}
+          <div class="{% if spec.type == 'bool' %}flex items-center{% endif %}">
+            {% if spec.type == "bool" %}
+              <input type="checkbox" class="gm-check" id="{{ bf.id_for_label }}" name="{{ bf.html_name }}" value="on" {% if bf.value %}checked{% endif %}>
+              <label class="gm-check-label" for="{{ bf.id_for_label }}"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>{{ bf.label }}</label>
+            {% elif spec.type == "select" %}
+              <div class="field">
+                <select class="field-input" name="{{ bf.html_name }}" id="{{ bf.id_for_label }}">
+                  {% for v, t in bf.field.choices %}<option value="{{ v }}" {% if bf.value|stringformat:'s' == v %}selected{% endif %}>{{ t }}</option>{% endfor %}
+                </select>
+                <label class="field-label" for="{{ bf.id_for_label }}">{{ bf.label }}</label>
+              </div>
+            {% else %}
+              <div class="field">
+                <input class="field-input {% if spec.type == 'number' %}fa-num ltr text-left{% endif %}" {% if spec.type == 'number' %}type="number" min="0"{% endif %} name="{{ bf.html_name }}" id="{{ bf.id_for_label }}" placeholder=" " value="{{ bf.value|default_if_none:'' }}">
+                <label class="field-label" for="{{ bf.id_for_label }}">{{ bf.label }}</label>
+                {% if spec.unit %}<span class="field-suffix">{{ spec.unit }}</span>{% endif %}
+              </div>
+            {% endif %}
+            {% for e in bf.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+          </div>
+          {% endwith %}{% endfor %}
+        </div>
+      </section>
+
+      {# ۳. امنیت اکانت #}
+      <section class="panel p-6">
+        <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۳</span>امنیت و مالکیت</h2>
+        <p class="mt-1 text-sm text-espresso-500">این‌ها «شناسنامه سلامت» آگهی را می‌سازند و خریدارها قبل از هر چیز نگاهش می‌کنند. صادق باش؛ واسط بررسی می‌کند.</p>
+        <div class="mt-5 grid gap-3 sm:grid-cols-3">
+          {% for v, t in form.fields.email_access.choices %}
+          <label class="cursor-pointer">
+            <input type="radio" name="email_access" value="{{ v }}" class="peer sr-only" {% if form.email_access.value == v %}checked{% endif %}>
+            <span class="flex h-full flex-col gap-2 rounded-xl border-2 border-sand-200 p-4 text-sm transition peer-checked:border-ember peer-checked:bg-ember-50/50 peer-focus-visible:ring-2 peer-focus-visible:ring-ember-200 hover:border-sand-300">
+              {% if v == 'full' %}{% icon "mail-check" "size-5 text-sage-700" %}{% elif v == 'changeable' %}{% icon "mail" "size-5 text-saffron-700" %}{% else %}{% icon "mail-x" "size-5 text-espresso-400" %}{% endif %}
+              {{ t }}
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        <div class="mt-5 space-y-3">
+          <div>
+            <input type="checkbox" class="gm-check" id="f-first" name="first_owner" {% if form.first_owner.value %}checked{% endif %}>
+            <label class="gm-check-label" for="f-first"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>اکانت را خودم ساخته‌ام (مالک اول)</label>
+          </div>
+          <div>
+            <input type="checkbox" class="gm-check" id="f-ban" name="ban_free" {% if form.ban_free.value %}checked{% endif %}>
+            <label class="gm-check-label" for="f-ban"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>هیچ سابقه بن یا محدودیتی ندارد</label>
+          </div>
+          <div>
+            <input type="checkbox" class="gm-check" id="f-2fa" name="has_2fa" {% if form.has_2fa.value %}checked{% endif %}>
+            <label class="gm-check-label" for="f-2fa"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>تأیید دومرحله‌ای قابل انتقال به خریدار است</label>
+          </div>
+        </div>
+      </section>
+
+      {# ۴. تصاویر #}
+      <section class="panel p-6" x-data="dropzone(6)">
+        <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۴</span>اسکرین‌شات‌ها</h2>
+        <p class="mt-1 text-sm text-espresso-500">تا ۶ تصویر، هرکدام حداکثر ۴ مگابایت. آگهی عکس‌دار تا سه برابر بیشتر دیده می‌شود.</p>
+        {% if listing and listing.images.all %}
+        <div class="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-6">
+          {% for img in listing.images.all %}
+          <label class="group relative aspect-square cursor-pointer overflow-hidden rounded-xl" x-data="{ rm: false }">
+            <img src="{{ img.image.url }}" alt="" class="size-full object-cover transition" :class="rm && 'opacity-30 grayscale'">
+            <input type="checkbox" name="remove_image" value="{{ img.pk }}" class="sr-only" x-model="rm">
+            <span class="absolute left-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-surface/95 shadow-soft" :class="rm ? 'text-danger' : 'text-espresso-500'">{% icon "trash-2" "size-3.5" %}</span>
+            <span x-show="rm" x-cloak class="absolute inset-x-0 bottom-0 bg-danger py-0.5 text-center text-[10px] text-white">حذف می‌شود</span>
+          </label>
+          {% endfor %}
+        </div>
+        {% endif %}
+        {# Input file — uiverse.io/escannord/good-insect-28 #}
+        <label class="file-drop mt-5" :class="over && 'is-over'" @dragover.prevent="over = true" @dragleave="over = false" @drop.prevent="drop($event)">
+          {% icon "image-up" "size-8" "1.5" %}
+          <span class="text-sm font-medium">تصاویر را این‌جا رها کن یا کلیک کن</span>
+          <span class="text-xs text-espresso-400">JPG، PNG یا WEBP</span>
+          <input type="file" name="images" accept="image/*" multiple class="sr-only" x-ref="file" @change="pick($event.target.files)">
+        </label>
+        <p class="field-error" x-show="error" x-text="error" x-cloak></p>
+        {% if image_error %}<p class="field-error">{{ image_error }}</p>{% endif %}
+        <div class="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-6" x-show="previews.length" x-cloak>
+          <template x-for="(p, i) in previews" :key="p.url">
+            <div class="relative aspect-square overflow-hidden rounded-xl">
+              <img :src="p.url" alt="" class="size-full object-cover">
+              <button type="button" class="absolute left-1.5 top-1.5 grid size-7 place-items-center rounded-full bg-surface/95 text-ember shadow-soft" @click="removeAt(i)" aria-label="حذف">{% icon "x" "size-3.5" %}</button>
+              <span x-show="i === 0" class="absolute inset-x-0 bottom-0 bg-ink/70 py-0.5 text-center text-[10px] text-white">کاور</span>
+            </div>
+          </template>
+        </div>
+      </section>
+
+      {# ۵. قیمت #}
+      <section class="panel p-6">
+        <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۵</span>قیمت و کارمزد</h2>
+        <div class="mt-6 grid gap-5 sm:grid-cols-2">
+          <div x-data="moneyInput('{{ form.price.value|default:'' }}')" x-effect="price = value">
+            <input type="hidden" name="price" :value="raw">
+            <div class="field">
+              <input class="field-input fa-num ltr text-left {% if form.price.errors %}is-invalid{% endif %}" id="f-price" inputmode="numeric" placeholder=" " :value="shown" @input="set($event.target.value); $event.target.value = shown">
+              <label class="field-label" for="f-price">قیمت</label>
+              <span class="field-suffix">تومان</span>
+            </div>
+            {% for e in form.price.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint" x-text="words || 'حداقل ۵۰ هزار تومان'"></p>{% endfor %}
+            {% if median %}
+            <button type="button" class="mt-2 flex items-center gap-1.5 text-xs text-sage-700 hover:underline" @click="set('{{ median }}')">{% icon "chart-line" "size-3.5" %}میانه قیمت {{ game.name }}: <span class="fa-num">{{ median|toman }}</span> تومان</button>
+            {% endif %}
+          </div>
+          <div class="flex items-center justify-between gap-3 self-start rounded-xl border border-sand-200 px-4 py-3">
+            <span class="text-sm">قیمت قابل مذاکره است</span>
+            {# Switch — uiverse.io/Galahhad/strong-squid-82 #}
+            <label class="gm-switch">
+              <input type="checkbox" name="negotiable" {% if form.negotiable.value %}checked{% endif %}>
+              <span class="slider"><span class="circle">{% icon "x" "i-cross" "3" %}{% icon "check" "i-check" "3" %}</span></span>
+            </label>
+          </div>
+          <div class="self-start rounded-xl border border-sand-200 px-4 py-3" x-data="{ trade: {% if form.open_to_trade.value %}true{% else %}false{% endif %} }">
+            <div class="flex items-center justify-between gap-3">
+              <span class="text-sm">مایل به معاوضه هستم</span>
+              <label class="gm-switch">
+                <input type="checkbox" name="open_to_trade" x-model="trade" {% if form.open_to_trade.value %}checked{% endif %}>
+                <span class="slider"><span class="circle">{% icon "x" "i-cross" "3" %}{% icon "check" "i-check" "3" %}</span></span>
+              </label>
+            </div>
+            <div class="mt-3" x-show="trade" x-collapse {% if not form.open_to_trade.value %}x-cloak{% endif %}>
+              <div class="field">
+                <input class="field-input {% if form.trade_with.errors %}is-invalid{% endif %}" name="trade_with" id="f-trade" placeholder=" " maxlength="200" value="{{ form.trade_with.value|default:'' }}">
+                <label class="field-label" for="f-trade">با چی معاوضه می‌کنی؟ (اختیاری)</label>
+              </div>
+              {% for e in form.trade_with.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">مثلاً «فقط با اکانت والورانت»</p>{% endfor %}
+            </div>
+          </div>
+        </div>
+        <div class="mt-6">
+          <div class="mb-2 text-sm text-espresso-500">کارمزد {{ fee_percent|fa }}٪ واسط را چه کسی بپردازد؟</div>
+          <div class="seg max-w-md">
+            {% for v, t in form.fields.fee_payer.choices %}
+            <label class="seg-item"><input type="radio" name="fee_payer" value="{{ v }}" x-model="payer"><span class="seg-name">{{ t }}</span></label>
+            {% endfor %}
+          </div>
+        </div>
+      </section>
+
+      {# ۶. راه ارتباط مستقیم (اختیاری) #}
+      <section class="panel p-6" x-data="{ app: '{{ form.contact_app.value|default:'' }}',
+          hints: { telegram: 'مثل @looti_shop یا لینک t.me', whatsapp: 'شماره موبایل، مثل ۰۹۱۲۱۲۳۴۵۶۷', instagram: 'مثل @gamanat.shop',
+                   discord: 'نام کاربری دیسکورد', eitaa: 'آیدی ایتا', bale: 'آیدی بله', rubika: 'آیدی روبیکا' } }">
+        <h2 class="flex items-center gap-2 font-sans font-bold"><span class="grid size-7 place-items-center rounded-full bg-ember text-xs text-white">۶</span>راه ارتباط مستقیم <span class="text-xs font-light text-espresso-400">(اختیاری)</span></h2>
+        <p class="mt-1 text-sm font-light leading-7 text-espresso-500">اگر می‌خواهی خریدار در پیوی هم با تو صحبت کند، پیام‌رسانت را بگذار. فقط کاربران واردشده و بعد از دیدن هشدار امنیتی آن را می‌بینند.</p>
+        <div class="seg mt-5" role="radiogroup" aria-label="پیام‌رسان">
+          <label class="seg-item"><input type="radio" name="contact_app" value="" x-model="app"><span class="seg-name">ندارم</span></label>
+          {% for v, t in form.fields.contact_app.choices %}{% if v %}
+          <label class="seg-item"><input type="radio" name="contact_app" value="{{ v }}" x-model="app"><span class="seg-name">{{ t }}</span></label>
+          {% endif %}{% endfor %}
+        </div>
+        {% for e in form.contact_app.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+        <div class="mt-5" x-show="app" x-collapse {% if not form.contact_app.value %}x-cloak{% endif %}>
+          <div class="field">
+            <input class="field-input ltr text-left {% if form.contact_id.errors %}is-invalid{% endif %}" name="contact_id" id="f-contact" placeholder=" " maxlength="64" autocapitalize="none" spellcheck="false" value="{{ form.contact_id.value|default:'' }}" :disabled="!app">
+            <label class="field-label" for="f-contact">آیدی یا شماره</label>
+          </div>
+          {% for e in form.contact_id.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint" x-text="hints[app] || ''"></p>{% endfor %}
+          {% alert variant="warning" appearance="light" size="sm" cls="mt-4" %}پولی که بیرون از لوطی جابه‌جا شود، دیگر امن نیست. اگر خریدار خواست مستقیم پرداخت کند، او را به «خرید امن» همین آگهی راهنمایی کن.{% endalert %}
+        </div>
+      </section>
+    </div>
+
+    {# ─── ستون کناری: خلاصه زنده ─── #}
+    <aside class="space-y-4 lg:sticky lg:top-24 hdr-follow lg:self-start">
+      <div class="panel p-5">
+        <div class="text-sm font-semibold text-espresso-500">خلاصه فروش</div>
+        <dl class="mt-4 space-y-3 text-sm">
+          <div class="flex justify-between"><dt class="text-espresso-500">قیمت آگهی</dt><dd class="fa-num" x-text="m(price)"></dd></div>
+          <div class="flex justify-between"><dt class="text-espresso-500">کارمزد واسط</dt><dd class="fa-num" x-text="m(fee)"></dd></div>
+          <div class="flex justify-between"><dt class="text-espresso-500">خریدار می‌پردازد</dt><dd class="fa-num" x-text="m(buyerTotal)"></dd></div>
+          <div class="flex justify-between border-t border-dashed border-sand-300 pt-3 font-semibold"><dt>به کیف پولت می‌رسد</dt><dd class="font-display text-lg fa-num text-sage-700" x-text="m(sellerGets) + ' ت'"></dd></div>
+        </dl>
+      </div>
+      <button class="btn-push is-block"><span class="shadow"></span><span class="edge"></span><span class="front">{% if listing %}{% icon "save" "size-5" %}ذخیره تغییرات{% else %}{% icon "send" "size-5" %}انتشار آگهی{% endif %}</span></button>
+      <ul class="space-y-2.5 px-1 text-xs leading-6 text-espresso-500">
+        <li class="flex gap-2">{% icon "lock-keyhole" "size-4 shrink-0 text-sage-700" %}رمز اکانت را این‌جا نمی‌خواهیم؛ بعد از پرداخت خریدار، در فرم امن سفارش می‌دهی.</li>
+        <li class="flex gap-2">{% icon "clock" "size-4 shrink-0 text-saffron-700" %}بعد از پرداخت، {{ INSPECTION_HOURS|fa }} ساعت زمان بررسی خریدار است و سپس پول آزاد می‌شود.</li>
+        <li class="flex gap-2">{% icon "ban" "size-4 shrink-0 text-ember" %}اکانت دزدی، هک‌شده یا اشتراکی ممنوع است.</li>
+      </ul>
+    </aside>
+  </form>
+</div>
+{% endblock %}

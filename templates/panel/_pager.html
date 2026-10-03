@@ -1,0 +1,9 @@
+{% load ui %}{% if page.paginator.num_pages > 1 %}
+<nav class="adm-pager" aria-label="صفحه‌بندی">
+  <span class="fa-num">صفحه {{ page.number|fa }} از {{ page.paginator.num_pages|fa }}<span class="sep" aria-hidden="true"></span>{{ page.paginator.count|fa }} مورد</span>
+  <div class="flex gap-1.5">
+    {% if page.has_previous %}<a class="icon-btn !size-9" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.previous_page_number }}" aria-label="صفحه قبل">{% icon "chevron-right" "size-4" %}</a>{% endif %}
+    {% if page.has_next %}<a class="icon-btn !size-9" href="?{% if qs %}{{ qs }}&{% endif %}page={{ page.next_page_number }}" aria-label="صفحه بعد">{% icon "chevron-left" "size-4" %}</a>{% endif %}
+  </div>
+</nav>
+{% endif %}

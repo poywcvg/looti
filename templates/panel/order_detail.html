@@ -1,0 +1,220 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}سفارش {{ o.code }}{% endblock %}
+{% block crumb %}<a href="{% url 'panel:orders' %}" class="font-normal text-espresso-400 hover:text-ember">معامله‌ها</a> / <span class="code">{{ o.code }}</span>{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div class="flex min-w-0 items-center gap-3.5">
+    <span class="grid size-12 shrink-0 place-items-center rounded-2xl" style="background: color-mix(in srgb, {{ o.listing.game.tone }} 14%, transparent); color: {{ o.listing.game.tone }}">{% icon o.listing.game.icon "size-6" %}</span>
+    <div class="min-w-0">
+      <div class="flex flex-wrap items-center gap-2"><h1 class="!m-0 truncate">{{ o.listing.title }}</h1>{% order_status o %}</div>
+      <p class="flex flex-wrap items-center"><span class="code">{{ o.code }}</span><span class="sep" aria-hidden="true"></span>{{ o.listing.game.name }}<span class="sep" aria-hidden="true"></span>ثبت {{ o.created_at|jdatetime_fa }}</p>
+    </div>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="{{ o.listing.get_absolute_url }}" target="_blank" rel="noopener" class="btn-ghost is-sm">{% icon "external-link" "size-4" %}آگهی</a>
+    <a href="{{ o.get_absolute_url }}" target="_blank" rel="noopener" class="btn-ghost is-sm">{% icon "eye" "size-4" %}نمای کاربر</a>
+  </div>
+</div>
+
+{# ── مراحل معامله ── #}
+<section class="adm-card mb-5 overflow-x-auto">
+  <ol class="flex min-w-[40rem] items-center gap-2 p-4">
+    {% for s in o.steps %}
+    <li class="flex flex-1 items-center gap-2.5">
+      <span class="grid size-9 shrink-0 place-items-center rounded-xl border {% if s.done %}border-sage-100 bg-sage-50 text-sage-700{% elif s.current %}{% if o.status == 'disputed' %}border-danger-100 bg-danger-50 text-danger-700{% else %}border-warn-100 bg-warn-50 text-warn-700{% endif %}{% else %}border-sand-200 text-espresso-300{% endif %}">{% if s.done %}{% icon "check" "size-4" %}{% else %}{% icon s.icon "size-4" %}{% endif %}</span>
+      <span class="text-xs {% if s.current %}font-bold text-espresso{% elif s.done %}text-espresso-600{% else %}text-espresso-400{% endif %}">{{ s.label }}</span>
+      {% if not forloop.last %}<span class="h-px flex-1 {% if s.done %}bg-sage-100{% else %}bg-sand-200{% endif %}"></span>{% endif %}
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+
+<div class="grid gap-5 xl:grid-cols-3">
+  <div class="space-y-5 xl:col-span-2">
+
+    {# ── مبالغ ── #}
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>{% icon "receipt-text" "size-[18px] text-espresso-400" %}مبالغ و زمان‌ها</h2><p>کارمزد بر عهده {% if o.fee_payer == "seller" %}فروشنده{% elif o.fee_payer == "split" %}هر دو طرف{% else %}خریدار{% endif %}</p></div></div>
+      <div class="adm-card-b">
+        <dl class="kv fa-num">
+          <div><dt>قیمت معامله</dt><dd>{{ o.price|toman }} <small class="text-xs font-normal text-espresso-400">تومان</small></dd></div>
+          <div><dt>کارمزد لوطی</dt><dd class="text-ember-700">{{ o.fee|toman }}</dd></div>
+          <div><dt>پرداختی خریدار</dt><dd>{{ o.buyer_total|toman }}</dd></div>
+          <div><dt>سهم فروشنده</dt><dd class="text-sage-700">{{ o.seller_payout|toman }}</dd></div>
+          <div><dt>پرداخت</dt><dd>{{ o.paid_at|jdatetime_fa|default:"—" }}</dd></div>
+          <div><dt>مهلت تحویل فروشنده</dt><dd>{{ o.seller_deadline|jdatetime_fa|default:"—" }}</dd></div>
+          <div><dt>تحویل به خریدار</dt><dd>{{ o.delivered_at|jdatetime_fa|default:"—" }}</dd></div>
+          <div><dt>پایان مهلت بررسی</dt><dd>{{ o.inspection_deadline|jdatetime_fa|default:"—" }}</dd></div>
+          <div><dt>پایان معامله</dt><dd>{{ o.completed_at|jdatetime_fa|default:"—" }}</dd></div>
+          <div><dt>واسط</dt><dd>{% if o.mediator %}<a class="row-link" href="{% url 'panel:user' o.mediator_id %}">{{ o.mediator }}</a>{% else %}—{% endif %}</dd></div>
+        </dl>
+      </div>
+    </section>
+
+    {# ── اطلاعات ورود (فقط هنگام بررسی واسط) ── #}
+    {% if o.status == "verifying" %}
+    <section class="adm-card tone-saffron" x-data="{ show: false }">
+      <div class="adm-card-h">
+        <div><h2>{% icon "key-round" "size-[18px] text-saffron-700" %}اطلاعات ورود اکانت</h2><p>فروشنده {{ cred.submitted_at|ago }} فرستاده؛ وارد شوید و با آگهی تطبیق دهید.</p></div>
+        <button type="button" class="btn-ghost is-sm" @click="show = !show"><span x-show="!show">{% icon "eye" "size-4" %}</span><span x-show="show" x-cloak>{% icon "eye-off" "size-4" %}</span><span x-text="show ? 'پنهان' : 'نمایش'">نمایش</span></button>
+      </div>
+      <div class="adm-card-b" x-show="show" x-collapse x-cloak>
+        <dl class="grid gap-3 rounded-xl bg-sand-50 p-4 text-sm sm:grid-cols-2">
+          <div><dt class="text-xs text-espresso-400">نام کاربری</dt><dd class="ltr mt-0.5 select-all text-right font-mono">{{ cred_data.login|default:"—" }}</dd></div>
+          <div><dt class="text-xs text-espresso-400">رمز</dt><dd class="ltr mt-0.5 select-all text-right font-mono">{{ cred_data.password|default:"—" }}</dd></div>
+          <div><dt class="text-xs text-espresso-400">ایمیل</dt><dd class="ltr mt-0.5 select-all text-right font-mono">{{ cred_data.email|default:"—" }}</dd></div>
+          <div><dt class="text-xs text-espresso-400">رمز ایمیل</dt><dd class="ltr mt-0.5 select-all text-right font-mono">{{ cred_data.email_password|default:"—" }}</dd></div>
+          {% if cred_data.recovery %}<div class="sm:col-span-2"><dt class="text-xs text-espresso-400">بازیابی</dt><dd class="ltr mt-0.5 text-right whitespace-pre-line font-mono text-xs">{{ cred_data.recovery }}</dd></div>{% endif %}
+          {% if cred_data.notes %}<div class="sm:col-span-2"><dt class="text-xs text-espresso-400">توضیح فروشنده</dt><dd>{{ cred_data.notes }}</dd></div>{% endif %}
+        </dl>
+        <div class="mt-4 flex flex-wrap gap-2 text-xs">
+          {% for ic, label, val in o.listing.attr_rows %}<span class="chip is-muted">{% icon ic "size-3.5" %}{{ label }}: {{ val|fa }}</span>{% endfor %}
+          {% for ic, label, ok, desc in o.listing.health.items %}<span class="chip {% if ok %}is-sage{% else %}is-muted{% endif %}">{% icon ic "size-3.5" %}{{ label }}</span>{% endfor %}
+        </div>
+      </div>
+      <form method="post" action="{% url 'panel:order_action' o.code %}" class="flex flex-col gap-3 border-t border-sand-100 p-4 sm:flex-row sm:items-center">
+        {% csrf_token %}
+        <input class="adm-input flex-1" name="note" maxlength="300" placeholder="یادداشت برای خریدار یا فروشنده (اختیاری)" aria-label="یادداشت بررسی">
+        <div class="flex gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
+          <button name="action" value="approve" class="btn-grad is-sage is-sm">{% icon "shield-check" "size-4" %}تأیید و تحویل</button>
+          <button name="action" value="reject" class="btn-ghost is-sm is-danger">{% icon "undo-2" "size-4" %}برگشت به فروشنده</button>
+        </div>
+      </form>
+    </section>
+    {% endif %}
+
+    {# ── گزارش مشکل ── #}
+    {% if dispute %}
+    <section class="adm-card {% if dispute.status == 'open' %}tone-danger{% else %}tone-muted{% endif %}">
+      <div class="adm-card-h">
+        <div><h2>{% icon "scale" "size-[18px] text-ember" %}گزارش مشکل</h2><p>{{ dispute.opened_by }} · {{ dispute.created_at|ago }}</p></div>
+        <span class="st is-{% if dispute.status == 'open' %}ember{% else %}sage{% endif %}"><i></i>{{ dispute.get_status_display }}</span>
+      </div>
+      <div class="adm-card-b space-y-3 text-sm">
+        <span class="chip is-muted">{{ dispute.get_reason_display }}</span>
+        <p class="whitespace-pre-line leading-7 text-espresso-600">{{ dispute.text }}</p>
+        {% if dispute.resolution %}<div class="rounded-xl bg-sand-50 p-3 text-xs leading-6"><b>تصمیم {{ dispute.resolved_by|default:"" }}:</b> {{ dispute.resolution }}</div>{% endif %}
+        {% if dispute.status == "open" %}<a href="{% url 'panel:disputes' %}" class="adm-more">رفتن به گزارش‌های مشکل{% icon "chevron-left" "size-3.5" %}</a>{% endif %}
+      </div>
+    </section>
+    {% endif %}
+
+    {# ── گفتگوی سفارش ── #}
+    <section class="adm-card" id="thread">
+      <div class="adm-card-h"><div><h2>{% icon "messages-square" "size-[18px] text-espresso-400" %}گفتگوی سفارش</h2><p>پیام شما برای هر دو طرف نمایش داده و اعلان می‌شود.</p></div></div>
+      <div class="adm-card-b max-h-[28rem] space-y-3 overflow-y-auto">
+        {% for m in thread %}
+        <div class="flex gap-2.5 {% if m.sender.is_staff %}flex-row-reverse{% endif %}">
+          {% include "components/avatar.html" with u=m.sender size="size-8" %}
+          <div class="max-w-[80%]">
+            <div class="adm-bubble {% if m.sender.is_staff %}is-staff{% endif %}"><p class="whitespace-pre-line text-sm leading-7">{{ m.text }}</p></div>
+            <p class="mt-1 px-1 text-[11px] text-espresso-400 {% if m.sender.is_staff %}text-end{% endif %}">{{ m.sender }}{% if m.sender_id == o.buyer_id %} · خریدار{% elif m.sender_id == o.seller_id %} · فروشنده{% elif m.sender.is_staff %} · واسط{% endif %}<span class="sep" aria-hidden="true"></span>{{ m.created_at|ago }}</p>
+          </div>
+        </div>
+        {% empty %}
+        <div class="adm-empty !py-6"><span class="feed-ic">{% icon "message-circle" "size-5" %}</span>هنوز پیامی رد و بدل نشده.</div>
+        {% endfor %}
+      </div>
+      <form method="post" action="{% url 'panel:order_action' o.code %}" class="flex items-end gap-2 border-t border-sand-100 p-4">
+        {% csrf_token %}<input type="hidden" name="action" value="message">
+        <textarea class="adm-input min-h-[2.6rem] flex-1" name="note" rows="1" maxlength="500" required placeholder="پیام واسط به خریدار و فروشنده…" aria-label="متن پیام"></textarea>
+        <button class="btn-grad is-sm shrink-0">{% icon "send-horizontal" "size-4" %}<span class="hidden sm:inline">ارسال</span></button>
+      </form>
+    </section>
+  </div>
+
+  <div class="space-y-5">
+    {# ── طرفین ── #}
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>طرفین معامله</h2></div></div>
+      <ul class="divide-y divide-sand-100">
+        {% with u=o.buyer %}
+        <li><a href="{% url 'panel:user' u.pk %}" class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-sand-50">
+          {% include "components/avatar.html" with u=u size="size-10" %}
+          <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">{{ u }}</span><span class="block text-xs text-espresso-400 ltr text-end fa-num">{{ u.phone|mask_phone }}</span></span>
+          <span class="chip is-saffron">خریدار</span>
+        </a></li>
+        {% endwith %}
+        {% with u=o.seller %}
+        <li><a href="{% url 'panel:user' u.pk %}" class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-sand-50">
+          {% include "components/avatar.html" with u=u size="size-10" %}
+          <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">{{ u }}</span><span class="block text-xs text-espresso-400 ltr text-end fa-num">{{ u.phone|mask_phone }}</span></span>
+          <span class="chip is-sage">فروشنده</span>
+        </a></li>
+        {% endwith %}
+      </ul>
+    </section>
+
+    {# ── اقدام‌های واسط ── #}
+    {% if o.status != "completed" and o.status != "cancelled" and o.status != "refunded" %}
+    <section class="adm-card" x-data="{ act: '' }">
+      <div class="adm-card-h"><div><h2>{% icon "gavel" "size-[18px] text-espresso-400" %}اقدام واسط</h2><p>هر اقدام با دلیل در تاریخچه سفارش ثبت می‌شود.</p></div></div>
+      <div class="adm-card-b space-y-3">
+        {% if o.status == "delivered" %}
+        <form method="post" action="{% url 'panel:order_action' o.code %}" class="flex items-end gap-2">
+          {% csrf_token %}<input type="hidden" name="action" value="extend">
+          <label class="flex-1"><span class="adm-label">تمدید مهلت بررسی خریدار</span>
+            <select class="adm-input w-full" name="hours"><option value="12">۱۲ ساعت</option><option value="24" selected>۲۴ ساعت</option><option value="48">۴۸ ساعت</option><option value="72">۳ روز</option></select>
+          </label>
+          <button class="btn-ghost is-sm">{% icon "timer" "size-4" %}تمدید</button>
+        </form>
+        <div class="border-t border-sand-100"></div>
+        {% endif %}
+
+        <form method="post" action="{% url 'panel:order_action' o.code %}" class="space-y-3"
+              data-confirm data-confirm-text="این اقدام برگشت‌پذیر نیست و مبلغ جابه‌جا می‌شود. ادامه می‌دهید؟" data-confirm-ok="بله، انجام بده">
+          {% csrf_token %}
+          <label class="block"><span class="adm-label">دلیل (برای طرفین نمایش داده می‌شود)</span>
+            <textarea class="adm-input w-full" name="note" rows="3" minlength="5" maxlength="500" required placeholder="مثلاً: فروشنده بعد از ۴۸ ساعت پاسخ نداد."></textarea>
+          </label>
+          <div class="grid gap-2">
+            {% if o.status == "pending_payment" %}
+            <button name="action" value="cancel" class="btn-ghost is-sm is-danger w-full">{% icon "circle-x" "size-4" %}لغو سفارش پرداخت‌نشده</button>
+            {% else %}
+            {% if o.status == "delivered" or o.status == "disputed" %}
+            <button name="action" value="release" class="btn-grad is-sage is-sm w-full">{% icon "banknote" "size-4" %}واریز پول به فروشنده</button>
+            {% endif %}
+            <button name="action" value="refund" class="btn-ghost is-sm is-danger w-full">{% icon "undo-2" "size-4" %}لغو و بازگشت {{ o.buyer_total|toman }} تومان به خریدار</button>
+            {% endif %}
+          </div>
+        </form>
+      </div>
+    </section>
+    {% endif %}
+
+    {# ── تاریخچه ── #}
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>{% icon "history" "size-[18px] text-espresso-400" %}تاریخچه سفارش</h2></div></div>
+      <div class="adm-card-b">
+        <ol class="tl">
+          {% for e in events %}
+          <li>
+            <span class="tl-ic">{% icon e.icon "size-4" %}</span>
+            <p class="text-sm leading-6">{{ e.text }}</p>
+            <p class="mt-0.5 text-[11px] text-espresso-400">{{ e.actor|default:"سیستم" }}<span class="sep" aria-hidden="true"></span><span title="{{ e.created_at|jdatetime_fa }}">{{ e.created_at|ago }}</span></p>
+          </li>
+          {% empty %}
+          <li class="!ps-0 text-sm text-espresso-400">رویدادی ثبت نشده.</li>
+          {% endfor %}
+        </ol>
+      </div>
+    </section>
+
+    {# ── تراکنش‌ها ── #}
+    {% if txs %}
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>{% icon "arrow-left-right" "size-[18px] text-espresso-400" %}تراکنش‌های کیف پول</h2></div></div>
+      <ul class="divide-y divide-sand-100">
+        {% for t in txs %}
+        <li class="flex items-center gap-3 px-5 py-3 text-sm">
+          <span class="feed-ic">{% icon t.icon "size-4" %}</span>
+          <span class="min-w-0 flex-1"><span class="block truncate">{{ t.get_kind_display }}</span><a href="{% url 'panel:user' t.user_id %}" class="row-link text-xs text-espresso-400">{{ t.user }}</a></span>
+          <span class="fa-num font-semibold {% if t.amount > 0 %}text-sage-700{% else %}text-danger-700{% endif %}">{% if t.amount > 0 %}+{% endif %}{{ t.amount|toman }}</span>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

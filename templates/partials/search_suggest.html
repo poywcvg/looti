@@ -1,0 +1,38 @@
+{% if not q %}
+  <div class="px-3 pb-1 pt-2 text-xs text-espresso-400">بازی‌ها</div>
+  {% for g in games %}
+    <a data-pal-item href="{{ g.get_absolute_url }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 outline-none hover:bg-sand focus:bg-sand">
+      <span class="grid size-8 place-items-center rounded-lg" style="background: {{ g.tone }}1f; color: {{ g.tone }}">{% icon g.icon "size-4" %}</span>
+      <span class="flex-1"><span class="block text-sm font-medium">{{ g.name }}</span><span class="block text-xs text-espresso-400">{{ g.tagline }}</span></span>
+      <span class="ltr text-xs text-espresso-400">{{ g.name_en }}</span>
+    </a>
+  {% endfor %}
+  <div class="mt-1 flex flex-wrap gap-2 border-t border-sand-200 px-3 py-3 text-xs text-espresso-500">
+    <span class="flex items-center gap-1">{% icon "lightbulb" "size-3.5 text-saffron-600" %}نکته:</span> کد آگهی (مثل <span class="ltr font-semibold">G1A2B3</span>) را هم می‌توانید جستجو کنید.
+  </div>
+{% else %}
+  {% if games %}
+    <div class="px-3 pb-1 pt-2 text-xs text-espresso-400">بازی‌ها</div>
+    {% for g in games %}
+      <a data-pal-item href="{{ g.get_absolute_url }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 outline-none hover:bg-sand focus:bg-sand">
+        <span class="grid size-8 place-items-center rounded-lg" style="background: {{ g.tone }}1f; color: {{ g.tone }}">{% icon g.icon "size-4" %}</span>
+        <span class="flex-1 text-sm font-medium">{{ g.name }}</span>
+        <span class="text-xs text-espresso-400">همه آگهی‌ها</span>
+      </a>
+    {% endfor %}
+  {% endif %}
+  {% if listings %}
+    <div class="px-3 pb-1 pt-2 text-xs text-espresso-400">آگهی‌ها</div>
+    {% for l in listings %}
+      <a data-pal-item href="{{ l.get_absolute_url }}" class="flex items-center gap-3 rounded-lg px-3 py-2.5 outline-none hover:bg-sand focus:bg-sand">
+        <span class="grid size-8 place-items-center rounded-lg bg-sand text-espresso-500">{% icon l.game.icon "size-4" %}</span>
+        <span class="min-w-0 flex-1"><span class="block truncate text-sm font-medium">{{ l.title }}</span><span class="block text-xs text-espresso-400">{{ l.game.name }}<span class="sep" aria-hidden="true"></span>{{ l.get_platform_display }}</span></span>
+        <span class="text-xs font-semibold fa-num text-espresso-700">{{ l.price|toman }}</span>
+      </a>
+    {% endfor %}
+  {% endif %}
+  <a data-pal-item href="{% url 'listings:list' %}?q={{ q|urlencode }}" class="mt-1 flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-ember outline-none hover:bg-ember-50 focus:bg-ember-50">
+    {% icon "search" "size-4" %}جستجوی «{{ q }}» در همه آگهی‌ها
+    {% icon "corner-down-left" "size-3.5 ms-auto text-espresso-400" %}
+  </a>
+{% endif %}

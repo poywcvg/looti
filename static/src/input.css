@@ -1,0 +1,1314 @@
+@import "tailwindcss";
+
+@source "../../templates";
+@source "../../apps";
+
+/* حالت تاریک با data-theme روی <html> (نه کلاس سیستم)؛ کاربر انتخاب می‌کند، پیش‌فرض = تنظیم سیستم */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* ───────────────────────── فونت‌ها ───────────────────────── */
+/* میخک — Mikhak Project Authors، مجوز SIL OFL 1.1 — هر ۹ وزن */
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-Thin.woff2") format("woff2"); font-weight: 100; font-style: normal; font-display: swap; }
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-ExtraLight.woff2") format("woff2"); font-weight: 200; font-style: normal; font-display: swap; }
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-Light.woff2") format("woff2"); font-weight: 300; font-style: normal; font-display: swap; }
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; font-display: swap; }
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-Medium.woff2") format("woff2"); font-weight: 500; font-style: normal; font-display: swap; }
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-SemiBold.woff2") format("woff2"); font-weight: 600; font-style: normal; font-display: swap; }
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; font-display: swap; }
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-ExtraBold.woff2") format("woff2"); font-weight: 800; font-style: normal; font-display: swap; }
+@font-face { font-family: "Mikhak"; src: url("../fonts/Mikhak-Black.woff2") format("woff2"); font-weight: 900; font-style: normal; font-display: swap; }
+
+/* ───────────────────────── پالت گرم ─────────────────────────
+   ember (سفالی): اعتماد گرم و اقدام · saffron (زعفرانی): خوش‌بینی و توجه
+   sage (سبز): موفقیت، تأیید و امنیت · espresso / cream / sand: پایه‌های گرم و خوانا
+   رنگ‌های وضعیت (جدا از رنگ برند): danger قرمز = نیاز به توجه، خطا، داوری، رد · warn زرد = هشدار و در انتظار · sage سبز = انجام‌شده و درست */
+@theme {
+  --font-sans: "Mikhak", ui-sans-serif, system-ui, "Segoe UI", Tahoma, sans-serif;
+  --font-display: "Mikhak", ui-sans-serif, system-ui, sans-serif;
+
+  --color-ember-50: #FBF0EB;
+  --color-ember-100: #F6DDD4;
+  --color-ember-200: #EDBCAC;
+  --color-ember: #C8553D;
+  --color-ember-600: #B04631;
+  --color-ember-700: #8F3826;
+
+  --color-saffron-50: #FDF5E7;
+  --color-saffron-100: #FAE7C4;
+  --color-saffron: #E8A33D;
+  --color-saffron-600: #C98523;
+  --color-saffron-700: #9C6618;
+
+  --color-sage-50: #ECF6EF;
+  --color-sage-100: #D2EADA;
+  --color-sage-200: #A9D5B8;
+  --color-sage: #3E9461;
+  --color-sage-600: #2F7C4F;
+  --color-sage-700: #22603C;
+
+  /* قرمز وضعیت: قرمز گرم، متمایز از سفالیِ برند */
+  --color-danger-50: #FDEEEC;
+  --color-danger-100: #F9D6D2;
+  --color-danger-200: #F0ADA6;
+  --color-danger: #CC3A30;
+  --color-danger-600: #B02E25;
+  --color-danger-700: #8E2219;
+
+  /* زرد وضعیت: خردلی گرم (نه فسفری) */
+  --color-warn-50: #FDF8E4;
+  --color-warn-100: #F9EDB8;
+  --color-warn-200: #F0DA7A;
+  --color-warn: #E2B320;
+  --color-warn-600: #C29812;
+  --color-warn-700: #7F6206;
+
+  --color-espresso: #2A1F1A;
+  --color-espresso-700: #45342B;
+  --color-espresso-500: #6E5A4F;
+  --color-espresso-400: #8F7B6F;
+  --color-cream: #FAF6F0;
+  --color-sand: #EFE6DA;
+  --color-sand-200: #E5D8C7;
+  --color-sand-300: #D7C6B1;
+  /* نوار یک‌درمیان صفحه اصلی — فقط یک پله از cream تیره‌تر */
+  --color-band: #F5EFE6;
+  --color-sand-50: #FCF9F4;
+  --color-sand-100: #F5EEE4;
+  --color-espresso-600: #5B4A40;
+  --color-espresso-300: #B3A296;
+
+  /* رویه کارت‌ها/پنل‌ها — در حالت تاریک قهوه‌ای گرم می‌شود (به‌جای bg-white) */
+  --color-surface: #FFFFFF;
+  /* همیشه تیره / همیشه روشن: پنل‌های تیره ویژه، پرده پشت مودال، متن روی زعفرانی */
+  --color-ink: #2A1F1A;
+  --color-paper: #FAF6F0;
+
+  --shadow-soft: 0 1px 2px rgb(42 31 26 / 0.04), 0 4px 16px -4px rgb(42 31 26 / 0.08);
+  --shadow-lift: 0 2px 4px rgb(42 31 26 / 0.05), 0 16px 32px -12px rgb(42 31 26 / 0.18);
+
+  /* منحنی‌های حرکت: فنر نرم برای ورود، شتاب‌دار برای خروج، کمی جهش برای ریزتعامل */
+  --ease-spring: cubic-bezier(.32, .72, 0, 1);
+  --ease-exit: cubic-bezier(.4, 0, 1, 1);
+  --ease-pop: cubic-bezier(.34, 1.56, .64, 1);
+
+  --animate-fade-up: fade-up 0.5s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  @keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+
+/* ───────────────────────── پالت تاریک ─────────────────────────
+   نقش رنگ‌ها عوض نمی‌شود، فقط روشنایی: cream زمینه می‌شود قهوه‌ای سوخته، espresso متن می‌شود کرم.
+   سفالی و زعفرانی کمی روشن‌تر تا روی زمینه تیره کنتراست AA بماند؛ هیچ رنگی نئون نمی‌شود. */
+:root {
+  /* چیدمان سیال: کانتینر .wrap با این عرض و فاصله‌ی کناری؛ فاصله با عرض صفحه بزرگ می‌شود */
+  --wrap-max: 120rem;
+  --gutter: clamp(1rem, 3.5vw, 4rem);
+  --head-h: 73px; /* هدر شناور: ۱۲ پیکسل فاصله + ۶۰ پیکسل نوار + لبه */
+
+  /* صحنه‌ی هیرو در حالت روشن: کرم گرم، صندوق قهوه‌ای سوخته، نور زعفرانی */
+  --hero-bg-top: #FBF4EA;
+  --hero-bg-bottom: #F1E3D1;
+  --hero-glow-ember: rgb(200 85 61 / .18);
+  --hero-glow-saffron: rgb(232 163 61 / .20);
+  --hero-spot: rgb(232 163 61 / .14);
+  --hero-edge: rgb(42 31 26 / .07);
+  --hero-chest-top: #5B4A40;
+  --hero-chest-bottom: #2A1F1A;
+  --hero-chest-line: rgb(255 255 255 / .10);
+  --hero-beam-core: rgb(232 163 61 / .50);
+  --hero-beam-tail: rgb(232 163 61 / .14);
+  --hero-head-from: var(--color-ember);
+  --hero-head-to: var(--color-saffron-600);
+  --hero-panel-line: rgb(42 31 26 / .07);
+  --hero-panel-shadow: 0 30px 60px -28px rgb(91 52 34 / .35);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-cream: #15100D;
+  --color-surface: #1E1714;
+  --color-sand: #2A201B;
+  --color-sand-50: #1A1411;
+  --color-sand-100: #231B17;
+  --color-sand-200: #352922;
+  --color-sand-300: #4A3A30;
+  --color-band: #1B1511;
+
+  --hero-bg-top: #1B1411;
+  --hero-bg-bottom: #120D0B;
+  --hero-glow-ember: rgb(218 106 80 / .32);
+  --hero-glow-saffron: rgb(235 170 74 / .10);
+  --hero-spot: rgb(235 170 74 / .07);
+  --hero-edge: rgb(255 255 255 / .05);
+  --hero-chest-top: #7A6253;
+  --hero-chest-bottom: #3E2E26;
+  --hero-chest-line: rgb(255 230 200 / .2);
+  --hero-beam-core: rgb(242 198 129 / .42);
+  --hero-beam-tail: rgb(235 170 74 / .12);
+  --hero-head-from: var(--color-saffron);
+  --hero-head-to: var(--color-ember);
+  --hero-panel-line: rgb(255 255 255 / .07);
+  --hero-panel-shadow: 0 30px 60px -24px rgb(0 0 0 / .7);
+
+  --color-espresso: #F3EAE0;
+  --color-espresso-700: #E3D5C6;
+  --color-espresso-600: #D0BFAE;
+  --color-espresso-500: #B9A595;
+  --color-espresso-400: #978273;
+  --color-espresso-300: #6F5D51;
+
+  --color-ember: #DA6A50;
+  --color-ember-600: #C95B42;
+  --color-ember-700: #F0A48F;
+  --color-ember-200: #6A3527;
+  --color-ember-100: #43241B;
+  --color-ember-50: #2E1A14;
+
+  --color-saffron: #EBAA4A;
+  --color-saffron-600: #D69633;
+  --color-saffron-700: #F2C681;
+  --color-saffron-100: #4A3518;
+  --color-saffron-50: #2C2216;
+
+  --color-sage: #5CB37F;
+  --color-sage-600: #74C294;
+  --color-sage-700: #A8DDBC;
+  --color-sage-200: #24533A;
+  --color-sage-100: #1A3424;
+  --color-sage-50: #12241A;
+
+  --color-danger: #E5584C;
+  --color-danger-600: #EE7166;
+  --color-danger-700: #F7A9A1;
+  --color-danger-200: #6B2420;
+  --color-danger-100: #45191A;
+  --color-danger-50: #2E1314;
+
+  --color-warn: #EBC04A;
+  --color-warn-600: #F0CC66;
+  --color-warn-700: #F4DA8E;
+  --color-warn-200: #5C4A12;
+  --color-warn-100: #3B3010;
+  --color-warn-50: #26200D;
+
+  --shadow-soft: 0 1px 2px rgb(0 0 0 / .35), 0 4px 16px -4px rgb(0 0 0 / .45);
+  --shadow-lift: 0 2px 4px rgb(0 0 0 / .35), 0 18px 36px -12px rgb(0 0 0 / .7);
+}
+/* پنل‌های همیشه‌تیره در حالت تاریک با یک خط ظریف از زمینه جدا شوند */
+[data-theme="dark"] .bg-ink { box-shadow: inset 0 0 0 1px rgb(255 255 255 / .06); }
+/* عکس‌ها و تصویرسازی‌ها در شب کمی آرام‌تر */
+[data-theme="dark"] img:not([src$=".svg"]) { filter: brightness(.92); }
+
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; scroll-behavior: smooth; font-size: clamp(100%, .25vw + .85rem, 112.5%); }
+  body { @apply bg-cream text-espresso font-sans antialiased; font-feature-settings: "ss01"; }
+  h1, h2, h3, h4 { @apply font-display; }
+  ::selection { background: var(--color-saffron-100); color: var(--color-espresso); }
+  [x-cloak] { display: none !important; }
+  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+  :focus-visible { outline: 2px solid var(--color-ember); outline-offset: 2px; }
+  .ltr { direction: ltr; unicode-bidi: isolate; }
+  /* ورودی با جهت خودکار (app.js): تا خالی است راست‌چین، با اولین حرف لاتین چپ‌چین */
+  [data-autodir]:placeholder-shown { direction: rtl; }
+  /* کدهای لاتین (کد سفارش) — فونت‌های فارسی ارقام لاتین را فارسی می‌کشند */
+  /* جداکننده — به‌جای «·» که با صفر فارسی (۰) اشتباه می‌شود */
+  .sep { display: inline-block; width: 1px; height: .85em; margin-inline: .45rem; vertical-align: -0.1em; background: currentColor; opacity: .35; }
+  .latin { font-family: ui-sans-serif, system-ui, "Segoe UI", Tahoma, sans-serif; letter-spacing: .02em; }
+
+  /* نشانگر دست برای هر چیز قابل کلیک یا انتخاب — Tailwind v4 دکمه‌ها را cursor: default می‌گذارد */
+  button, [role="button"], [role="tab"], [role="option"], [role="menuitem"], [role="switch"],
+  a[href], summary, select, label[for], label:has(> input:is([type="checkbox"], [type="radio"], [type="file"])),
+  input:is([type="checkbox"], [type="radio"], [type="file"], [type="range"], [type="color"], [type="submit"], [type="button"]),
+  [x-on\:click], [\@click], .seg-name, .chip:is(a, button, label) { cursor: pointer; }
+  :is(button, input, select, textarea, [role="button"]):disabled, [aria-disabled="true"] { cursor: not-allowed; }
+  label:has(> input:disabled) { cursor: not-allowed; }
+  input:is([type="checkbox"], [type="radio"]):disabled + * { cursor: not-allowed; }
+  [draggable="true"] { cursor: grab; }
+  [draggable="true"]:active { cursor: grabbing; }
+}
+
+/* ═════════════ کامپوننت‌ها — اقتباس از uiverse.io با پالت لوطی ═════════════ */
+@layer components {
+
+  /* Button — uiverse.io/zymantas-katinas/pink-lizard-56 (دکمه سه‌لایه برجسته؛ اقدام اصلی) */
+  .btn-push { --edge-dark: #8F3826; --edge-mid: #B04631; --face: var(--color-ember);
+    position: relative; border: none; background: transparent; padding: 0; outline-offset: 6px; cursor: pointer; display: inline-block; }
+  .btn-push .shadow { position: absolute; inset: 0; background: rgb(42 31 26 / 0.22); border-radius: 12px; transform: translateY(2px); transition: transform 600ms cubic-bezier(.3,.7,.4,1); }
+  .btn-push .edge { position: absolute; inset: 0; border-radius: 12px;
+    background: linear-gradient(to left, var(--edge-dark) 0%, var(--edge-mid) 8%, var(--edge-mid) 92%, var(--edge-dark) 100%); }
+  .btn-push .front { position: relative; display: flex; align-items: center; justify-content: center; gap: .5rem; padding: 12px 28px;
+    font-family: var(--font-display); font-weight: 500; font-size: 1rem; color: #fff; background: var(--face); border-radius: 12px;
+    transform: translateY(-4px); transition: transform 600ms cubic-bezier(.3,.7,.4,1); user-select: none; white-space: nowrap; }
+  .btn-push:hover .shadow { transform: translateY(4px); transition: transform 250ms cubic-bezier(.3,.7,.4,1.5); }
+  .btn-push:hover .front { transform: translateY(-6px); transition: transform 250ms cubic-bezier(.3,.7,.4,1.5); }
+  .btn-push:active .shadow { transform: translateY(1px); transition: transform 34ms; }
+  .btn-push:active .front { transform: translateY(-2px); transition: transform 34ms; }
+  .btn-push:disabled { opacity: .55; pointer-events: none; }
+  .btn-push.is-sage { --edge-dark: #1B4D30; --edge-mid: #2F7C4F; --face: var(--color-sage); }
+  .btn-push.is-dark { --edge-dark: #120c09; --edge-mid: #1d1511; --face: var(--color-ink); }
+  .btn-push.is-sm .front { padding: 8px 18px; font-size: .9rem; }
+  .btn-push.is-block, .btn-push.is-block .front { width: 100%; }
+
+  /* Button — uiverse.io/virus231/fat-mouse-84 (دکمه گرادیانی فرم‌ها) */
+  .btn-grad { display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    background: linear-gradient(140.14deg, var(--color-ember) 15.05%, var(--color-ember-600) 114.99%) padding-box,
+                linear-gradient(142.51deg, #E59A7E 8.65%, #8F3826 88.82%) border-box;
+    border-radius: 10px; border: 2px solid transparent; text-shadow: 1px 1px 1px #00000030;
+    box-shadow: 6px 6px 18px 0px rgb(143 56 38 / 0.28); padding: 9px 28px; line-height: 22px; cursor: pointer;
+    transition: all .3s; color: #fff; font-size: .95rem; font-weight: 500; font-family: var(--font-display); white-space: nowrap; }
+  .btn-grad:hover { box-shadow: none; opacity: 85%; }
+  .btn-grad:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-grad.is-sage { background: linear-gradient(140deg, var(--color-sage) 15%, var(--color-sage-600) 115%) padding-box,
+                                  linear-gradient(142deg, #9FD1B1 8%, #22603C 88%) border-box; box-shadow: 6px 6px 18px 0 rgb(34 96 60 / .25); }
+  .btn-grad.is-saffron { color: var(--color-ink); text-shadow: none;
+    background: linear-gradient(140deg, var(--color-saffron) 15%, var(--color-saffron-600) 115%) padding-box,
+                linear-gradient(142deg, #F5C982 8%, #9C6618 88%) border-box; box-shadow: 6px 6px 18px 0 rgb(156 102 24 / .22); }
+  .btn-grad.is-sm { padding: 6px 16px; font-size: .85rem; }
+
+  /* دکمه ثانویه آرام (هم‌خانواده fat-mouse، بدون گرادیان) */
+  .btn-ghost { display: inline-flex; align-items: center; justify-content: center; gap: .5rem; border-radius: 10px;
+    border: 1.5px solid var(--color-sand-300); background: var(--color-surface); color: var(--color-espresso); padding: 8px 20px;
+    font-size: .95rem; font-family: var(--font-display); font-weight: 500; transition: all .25s; cursor: pointer; white-space: nowrap; }
+  .btn-ghost:hover { border-color: var(--color-espresso-400); background: var(--color-cream); }
+  .btn-ghost.is-sm { padding: 5px 12px; font-size: .85rem; }
+  .btn-ghost.is-danger { color: var(--color-danger-600); border-color: var(--color-danger-200); }
+  .btn-ghost.is-danger:hover { background: var(--color-danger-50); }
+
+  /* Button — uiverse.io/Creatlydev/silly-cat-86 (دکمه «مشاهده همه»؛ آیکن Lucide، جهت راست‌به‌چپ) */
+  .btn-arrow { --clr: var(--color-espresso); line-height: 1; display: inline-flex; border: none; cursor: pointer; align-items: center; gap: .75rem;
+    background-color: var(--clr); color: var(--color-cream); border-radius: 10rem; font-weight: 500; font-family: var(--font-display);
+    padding: .65rem 1.25rem; padding-inline-start: 1.4rem; padding-inline-end: .6rem; white-space: nowrap; transition: background-color .3s; }
+  .btn-arrow__icon { flex-shrink: 0; width: 25px; height: 25px; position: relative; color: var(--clr); background-color: var(--color-cream); border-radius: 50%; display: grid; place-items: center; overflow: hidden; }
+  .btn-arrow__icon svg { width: 14px; height: 14px; transition: transform .3s ease-in-out; }
+  .btn-arrow__icon svg:nth-child(2) { position: absolute; transform: translate(150%, 150%); }
+  .btn-arrow:hover { background-color: var(--color-ember); color: #fff; }
+  .btn-arrow:hover .btn-arrow__icon { background-color: #fff; }
+  .btn-arrow:hover .btn-arrow__icon { color: var(--color-ember); }
+  .btn-arrow:hover .btn-arrow__icon svg:first-child { transform: translate(-150%, -150%); }
+  .btn-arrow:hover .btn-arrow__icon svg:nth-child(2) { transition-delay: .1s; transform: translate(0); }
+
+  /* Checkbox — uiverse.io/MattiaCode-IT/wise-elephant-53 */
+  .gm-check { display: none; }
+  .gm-check-label { display: flex; align-items: center; gap: 12px; cursor: pointer; font-size: .95rem; color: var(--color-espresso-700);
+    transition: all .2s ease; padding: 8px; border-radius: 10px; user-select: none; }
+  .gm-check-label:hover { background: rgb(62 148 97 / .07); color: var(--color-espresso); }
+  .gm-check-box { position: relative; width: 22px; height: 22px; border: 2px solid var(--color-sand-300); border-radius: 6px; flex-shrink: 0;
+    transition: all .3s cubic-bezier(.4,0,.2,1); background: var(--color-surface); display: flex; align-items: center; justify-content: center; }
+  .gm-check-fill { position: absolute; inset: 0; background: linear-gradient(135deg, var(--color-sage) 0%, var(--color-sage-600) 100%);
+    transform: scale(0); transition: all .4s cubic-bezier(.68,-.55,.265,1.55); border-radius: 4px; opacity: 0; }
+  .gm-check-mark { position: relative; z-index: 2; opacity: 0; transform: scale(.3) rotate(20deg); transition: all .5s cubic-bezier(.68,-.55,.265,1.55); color: #fff; }
+  .gm-check-mark svg { width: 14px; height: 14px; filter: drop-shadow(0 1px 2px rgb(0 0 0 / .2)); }
+  .gm-check-ripple { position: absolute; top: 50%; left: 50%; width: 0; height: 0; background: rgb(62 148 97 / .4); border-radius: 50%; transform: translate(-50%, -50%); opacity: 0; pointer-events: none; }
+  .gm-check-label:hover .gm-check-box { border-color: var(--color-sage); box-shadow: 0 0 0 2px rgb(62 148 97 / .12); }
+  .gm-check:checked + .gm-check-label .gm-check-box { border-color: var(--color-sage); background: var(--color-sage); box-shadow: 0 4px 12px rgb(62 148 97 / .3), 0 0 0 2px rgb(62 148 97 / .2); }
+  .gm-check:checked + .gm-check-label .gm-check-fill { transform: scale(1); opacity: 1; }
+  .gm-check:checked + .gm-check-label .gm-check-mark { opacity: 1; transform: scale(1) rotate(0deg); animation: checkPop .3s ease-out .2s; }
+  .gm-check:checked + .gm-check-label .gm-check-ripple { animation: rippleSuccess .6s ease-out; }
+  .gm-check-label:active .gm-check-box { transform: scale(.95); }
+  @keyframes checkPop { 0% { transform: scale(1) rotate(0); } 50% { transform: scale(1.2) rotate(-5deg); } 100% { transform: scale(1) rotate(0); } }
+  @keyframes rippleSuccess { 0% { width: 0; height: 0; opacity: .6; } 70% { width: 50px; height: 50px; opacity: .3; } 100% { width: 60px; height: 60px; opacity: 0; } }
+
+  /* Switch — uiverse.io/JaydipPrajapati1910/tricky-cobra-89 (آیکن‌ها: Lucide x / check) */
+  .gm-switch { --switch-width: 46px; --switch-height: 24px; --switch-bg: var(--color-sand-300); --switch-checked-bg: var(--color-sage);
+    --circle-diameter: 18px; --switch-offset: calc((var(--switch-height) - var(--circle-diameter)) / 2);
+    --switch-transition: all .2s cubic-bezier(.27,.2,.25,1.51); --effect-width: calc(var(--circle-diameter) / 2); --effect-height: calc(var(--effect-width) / 2 - 1px);
+    display: inline-block; direction: ltr; flex-shrink: 0; }
+  .gm-switch input { display: none; }
+  .gm-switch .slider { box-sizing: border-box; width: var(--switch-width); height: var(--switch-height); background: var(--switch-bg); border-radius: 999px;
+    display: flex; align-items: center; position: relative; transition: var(--switch-transition); cursor: pointer; }
+  .gm-switch .circle { width: var(--circle-diameter); height: var(--circle-diameter); background: var(--color-surface); border-radius: inherit; box-shadow: 1px 1px 2px rgb(110 90 79 / .4);
+    display: flex; align-items: center; justify-content: center; transition: var(--switch-transition); z-index: 1; position: absolute; left: var(--switch-offset); }
+  .gm-switch svg { transition: all .2s cubic-bezier(.27,.2,.25,1.51); position: absolute; }
+  .gm-switch .i-check { width: 11px; height: 11px; color: var(--switch-checked-bg); transform: scale(0); }
+  .gm-switch .i-cross { width: 9px; height: 9px; color: var(--color-espresso-400); }
+  .gm-switch .slider::before { content: ""; position: absolute; width: var(--effect-width); height: var(--effect-height); left: calc(var(--switch-offset) + (var(--effect-width) / 2));
+    background: var(--color-surface); border-radius: 1px; transition: all .2s ease-in-out; }
+  .gm-switch input:checked + .slider { background: var(--switch-checked-bg); }
+  .gm-switch input:checked + .slider .i-check { transform: scale(1); }
+  .gm-switch input:checked + .slider .i-cross { transform: scale(0); }
+  .gm-switch input:checked + .slider::before { left: calc(100% - var(--effect-width) - (var(--effect-width) / 2) - var(--switch-offset)); }
+  .gm-switch input:checked + .slider .circle { left: calc(100% - var(--circle-diameter) - var(--switch-offset)); box-shadow: -1px 1px 2px rgb(110 90 79 / .4); }
+
+  /* Input — uiverse.io/Alien14k/honest-goat-49 (برچسب شناور) */
+  .field { position: relative; }
+  .field-input { width: 100%; border: 1.5px solid var(--color-sand-300); border-radius: 10px; color: var(--color-espresso); background: var(--color-surface);
+    height: 48px; padding: 0 14px; font-size: .95rem; transition: border-color .2s, box-shadow .2s; }
+  textarea.field-input { height: auto; min-height: 120px; padding: 14px; line-height: 1.9; resize: vertical; }
+  select.field-input { appearance: none; padding-inline-end: 36px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238F7B6F' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: left 12px center; }
+  .field-input::placeholder { color: transparent; }
+  .field-label { background-color: var(--color-surface); border-inline: 1.5px solid var(--color-sand-300); color: var(--color-espresso-400); display: block; font-size: .85em;
+    margin-inline-start: 10px; padding: 0 8px; pointer-events: none; position: absolute; top: -10px; line-height: 20px; transition: .2s; }
+  .field-input:placeholder-shown:not(:focus) ~ .field-label { top: 14px; border-inline-color: transparent; font-size: .95em; }
+  textarea.field-input:placeholder-shown:not(:focus) ~ .field-label { top: 14px; }
+  .field-input:focus { border-color: var(--color-ember); outline: none; box-shadow: 0 0 0 4px rgb(200 85 61 / .08); }
+  .field-input:focus ~ .field-label { border-inline-color: var(--color-ember); color: var(--color-ember); top: -10px; font-size: .85em; }
+  .field-input.is-invalid { border-color: var(--color-danger); box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-danger) 10%, transparent); }
+  .field-hint { margin-top: 6px; font-size: .8rem; color: var(--color-espresso-400); padding-inline-start: 4px; }
+
+  /* کارت ورود دوحالته — الگوی «React Logins Part 10» از frontendjoe، با پالت لوطی و راست‌به‌چپ.
+     پنل سفالی (.auth-bg) نیمه‌ی چپ را می‌پوشاند و در حالت ثبت‌نام (.is-reg) به نیمه‌ی راست می‌لغزد. متن پنل و فرم‌ها هم‌جهت با آن محو و جابه‌جا می‌شوند.
+     در موبایل پنل نوار بالای کارت است و فقط محتوا جابه‌جا می‌شود. فرم پنهان inert است. */
+  .auth-card { --band: 12.5rem; --slide: cubic-bezier(.65, 0, .35, 1); position: relative; overflow: hidden; display: grid; width: 100%; max-width: 27rem;
+    border-radius: 24px; background: var(--color-surface); border: 8px solid var(--color-surface); box-shadow: 0 12px 80px rgb(42 31 26 / .12); }
+  :root[data-theme="dark"] .auth-card { box-shadow: 0 12px 80px rgb(0 0 0 / .45); }
+  .auth-bg { position: absolute; z-index: 2; inset: 0 0 auto; height: var(--band); overflow: hidden; border-radius: 18px; color: #FFF8F4;
+    background: radial-gradient(110% 80% at 25% 0%, rgb(235 170 74 / .38), transparent 60%), linear-gradient(160deg, #D8664C, #8E3B29 70%, #6A2B1F);
+    transition: translate .65s var(--slide); }
+  .auth-bg-mark { position: absolute; width: 62%; left: -12%; bottom: -22%; opacity: .13; rotate: -8deg; }
+  .auth-hero { --off: 1.25rem; position: absolute; z-index: 3; inset: 0 0 auto; height: var(--band); display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: .7rem; padding: 0 1.75rem; color: #FFF8F4; text-align: center; }
+  .auth-hero p { max-width: 22rem; font-size: .85rem; line-height: 1.8; opacity: .85; }
+  .auth-form { --off: 1.25rem; grid-area: 1 / 1; padding: calc(var(--band) + 1.75rem) 1.25rem 1.25rem; }
+  .auth-hero, .auth-form { opacity: 0; visibility: hidden; transition: opacity .65s ease-in-out, visibility .65s, translate .65s var(--slide); }
+  .auth-card:not(.is-reg) :is(.auth-hero, .auth-form).is-login, .auth-card.is-reg :is(.auth-hero, .auth-form).is-reg { opacity: 1; visibility: visible; }
+  .auth-card:not(.is-reg) :is(.auth-hero, .auth-form).is-reg { translate: calc(-1 * var(--off)) 0; }
+  .auth-card.is-reg :is(.auth-hero, .auth-form).is-login { translate: var(--off) 0; }
+  .auth-switch { display: inline-flex; align-items: center; gap: .5rem; margin-top: .2rem; padding: .7rem 1.6rem; border-radius: 12px; font-size: .9rem; font-weight: 600; color: inherit;
+    background: rgb(255 255 255 / .12); backdrop-filter: blur(4px); box-shadow: inset 0 0 0 1px rgb(255 255 255 / .2); transition: color .3s, background-color .3s; }
+  .auth-switch:hover { color: #2A1F1A; background: #FFF8F4; }
+  .auth-switch:focus-visible { outline: 2px solid #FFF8F4; outline-offset: 3px; }
+  .auth-terms { margin-top: 1rem; text-align: center; font-size: .75rem; line-height: 1.6rem; color: var(--color-espresso-400); }
+  .auth-terms a { color: var(--color-ember); text-underline-offset: 4px; }
+  .auth-terms a:hover { text-decoration: underline; }
+  @media (width >= 48rem) {
+    .auth-card { max-width: 52rem; min-height: 34rem; }
+    .auth-bg, .auth-hero { inset: 0 auto 0 0; width: 50%; height: auto; }
+    .auth-card.is-reg .auth-bg { translate: 100% 0; }
+    .auth-bg-mark { width: 78%; left: -18%; bottom: -12%; }
+    .auth-hero { --off: 40%; gap: 1rem; padding: 0 2.75rem; }
+    .auth-hero.is-reg { left: 50%; }
+    .auth-form { --off: 25%; width: 50%; align-self: center; justify-self: right; padding: 2.5rem 2.25rem; }
+    .auth-form.is-reg { justify-self: left; }
+  }
+  @media (prefers-reduced-motion: reduce) { .auth-bg, .auth-hero, .auth-form { transition-duration: .01s; } }
+  .field-error { margin-top: 6px; font-size: .8rem; color: var(--color-danger-600); padding-inline-start: 4px; }
+  .field-suffix { position: absolute; inset-inline-end: 14px; top: 14px; font-size: .85rem; color: var(--color-espresso-400); pointer-events: none; }
+  /* جلوگیری از تداخل متن با برچسب، واحد («تومان») و دکمه چشم:
+     ورودی‌های لاتین (.ltr) جهت را برمی‌گردانند و padding منطقی به سمت اشتباه می‌رود؛ چون سایت راست‌به‌چپ است
+     واحد و دکمه همیشه سمت چپ‌اند، پس اینجا فاصله فیزیکی چپ لازم است. */
+  .field-label { max-width: calc(100% - 20px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .field:has(> .field-suffix) > .field-input { padding-left: 4.25rem; }
+  .field:has(> button) > .field-input { padding-left: 3rem; }
+  .field:has(> .field-suffix) > .field-input:placeholder-shown:not(:focus) ~ .field-label { max-width: calc(100% - 5rem); }
+  /* پرشدن خودکار مرورگر هم برچسب را بالا ببرد */
+  .field-input:is(:autofill, :-webkit-autofill) ~ .field-label { top: -10px; font-size: .85em; border-inline-color: var(--color-sand-300); }
+  .field-input:-webkit-autofill { -webkit-box-shadow: 0 0 0 40px var(--color-surface) inset; -webkit-text-fill-color: var(--color-espresso); }
+
+  /* Input — uiverse.io (ذره‌بینی که دسته‌اش نشانگر متن می‌شود) — تنها ورودی جستجوی سایت.
+     بسته: دایره ذره‌بین وسط جعبه (کل جعبه کلیک‌پذیر است). با فوکوس یا داشتن متن باز می‌شود؛ دسته می‌چرخد، می‌دود و نشانگر تایپ می‌شود.
+     تغییرها نسبت به اصل: رنگ گرم (شنی + سفالی به‌جای powderblue و آبی)، فونت میخک، راست‌به‌چپ (نشانگر به لبه راست می‌رود)،
+     و جای نشانگر به‌جای عدد ثابت 7.5em (مخصوص پهنای 17em) با cqw از پهنای خود جعبه حساب می‌شود؛
+     به‌جای required/:valid از :placeholder-shown استفاده شده تا فرم‌های خالی (مثل فیلترها) جلوی ارسال را نگیرند. */
+  .gsearch { --gs-x: calc(1em - 50cqw); position: relative; width: 100%; height: 3em; min-height: 3em; container-type: inline-size; color: var(--color-espresso); }
+  .gsearch label { position: absolute; inset: 0; z-index: 1; overflow: hidden; color: transparent; font-size: 0; cursor: text; }
+  .gsearch:has(.input:is(:focus, :not(:placeholder-shown))) label { pointer-events: none; }
+  .gsearch .input, .gsearch .caret { display: block; margin-inline: auto; transition: all .5s linear; }
+  .gsearch .input { font: inherit; line-height: 1.5; color: inherit; background: transparent; border: 0; border-radius: 50%; box-shadow: 0 0 0 .25em inset;
+    caret-color: var(--color-ember); width: 2em; height: 2em; margin-top: .4em; padding: 0; -webkit-appearance: none; appearance: none; }
+  .gsearch .input::-webkit-search-decoration { -webkit-appearance: none; }
+  .gsearch .input::placeholder { color: transparent; }
+  .gsearch .input:focus::placeholder { color: var(--color-espresso-400); transition: color .2s ease .45s; }
+  .gsearch .input:is(:focus, :not(:placeholder-shown)) { background: var(--color-sand); border-radius: .25em; box-shadow: none; padding: .75em 1em; margin-top: 0;
+    transition-duration: .25s; transition-delay: .25s; width: 100%; height: 3em; }
+  .gsearch .input:focus { animation: gs-show-caret 1s steps(1); outline: transparent; box-shadow: 0 0 0 2px var(--color-ember-200) inset; }
+  .gsearch .caret { position: absolute; inset-inline: 0; top: 2.4em; background: currentColor; border-radius: 0 0 .125em .125em; width: .25em; height: 1em;
+    transform: translate(0, -1em) rotate(-45deg) translate(0, .875em); transform-origin: 50% 0; pointer-events: none; }
+  .gsearch .input:is(:focus, :not(:placeholder-shown)) + .caret { animation: gs-handle 1s linear; background: transparent; width: 1px; height: 1.5em; top: 3em;
+    transform: translate(0, -1em) rotate(-180deg) translate(var(--gs-x), -.25em); transition-duration: .25s; transition-delay: .25s; }
+  @keyframes gs-show-caret { from { caret-color: transparent; } to { caret-color: var(--color-ember); } }
+  @keyframes gs-handle {
+    from { background: currentColor; width: .25em; height: 1em; transform: translate(0, -1em) rotate(-45deg) translate(0, .875em); }
+    25% { background: currentColor; width: .25em; height: 1em; transform: translate(0, -1em) rotate(-180deg) translate(0, .875em); }
+    50%, 62.5% { background: var(--color-ember); width: 1px; height: 1.5em; transform: translate(0, -1em) rotate(-180deg) translate(var(--gs-x), 2.5em); }
+    75%, 99% { background: var(--color-ember); width: 1px; height: 1.5em; transform: translate(0, -1em) rotate(-180deg) translate(var(--gs-x), -.25em); }
+    87.5% { background: var(--color-ember); width: 1px; height: 1.5em; transform: translate(0, -1em) rotate(-180deg) translate(var(--gs-x), .125em); }
+    to { background: transparent; width: 1px; height: 1.5em; transform: translate(0, -1em) rotate(-180deg) translate(var(--gs-x), -.25em); }
+  }
+  @media (prefers-reduced-motion: reduce) { .gsearch .input, .gsearch .caret { animation: none !important; transition-duration: 0s !important; transition-delay: 0s !important; } }
+
+
+  /* Input — uiverse.io/escannord/good-insect-28 (بارگذاری فایل) */
+  .file-drop { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: .5rem; width: 100%; min-height: 150px;
+    border: 2px dashed var(--color-sand-300); border-radius: 14px; text-align: center; padding: 16px; color: var(--color-espresso-500); cursor: pointer;
+    background: var(--color-surface); transition: all .25s; }
+  .file-drop:hover, .file-drop.is-over { border-color: var(--color-ember); background: var(--color-ember-50); color: var(--color-ember-700); }
+
+  /* Radio — uiverse.io/00Kubi/smooth-termite-31 (کنترل قطعه‌ای) */
+  .seg { position: relative; display: flex; flex-wrap: wrap; border-radius: 12px; background-color: var(--color-sand); box-shadow: 0 0 0 1px rgb(42 31 26 / .05);
+    padding: .25rem; font-size: .9rem; gap: 2px; }
+  .seg .seg-item { flex: 1 1 auto; text-align: center; }
+  .seg .seg-item input { display: none; }
+  .seg .seg-name { display: flex; gap: .4rem; cursor: pointer; align-items: center; justify-content: center; border-radius: 9px; padding: .5rem .75rem;
+    color: var(--color-espresso-500); transition: all .15s ease-in-out; white-space: nowrap; }
+  .seg .seg-item:hover .seg-name { background-color: color-mix(in srgb, var(--color-surface) 55%, transparent); }
+  .seg .seg-item input:checked + .seg-name { background-color: var(--color-surface); color: var(--color-espresso); font-weight: 600; position: relative; box-shadow: 0 2px 8px rgb(42 31 26 / .1); animation: seg-select .3s ease; }
+  @keyframes seg-select { 0% { transform: scale(.95); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+  .seg .seg-item input:checked + .seg-name::before, .seg .seg-item input:checked + .seg-name::after { content: ""; position: absolute; width: 4px; height: 4px; border-radius: 50%;
+    background: var(--color-saffron); opacity: 0; left: 50%; animation: seg-particles .5s ease forwards; }
+  .seg .seg-item input:checked + .seg-name::before { top: -8px; --direction: -10px; }
+  .seg .seg-item input:checked + .seg-name::after { bottom: -8px; --direction: 10px; }
+  @keyframes seg-particles { 0% { opacity: 0; transform: translateX(-50%) translateY(0); } 50% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(var(--direction)); } }
+
+  /* Radio — uiverse.io/Lu2ovic/short-hound-89 (امتیاز ستاره‌ای؛ آیکن Lucide star) */
+  .stars { display: inline-flex; flex-direction: row-reverse; gap: .3rem; transform-style: preserve-3d; perspective: 1000px; direction: ltr; }
+  .stars input { display: none; }
+  .stars label { position: relative; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; transition: all .5s ease; }
+  .stars .s-one { width: 34px; height: 34px; stroke: var(--color-sand-300); fill: transparent; transition: stroke .5s ease, fill .5s ease; }
+  .stars .s-two { width: 34px; height: 34px; position: absolute; top: 0; fill: var(--color-saffron); stroke: transparent; opacity: 0; transition: stroke .5s ease, fill .5s ease, opacity .5s ease; }
+  .stars label:hover .s-one, .stars label:hover ~ label .s-one { stroke: var(--color-saffron); }
+  .stars input:checked ~ label .s-one { stroke: transparent; }
+  .stars input:checked ~ label .s-two { opacity: 1; animation: displayStar .5s cubic-bezier(.75,.41,.82,1.2); }
+  .stars .ombre { background: radial-gradient(ellipse closest-side, rgb(42 31 26 / .24), transparent); width: 30px; height: 8px; opacity: 0; transition: opacity .6s ease .2s; }
+  .stars label:hover .ombre, .stars label:hover ~ label .ombre { opacity: .3; }
+  .stars input:checked ~ label .ombre { opacity: 1; }
+  .stars label:hover .s-two:hover { animation: shakeStar .6s ease-out; }
+  @keyframes displayStar { 0% { transform: rotateX(100deg) rotateY(100deg) translateY(10px); } 100% { transform: none; } }
+  @keyframes shakeStar { 0%,100% { transform: rotate(0); } 20%,80% { transform: rotate(-20deg); } 50% { transform: rotate(20deg); } }
+
+  /* Card — uiverse.io/Prince4fff/slippery-baboon-37 (کارت با گوشه «برو») */
+  .go-card { display: block; position: relative; background-color: var(--color-surface); border-radius: 16px; text-decoration: none; z-index: 0; overflow: hidden;
+    border: 1px solid var(--color-sand-200); transition: all .2s ease-out; top: 0; }
+  .go-card:hover { box-shadow: var(--shadow-lift); top: -4px; border-color: var(--color-sand-300); }
+  .go-card .go-corner { display: flex; align-items: center; justify-content: center; position: absolute; width: 34px; height: 34px; overflow: hidden; top: 0; left: 0;
+    background-color: var(--color-ember); border-radius: 0 0 34px 0; color: #fff; z-index: 3; opacity: 0; transition: opacity .25s; }
+  .go-card .go-corner svg { margin-top: -4px; margin-left: -4px; width: 15px; height: 15px; }
+  .go-card:hover .go-corner { opacity: 1; }
+  /* نسخه card1: دایره گوشه کل کارت را پر می‌کند */
+  .go-fill { position: relative; overflow: hidden; z-index: 0; }
+  .go-fill::before { content: ""; position: absolute; z-index: -1; top: -16px; left: -16px; background: var(--tone, var(--color-ember)); height: 32px; width: 32px;
+    border-radius: 32px; transform: scale(1); transform-origin: 50% 50%; transition: transform .35s ease-out; }
+  .go-fill:hover::before { transform: scale(24); }
+  .go-fill .go-icon { background: color-mix(in srgb, var(--tone) 10%, transparent); color: var(--tone); }
+  .go-fill .go-corner { opacity: 1; background: var(--tone, var(--color-ember)); }
+  .go-fill:hover .go-tint { color: #fff; }
+  .go-fill:hover .go-tint-soft { color: rgb(255 255 255 / .82); }
+  .go-fill:hover .go-icon { background: rgb(255 255 255 / .18); color: #fff; }
+  /* کارت بازی با کاور رسمی: آیکن روی لبه عکس می‌نشیند و موقع پر شدن کارت هم‌رنگ آن می‌شود */
+  .game-card .go-icon { background: color-mix(in srgb, var(--tone) 12%, var(--color-surface)); box-shadow: 0 0 0 4px var(--color-surface); transition: background-color .35s, color .35s, box-shadow .35s; }
+  .game-card:hover .go-icon { background: color-mix(in srgb, var(--tone) 78%, #000); color: #fff; box-shadow: 0 0 0 4px var(--tone); }
+  .game-cover img { transition: transform .6s cubic-bezier(.2, .7, .2, 1), filter .4s; }
+  .game-card:hover .game-cover img { transform: scale(1.06); }
+  @media (prefers-reduced-motion: reduce) { .game-card:hover .game-cover img { transform: none; } }
+
+  /* Card — uiverse.io/akshat-patel28/quick-baboon-29 (پیام‌های اعلان) */
+  .toast { width: min(360px, calc(100vw - 32px)); min-height: 78px; border-radius: 12px; padding: 12px 16px; background-color: var(--color-surface); box-shadow: rgb(42 31 26 / .16) 0 8px 24px;
+    position: relative; overflow: hidden; display: flex; align-items: center; gap: 14px; --tone: var(--color-sage); --tone-bg: rgb(62 148 97 / .18); }
+  .toast .wave { position: absolute; transform: rotate(-90deg); right: -31px; top: 28px; width: 80px; fill: var(--tone-bg); }
+  .toast .toast-icon { width: 36px; height: 36px; display: flex; justify-content: center; align-items: center; background-color: var(--tone-bg); color: var(--tone); border-radius: 50%; flex-shrink: 0; z-index: 1; }
+  .toast .toast-title { color: var(--tone); font-size: .95rem; font-weight: 700; font-family: var(--font-display); }
+  .toast .toast-text { font-size: .85rem; color: var(--color-espresso-500); }
+  .toast.is-error { --tone: var(--color-danger); --tone-bg: color-mix(in oklab, var(--color-danger) 15%, transparent); }
+  .toast.is-warning { --tone: var(--color-warn-600); --tone-bg: color-mix(in oklab, var(--color-warn) 24%, transparent); }
+  .toast.is-info { --tone: var(--color-espresso-700); --tone-bg: rgb(143 123 111 / .16); }
+
+  /* Card — uiverse.io/Yaya12085/grumpy-fox-39 (تأیید عملیات) */
+  .confirm-card { overflow: hidden; position: relative; background-color: var(--color-surface); text-align: center; border-radius: 18px; width: min(340px, calc(100vw - 32px));
+    box-shadow: 0 20px 25px -5px rgb(42 31 26 / .12), 0 10px 10px -5px rgb(42 31 26 / .05); padding: 1.5rem 1.25rem 1.25rem; }
+  .confirm-card .confirm-icon { display: flex; margin: 0 auto; background-color: var(--color-danger-50); justify-content: center; align-items: center; width: 3rem; height: 3rem; border-radius: 9999px; color: var(--color-danger-600); }
+  .confirm-card.is-sage .confirm-icon { background: var(--color-sage-50); color: var(--color-sage-600); }
+  .confirm-card .confirm-title { display: block; margin-top: .75rem; color: var(--color-espresso); font-size: 1.05rem; font-weight: 600; font-family: var(--font-display); }
+  .confirm-card .confirm-msg { margin-top: .5rem; color: var(--color-espresso-500); font-size: .875rem; line-height: 1.8; }
+  .confirm-card .confirm-actions { margin-top: 1rem; display: flex; flex-direction: column; gap: .6rem; }
+  .confirm-card .confirm-ok { display: inline-flex; padding: .55rem 1rem; background-color: var(--color-danger); color: #fff; font-weight: 500; justify-content: center; width: 100%; border-radius: .6rem; cursor: pointer; }
+  .confirm-card.is-sage .confirm-ok { background: var(--color-sage); }
+  .confirm-card .confirm-cancel { display: inline-flex; padding: .55rem 1rem; background-color: var(--color-surface); color: var(--color-espresso-700); font-weight: 500; justify-content: center; width: 100%; border-radius: .6rem; border: 1px solid var(--color-sand-300); cursor: pointer; }
+
+  /* Form — uiverse.io/vinodjangid07/ordinary-stingray-51 (کد یک‌بارمصرف) */
+  .otp-form { width: 100%; max-width: 380px; background-color: var(--color-surface); display: flex; flex-direction: column; align-items: center; padding: 32px 28px; gap: 18px;
+    position: relative; box-shadow: 0 0 20px rgb(42 31 26 / .07); border-radius: 20px; }
+  .otp-form .otp-heading { font-size: 1.35rem; color: var(--color-espresso); font-weight: 700; font-family: var(--font-display); }
+  .otp-form .otp-sub { font-size: .9rem; color: var(--color-espresso-500); line-height: 1.9; text-align: center; }
+  .otp-form .otp-inputs { width: 100%; display: flex; gap: 10px; align-items: center; justify-content: center; direction: ltr; }
+  .otp-form .otp-input { background-color: var(--color-sand); width: 54px; height: 58px; text-align: center; border: none; border-radius: 12px; caret-color: var(--color-ember);
+    color: var(--color-espresso); outline: none; font-weight: 700; font-size: 1.5rem; transition-duration: .3s; }
+  .otp-form .otp-input:focus, .otp-form .otp-input:valid { background-color: rgb(200 85 61 / .12); box-shadow: inset 0 0 0 2px rgb(200 85 61 / .35); }
+  .otp-form .otp-exit { position: absolute; top: 10px; left: 10px; box-shadow: 0 0 20px rgb(42 31 26 / .15); background-color: var(--color-surface); border-radius: 50%; width: 30px; height: 30px;
+    display: grid; place-items: center; color: var(--color-espresso); }
+  .otp-form .otp-resend { font-size: .85rem; color: var(--color-espresso-500); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .otp-form .otp-resend-btn { background: transparent; border: none; color: var(--color-ember); cursor: pointer; font-weight: 700; }
+  .otp-form .otp-resend-btn:disabled { color: var(--color-espresso-400); cursor: default; font-weight: 400; }
+
+  /* Loader — uiverse.io (سه ستون تپنده) — تنها لودر سایت. نسبت‌ها همان اصل (۲۰×۷۰، فاصله ۱۰) ولی بر حسب em
+     تا با font-size بزرگ و کوچک شود؛ رنگ از currentColor می‌آید (پیش‌فرض سفالی، داخل دکمه سفید). */
+  .bars { --h: 2.2em; display: inline-flex; align-items: center; justify-content: center; gap: .31em; height: var(--h); color: var(--color-ember); vertical-align: middle; }
+  .bars i { width: .63em; height: var(--h); border-radius: .14em; background: currentColor; animation: bars-load 1s infinite cubic-bezier(.68, -.55, .27, 1.55); }
+  @keyframes bars-load { 0% { height: 0; } 25% { height: var(--h); } 50% { height: var(--h); transform: rotate(10deg); } 75% { height: var(--h); transform: rotate(0deg); } 100% { height: 0; } }
+  /* لودرهای پنهان (htmx-indicator) تا لازم نشده‌اند تکان نمی‌خورند */
+  .htmx-indicator .bars i, .page-loader .bars i { animation-play-state: paused; }
+  .htmx-request .htmx-indicator .bars i, .htmx-request.htmx-indicator .bars i,
+  .htmx-request.page-loader .bars i, html.is-navigating .page-loader .bars i { animation-play-state: running; }
+
+  /* لودر شناور صفحه: هنگام رفتن به صفحه دیگر و درخواست‌های HTMX، با کمی تأخیر تا درخواست‌های سریع چشمک نزنند */
+  .page-loader { position: fixed; top: 5rem; inset-inline: 0; z-index: 100; width: max-content; margin-inline: auto; display: flex; align-items: center; gap: .6rem;
+    padding: .55rem 1rem; border-radius: 999px; border: 1px solid var(--color-sand-200); background: var(--color-surface); box-shadow: 0 10px 30px -12px rgb(42 31 26 / .35);
+    font-size: .8rem; color: var(--color-espresso-500); pointer-events: none; opacity: 0; scale: .85; translate: 0 -.5rem;
+    transition: opacity .2s ease, scale .35s var(--ease-spring), translate .35s var(--ease-spring), top .45s var(--ease-spring); }
+  .htmx-request.page-loader, html.is-navigating .page-loader { opacity: 1; scale: 1; translate: 0 0; transition-delay: .18s; }
+  html.hdr-hidden .page-loader { top: 1rem; }
+
+  /* ───────── اجزای کوچک خود پروژه (فقط چیدمان، بدون جایگزینی منابع بالا) ───────── */
+  .chip { display: inline-flex; align-items: center; gap: .3rem; border-radius: 999px; padding: .2rem .65rem; font-size: .78rem; line-height: 1.5; white-space: nowrap;
+    background: var(--color-sand); color: var(--color-espresso-700); }
+  .chip.is-sage { background: var(--color-sage-50); color: var(--color-sage-700); }
+  .chip.is-saffron { background: var(--color-saffron-50); color: var(--color-saffron-700); }
+  .chip.is-ember { background: var(--color-ember-50); color: var(--color-ember-700); }
+  .chip.is-danger { background: var(--color-danger-50); color: var(--color-danger-700); }
+  .chip.is-warn { background: var(--color-warn-50); color: var(--color-warn-700); }
+  .chip.is-muted { background: var(--color-sand); color: var(--color-espresso-400); }
+  /* Alert — اقتباس از 21st.dev «alert-1» (cva → data-variant/appearance/size). رنگ‌های اصل (آبی/بنفش/سبز تند) به پالت گرم برگردانده شد:
+     primary سفالی، destructive قرمز، success سبز، warning زرد، info قهوه‌ای، mono اسپرسو/کرم، secondary شنی. */
+  .alert { --a-tone: var(--color-espresso-500); --a-soft: var(--color-sand-100); --a-line: var(--color-sand-200); --a-solid: var(--color-sand); --a-on: var(--color-espresso);
+    display: flex; align-items: flex-start; width: 100%; gap: .625rem; padding: .875rem; border-radius: .75rem; font-size: .875rem; line-height: 1.6;
+    border: 1px solid transparent; background: var(--a-solid); color: var(--a-on); }
+  .alert[data-variant="primary"] { --a-tone: var(--color-ember); --a-soft: var(--color-ember-50); --a-line: var(--color-ember-100); --a-solid: #B04631; --a-on: #FFF8F4; }
+  .alert[data-variant="destructive"] { --a-tone: var(--color-danger-600); --a-soft: var(--color-danger-50); --a-line: var(--color-danger-200); --a-solid: #B02E25; --a-on: #FFF1EF; }
+  .alert[data-variant="success"] { --a-tone: var(--color-sage-600); --a-soft: var(--color-sage-50); --a-line: var(--color-sage-100); --a-solid: #2F7C4F; --a-on: #F1FAF4; }
+  .alert[data-variant="info"] { --a-tone: var(--color-espresso-600); --a-soft: var(--color-sand-50); --a-line: var(--color-sand-300); --a-solid: #5B4A40; --a-on: #FAF6F0; }
+  .alert[data-variant="warning"] { --a-tone: var(--color-warn-700); --a-soft: var(--color-warn-50); --a-line: var(--color-warn-100); --a-solid: #E2B320; --a-on: #2A1F1A; }
+  .alert[data-variant="mono"] { --a-tone: var(--color-espresso); --a-solid: var(--color-espresso); --a-on: var(--color-cream); }
+  [data-theme="dark"] .alert[data-variant="primary"] { --a-solid: #A9452F; }
+  [data-theme="dark"] .alert[data-variant="destructive"] { --a-solid: #9A2B23; }
+  [data-theme="dark"] .alert[data-variant="success"] { --a-solid: #276843; }
+  [data-theme="dark"] .alert[data-variant="info"] { --a-solid: #4A3A30; --a-on: #F3EAE0; }
+  .alert[data-appearance="outline"] { background: var(--color-surface); border-color: var(--color-sand-200); color: var(--a-tone); }
+  .alert[data-appearance="stroke"] { background: var(--color-surface); border-color: var(--color-sand-200); color: var(--color-espresso); }
+  .alert[data-appearance="light"] { background: var(--a-soft); border-color: var(--a-line); color: var(--color-espresso); }
+  .alert:is([data-appearance="stroke"], [data-appearance="light"]) [data-slot="alert-icon"] { color: var(--a-tone); }
+  .alert[data-variant="secondary"][data-appearance="light"] { background: var(--color-sand); }
+  .alert[data-size="lg"] { padding: 1rem; gap: .75rem; font-size: 1rem; }
+  .alert[data-size="sm"] { padding: .625rem .75rem; gap: .5rem; font-size: .8rem; border-radius: .6rem; }
+  .alert [data-slot="alert-icon"] { flex-shrink: 0; margin-top: .05em; }
+  .alert [data-slot="alert-icon"] svg { width: 1.25rem; height: 1.25rem; }
+  .alert[data-size="lg"] [data-slot="alert-icon"] svg { width: 1.5rem; height: 1.5rem; }
+  .alert[data-size="sm"] [data-slot="alert-icon"] svg { width: 1rem; height: 1rem; margin-top: .1em; }
+  .alert [data-slot="alert-content"] { flex: 1 1 auto; min-width: 0; display: grid; gap: .25rem; }
+  .alert [data-slot="alert-title"] { flex: 1 1 auto; min-width: 0; letter-spacing: -.01em; }
+  .alert [data-slot="alert-content"] [data-slot="alert-title"] { font-weight: 600; }
+  .alert [data-slot="alert-description"] { font-size: .92em; line-height: 1.8; opacity: .88; }
+  .alert [data-slot="alert-description"] :where(ul) { list-style: disc; padding-inline-start: 1.1rem; }
+  .alert [data-slot="alert-toolbar"] a { display: inline-flex; white-space: nowrap; font-size: .85em; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; margin-top: .1em; }
+  .alert [data-slot="alert-toolbar"] a:hover { opacity: .75; }
+  .alert[data-appearance="light"] [data-slot="alert-toolbar"] a { color: var(--a-tone); }
+  .alert [data-slot="alert-close"] { flex-shrink: 0; display: grid; place-items: center; width: 1.5rem; height: 1.5rem; margin-block-start: -.125rem; margin-inline-end: -.25rem; border-radius: .4rem; color: inherit; opacity: .6; transition: opacity .15s, background-color .15s; }
+  .alert [data-slot="alert-close"]:hover { opacity: 1; background: color-mix(in srgb, currentColor 10%, transparent); }
+  .alert [data-slot="alert-close"]:focus-visible { opacity: 1; outline: 2px solid currentColor; outline-offset: 1px; }
+  .alert [data-slot="alert-close"] svg { width: 1rem; height: 1rem; }
+  .alert:is([data-appearance="outline"], [data-appearance="stroke"], [data-appearance="light"]) [data-slot="alert-close"] { color: var(--color-espresso); }
+  .panel { background: var(--color-surface); border: 1px solid var(--color-sand-200); border-radius: 18px; }
+  .htmx-indicator { opacity: 0; transition: opacity .2s; }
+  .htmx-request .htmx-indicator, .htmx-request.htmx-indicator { opacity: 1; }
+  .htmx-request .htmx-hide { opacity: .45; transition: opacity .2s; }
+  .no-scrollbar { scrollbar-width: none; } .no-scrollbar::-webkit-scrollbar { display: none; }
+  .fa-num { font-feature-settings: "tnum"; }
+}
+
+@layer components {
+  /* ───────────── کلید روز/شب (uiverse.io، رنگ‌های گرم) ─────────────
+     روز: آسمان غروب زعفرانی با خورشید کرمی؛ شب: قهوه‌ای سوخته با ماه استخوانی و ستاره‌های کهربایی */
+  .theme-sw { position: relative; display: inline-block; flex-shrink: 0; width: 60px; height: 34px; direction: ltr; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .theme-sw .ts-input { position: absolute; opacity: 0; width: 0; height: 0; }
+  .theme-sw .ts-slider { position: absolute; inset: 0; z-index: 0; overflow: hidden; border-radius: 34px;
+    background: linear-gradient(160deg, #F3BE6C 0%, #E08A55 100%); box-shadow: inset 0 1px 3px rgb(42 31 26 / .25);
+    transition: background .5s, box-shadow .3s; }
+  .theme-sw .ts-slider::before { content: ""; position: absolute; inset: 0; border-radius: inherit; opacity: 0; transition: opacity .5s;
+    background: linear-gradient(160deg, #3A2C25 0%, #1B1411 100%); }
+  .theme-sw .ts-orb { position: absolute; left: 4px; bottom: 4px; width: 26px; height: 26px; border-radius: 50%; background: #FFE6A8;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / .35), 0 2px 6px rgb(143 56 38 / .35); transition: transform .5s cubic-bezier(.65,0,.35,1), background .5s; }
+  .theme-sw .ts-input:checked + .ts-slider::before { opacity: 1; }
+  .theme-sw .ts-input:checked + .ts-slider .ts-orb { transform: translateX(26px); background: #F3E9DD; animation: ts-spin .6s ease-in-out both; box-shadow: 0 0 10px rgb(243 233 221 / .25); }
+  .theme-sw .ts-input:focus-visible + .ts-slider { box-shadow: 0 0 0 3px var(--color-cream), 0 0 0 5px var(--color-ember); }
+  .theme-sw:hover .ts-orb { filter: brightness(1.04); }
+  @keyframes ts-spin { from { transform: translateX(26px) rotate(0); } to { transform: translateX(26px) rotate(360deg); } }
+
+  .theme-sw svg { position: absolute; }
+  .theme-sw .ts-dot { z-index: 4; fill: #B3A296; opacity: 0; transition: opacity .4s; }
+  .theme-sw .ts-input:checked + .ts-slider .ts-dot { opacity: 1; }
+  .theme-sw .d1 { left: 10px; top: 3px; width: 6px; height: 6px; }
+  .theme-sw .d2 { left: 2px; top: 10px; width: 10px; height: 10px; }
+  .theme-sw .d3 { left: 16px; top: 18px; width: 3px; height: 3px; }
+  .theme-sw .ts-ray { z-index: -1; fill: #FFF6E3; opacity: .14; }
+  .theme-sw .r1 { left: -8px; top: -8px; width: 43px; height: 43px; }
+  .theme-sw .r2 { left: -50%; top: -50%; width: 55px; height: 55px; }
+  .theme-sw .r3 { left: -18px; top: -18px; width: 60px; height: 60px; }
+  .theme-sw .ts-cloud { fill: #FCF4E9; animation: ts-cloud 6s infinite; transition: opacity .4s; }
+  .theme-sw .ts-cloud.is-back { fill: #F1DCC2; animation-delay: 1s; }
+  .theme-sw .ts-input:checked + .ts-slider .ts-cloud { opacity: .1; }
+  .theme-sw .c1 { left: 30px; top: 15px; width: 40px; }
+  .theme-sw .c2 { left: 44px; top: 10px; width: 20px; }
+  .theme-sw .c3 { left: 18px; top: 24px; width: 30px; }
+  .theme-sw .c4 { left: 36px; top: 18px; width: 40px; }
+  .theme-sw .c5 { left: 48px; top: 14px; width: 20px; }
+  .theme-sw .c6 { left: 22px; top: 26px; width: 30px; }
+  @keyframes ts-cloud { 0%, 100% { transform: translateX(0); } 40% { transform: translateX(4px); } 80% { transform: translateX(-4px); } }
+
+  .theme-sw .ts-stars { position: absolute; inset: 0; transform: translateY(-32px); opacity: 0; transition: transform .5s, opacity .5s; }
+  .theme-sw .ts-input:checked + .ts-slider .ts-stars { transform: translateY(0); opacity: 1; }
+  .theme-sw .ts-star { fill: #FAE7C4; animation: ts-twinkle 2s infinite; }
+  .theme-sw .s1 { width: 20px; top: 2px; left: 3px; animation-delay: .3s; }
+  .theme-sw .s2 { width: 6px; top: 16px; left: 3px; }
+  .theme-sw .s3 { width: 12px; top: 20px; left: 10px; animation-delay: .6s; }
+  .theme-sw .s4 { width: 18px; top: 0; left: 18px; animation-delay: 1.3s; }
+  @keyframes ts-twinkle { 0%, 100% { transform: scale(1); } 40% { transform: scale(1.2); } 80% { transform: scale(.8); } }
+}
+
+/* عوض شدن تم: دایره‌ای که از خود کلید باز می‌شود (View Transitions)؛ مرورگرهای بدون پشتیبانی رنگ‌ها را نرم عوض می‌کنند */
+html.vt-theme::view-transition-old(root), html.vt-theme::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+/* در عوض شدن تم، همه صفحه یک تکه است تا دایره روی هدر و نوار پایین هم بگذرد */
+html.vt-theme :is(.site-header, .tabbar, .tab-ink) { view-transition-name: none; }
+html.theme-fading, html.theme-fading :not(.theme-sw, .theme-sw *), html.theme-fading :not(.theme-sw *)::before {
+  transition: background-color .45s ease, border-color .45s ease, color .3s ease, fill .3s ease !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .theme-sw .ts-cloud, .theme-sw .ts-star, .theme-sw .ts-input:checked + .ts-slider .ts-orb { animation: none; }
+}
+/* تصویرسازی‌های unDraw در شب: سفیدهای درشت‌شان کمی خاموش‌تر */
+[data-theme="dark"] img[src*="/illustrations/"] { filter: brightness(.8) saturate(.9); }
+
+/* ═══════════════════════════ حرکت (Motion) ═══════════════════════════
+   یک زبان حرکتی برای کل سایت: ورودها «فنر نرم» (ease-spring)، خروج‌ها کوتاه و شتاب‌دار (ease-exit)،
+   ریزتعامل‌ها کمی جهش (ease-pop). هرچه پویانمایی است با «کاهش حرکت» سیستم خاموش می‌شود. */
+
+/* شماره ترتیب فرزندان برای تأخیر پلکانی: animation-delay: calc(var(--n) * …) */
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(1) { --n: 0; }
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(2) { --n: 1; }
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(3) { --n: 2; }
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(4) { --n: 3; }
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(5) { --n: 4; }
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(6) { --n: 5; }
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(7) { --n: 6; }
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(8) { --n: 7; }
+:is(#main, #main > div, .card-nav-top, .card-nav-actions, .tabbar > div, .menu-stagger, .dd-motion, .dd-motion ul) > :nth-child(n+9) { --n: 8; }
+
+@layer components {
+  /* کانتینر سیال همه‌ی صفحه‌ها: تا ۱۲۰rem تمام عرض را می‌گیرد، فاصله‌ی کناری با عرض صفحه بزرگ می‌شود */
+  .wrap { width: 100%; max-width: var(--wrap-max); margin-inline: auto; padding-inline: var(--gutter); }
+
+  /* ─── هدر: موقع اسکرول به پایین کنار می‌رود، با اسکرول به بالا برمی‌گردد ─── */
+  /* ───────── Hero صفحه اول ─────────
+     ساده و کاربردی: تیتر، جستجو، سه عدد واقعی معامله، و پنل «بازار همین حالا» با تعداد آگهی و ارزان‌ترین قیمت هر بازی. */
+  .hero { position: relative; isolation: isolate; overflow: clip; }
+  .home-band.hero { padding-block: 0; background: transparent; margin-top: calc(var(--head-h) * -1); }
+
+  /* صحنه‌ی تمام‌عرض: زیر هدر شناور شروع می‌شود و تا ارتفاع صفحه قد می‌کشد. رنگ‌ها همه از توکن‌های --hero-* (روشن/تاریک).
+     صندوق بزرگ لوطی درش آرام باز و بسته می‌شود، نور زعفرانی از لای در بالا می‌زند و سکه‌ها بیرون می‌آیند؛ نور ملایمی دنبال موس می‌آید (heroSpot). */
+  .hero-stage { --mx: 70%; --my: 30%; position: relative; isolation: isolate; overflow: hidden; display: flex; flex-direction: column;
+    padding-top: var(--head-h); min-height: min(100svh, 62rem);
+    border-radius: 0 0 clamp(1.5rem, 3vw, 3rem) clamp(1.5rem, 3vw, 3rem); color: var(--color-espresso);
+    background:
+      radial-gradient(32rem 26rem at var(--mx) var(--my), var(--hero-spot), transparent 70%),
+      radial-gradient(60% 60% at 22% 105%, var(--hero-glow-ember), transparent 70%),
+      radial-gradient(50% 45% at 95% -5%, var(--hero-glow-saffron), transparent 70%),
+      linear-gradient(180deg, var(--hero-bg-top), var(--hero-bg-bottom));
+    box-shadow: inset 0 -1px 0 var(--hero-edge); }
+  .hero-stage > .wrap { flex: 1; }
+  .hero-headline-glow { background: linear-gradient(90deg, var(--hero-head-from), var(--hero-head-to) 75%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* لوطیِ بزرگ زیر پنل بازار: تاج کلاهش پشت لبه‌ی پنل است و سبیلش زیر آن؛ وقتی کلاه را برمی‌دارد نور و سکه از زیرش بالا می‌زند */
+  .hero-loot { position: relative; padding-bottom: 10rem; }
+  @media (width >= 64rem) { .hero-loot { padding-bottom: 12rem; } }
+  .hero-vault { position: absolute; z-index: -1; width: 19rem; aspect-ratio: 1; left: 50%; bottom: -3.5rem; translate: -50% 0; pointer-events: none; }
+  @media (width >= 64rem) { .hero-vault { width: 22rem; bottom: -4.2rem; } }
+  .hero-vault svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .hc-hat { transform-box: view-box; transform-origin: 37px 21px; }
+  .hc-stache { fill: url(#hl-stache); stroke: var(--hero-chest-line); stroke-width: .25; transform-box: view-box; transform-origin: 24px 29px; }
+  .hc-light { transform-box: fill-box; transform-origin: 50% 100%; }
+  .hero-beam { position: absolute; left: 4%; right: 4%; bottom: 56%; height: 150%; clip-path: polygon(24% 100%, 76% 100%, 100% 0, 0 0);
+    background: linear-gradient(to top, var(--hero-beam-core), var(--hero-beam-tail) 45%, transparent 85%); filter: blur(18px); transform-origin: 50% 100%; }
+  .hero-coin { position: absolute; left: calc(50% + var(--x, 0px)); bottom: 56%; width: var(--s, 14px); aspect-ratio: 1; border-radius: 50%; opacity: 0;
+    background: radial-gradient(circle at 35% 30%, #FBE3B6, #EBAA4A 45%, #B5782A 100%); box-shadow: 0 0 14px rgb(235 170 74 / .55), inset 0 0 0 1.5px rgb(255 240 210 / .45); }
+
+  .hero-stage .hero-market { background: color-mix(in srgb, var(--color-surface) 78%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.2); backdrop-filter: blur(16px) saturate(1.2);
+    border-color: var(--hero-panel-line); box-shadow: var(--hero-panel-shadow), inset 0 1px 0 rgb(255 255 255 / .06); }
+  .hero-stage .hero-market-row:hover { background: color-mix(in srgb, var(--color-espresso) 4%, transparent); }
+  .hero-stage .hero-market li + li .hero-market-row { border-top-color: var(--hero-panel-line); }
+  /* صفحه اصلی: هر سکشن یک نوار تمام‌عرض؛ نوارها یک‌درمیان cream و band (دو رنگ خیلی نزدیک) — بدون خط و الگو */
+  .home-band { background: var(--color-cream); padding-block: clamp(3rem, 5vw, 6rem); }
+  .home-band:nth-child(even of .home-band) { background: var(--color-band); }
+  .home-band.is-tight { padding-block: clamp(2rem, 3vw, 3.5rem); }
+  .hero-facts { display: grid; grid-template-columns: repeat(3, 1fr); border-block: 1px solid var(--color-sand-200); }
+  .hero-facts > div { padding: .85rem .25rem; }
+  .hero-facts > div + div { border-inline-start: 1px solid var(--color-sand-200); padding-inline-start: 1rem; }
+  .hero-facts dt { font-size: .75rem; color: var(--color-espresso-400); }
+  .hero-facts dd { margin-top: .2rem; font-family: var(--font-display); font-size: 1.15rem; font-weight: 800; color: var(--color-espresso); }
+
+  .hero-market { border-radius: 1.25rem; border: 1px solid var(--color-sand-200); background: var(--color-surface); box-shadow: var(--shadow-lift); overflow: hidden; }
+  .hero-market-row { display: flex; align-items: center; gap: .85rem; padding: .7rem 1.25rem; transition: background-color .2s; }
+  .hero-market li + li .hero-market-row { border-top: 1px solid var(--color-sand-100); }
+  .hero-market-row:hover { background: var(--color-cream); }
+  .hero-market-thumb { display: grid; place-items: center; flex-shrink: 0; width: 2.75rem; height: 2.75rem; border-radius: .75rem; overflow: hidden; }
+  .hero-market-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .hero-market-go { transition: translate .3s var(--ease-pop), color .2s; }
+  .hero-market-row:hover .hero-market-go { translate: -3px 0; color: var(--color-ember); }
+
+  /* ───────── Header — React Bits «CardNav» ─────────
+     تایم‌لاین GSAP اصل (قد ۶۰ ← ۲۶۰ در ۰٫۴ ثانیه با power3.out، بعد کارت‌ها از ۵۰ پیکسل پایین‌تر با فاصله ۸۰ میلی‌ثانیه)
+     با transition بازسازی شده؛ بستن، برعکس همان: اول کارت‌ها پایین می‌روند، بعد کارت جمع می‌شود. */
+  .card-nav { --ease-p3: cubic-bezier(.215, .61, .355, 1); height: 60px; border-radius: .75rem; background: var(--color-surface);
+    border: 1px solid var(--color-sand-200); box-shadow: 0 6px 20px -10px rgb(42 31 26 / .28); will-change: height;
+    transition: height .4s var(--ease-p3) .22s, box-shadow .3s ease; }
+  .card-nav.is-open { transition-delay: 0s; box-shadow: 0 24px 50px -18px rgb(42 31 26 / .45); }
+  .site-header.is-scrolled .card-nav { box-shadow: 0 14px 34px -16px rgb(42 31 26 / .45); }
+  [data-theme="dark"] .card-nav { box-shadow: 0 10px 28px -12px rgb(0 0 0 / .8); }
+  [data-theme="dark"] .card-nav.is-open, [data-theme="dark"] .site-header.is-scrolled .card-nav { box-shadow: 0 24px 50px -14px rgb(0 0 0 / .95); }
+  .card-nav-top { position: absolute; inset-inline: 0; top: 0; z-index: 2; height: 60px; display: flex; align-items: center; justify-content: space-between;
+    gap: .5rem; padding: .5rem; padding-inline-start: 1.1rem; }
+  .card-nav-actions { display: flex; align-items: center; gap: .25rem; height: 100%; }
+  @media (width >= 48rem) {
+    .card-nav-logo { position: absolute; left: 50%; top: 50%; translate: -50% -50%; }
+  }
+  .hdr-icon { position: relative; display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: .6rem; color: var(--color-espresso-700); transition: background-color .2s, color .2s; }
+  .hdr-icon:hover { background: var(--color-sand); color: var(--color-espresso); }
+  .card-nav-cta { display: none; height: 100%; align-items: center; gap: .4rem; padding-inline: 1rem; border-radius: calc(.75rem - .2rem);
+    background: var(--color-espresso); color: var(--color-cream); font-weight: 600; font-size: .9rem; transition: background-color .3s ease, translate .3s var(--ease-pop); }
+  .card-nav-cta:hover { background: var(--color-ember-600); color: #fff; }
+  .card-nav-cta:active { translate: 0 1px; }
+  @media (width >= 48rem) { .card-nav-cta { display: inline-flex; } }
+
+  /* همبرگر: دو خط ۳۰ پیکسلی که ضربدر می‌شوند */
+  .hamburger { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; height: 100%; padding-inline: .35rem; border-radius: .5rem; color: var(--color-espresso); }
+  .hamburger-line { width: 30px; height: 2px; border-radius: 2px; background: currentColor; transform-origin: 50% 50%; transition: transform .3s linear, opacity .3s linear, margin .3s ease; }
+  .hamburger:hover .hamburger-line { opacity: .75; }
+  .hamburger.is-open .hamburger-line:first-child { transform: translateY(4px) rotate(45deg); }
+  .hamburger.is-open .hamburger-line:last-child { transform: translateY(-4px) rotate(-45deg); }
+
+  .card-nav-content { position: absolute; inset-inline: 0; top: 60px; bottom: 0; z-index: 1; overflow: hidden; visibility: hidden; pointer-events: none;
+    transition: visibility 0s linear .62s; }
+  .card-nav.is-open .card-nav-content { visibility: visible; pointer-events: auto; transition-delay: 0s; }
+  .card-nav-cards { display: flex; flex-direction: column; gap: .5rem; padding: .5rem; }
+  @media (width >= 48rem) { .card-nav-cards { flex-direction: row; align-items: flex-end; gap: 12px; height: 100%; } }
+
+  .nav-card { --nc-bg: #2A1F1A; --nc-fg: #FAF6F0; position: relative; display: flex; flex-direction: column; gap: .5rem; flex: 0 0 auto; min-height: 60px; min-width: 0;
+    padding: 12px 16px; border-radius: calc(.75rem - .2rem); background: var(--nc-bg); color: var(--nc-fg); user-select: none;
+    opacity: 0; translate: 0 50px; transition: opacity .25s ease, translate .3s var(--ease-exit); transition-delay: calc((2 - var(--i, 0)) * 50ms); }
+  .nav-card.is-c2 { --nc-bg: #4A3628; }
+  .nav-card.is-c3 { --nc-bg: #8F3826; --nc-fg: #FCEFE8; }
+  [data-theme="dark"] .nav-card { --nc-bg: #2C221D; --nc-fg: #F3EAE0; box-shadow: inset 0 0 0 1px rgb(255 255 255 / .04); }
+  [data-theme="dark"] .nav-card.is-c2 { --nc-bg: #3B2C23; }
+  [data-theme="dark"] .nav-card.is-c3 { --nc-bg: #5E2A1D; --nc-fg: #FBE6DC; }
+  .card-nav.is-open .nav-card { opacity: 1; translate: 0 0; transition: opacity .4s var(--ease-p3), translate .4s var(--ease-p3);
+    transition-delay: calc(.3s + var(--i, 0) * 80ms); }
+  @media (width >= 48rem) { .nav-card { height: 100%; flex: 1 1 0%; } }
+  .nav-card-label { font-family: var(--font-display); font-weight: 700; font-size: 18px; letter-spacing: -.5px; }
+  @media (width >= 48rem) { .nav-card-label { font-size: 22px; } }
+  .nav-card-links { margin-top: auto; display: flex; flex-direction: column; gap: 2px; }
+  .nav-card-link { display: inline-flex; align-items: center; gap: 6px; min-height: 2rem; font-size: 15px; color: inherit; border-radius: .35rem; transition: opacity .3s ease; }
+  .nav-card-link .lucide { transition: translate .3s var(--ease-pop); }
+  .nav-card-link:hover { opacity: .75; }
+  .nav-card-link:hover .lucide { translate: -2px -2px; }
+  .nav-card-link[aria-current="page"] { font-weight: 700; text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 1px; }
+  .nav-card-link:focus-visible { outline: 2px solid currentColor; outline-offset: 2px; }
+  @media (width >= 48rem) { .nav-card-link { font-size: 16px; } }
+  .nav-card-badge { display: grid; place-items: center; min-width: 1.1rem; height: 1.1rem; padding-inline: .3rem; border-radius: 999px; background: var(--color-danger); color: #fff; font-size: 10px; }
+  @media (prefers-reduced-motion: reduce) {
+    .card-nav, .nav-card, .card-nav-content, .hamburger-line { transition-duration: 0s !important; transition-delay: 0s !important; }
+  }
+
+  .site-header { view-transition-name: site-header; transition: translate .45s var(--ease-spring), box-shadow .3s ease; }
+  .site-header.is-hidden { translate: 0 -100%; }
+
+  /* لوگو: کاشی کمی می‌چرخد، برقی از رویش رد می‌شود، لوطی کلاهش را برمی‌دارد و سبیلش تاب می‌خورد */
+  .brand-mark { position: relative; overflow: hidden; transition: transform .55s var(--ease-pop); }
+  .brand-mark::after { content: ""; position: absolute; inset: 0; background: linear-gradient(115deg, transparent 30%, rgb(255 255 255 / .5) 50%, transparent 70%); translate: -130% 0; }
+  .brand:hover .brand-mark { transform: rotate(-8deg) scale(1.06); }
+  .brand:hover .brand-mark::after { translate: 130% 0; transition: translate .8s ease; }
+  .logo-mark .lm-hat, .logo-mark .lm-stache { transform-box: view-box; transition: transform .5s var(--ease-pop); }
+  .logo-mark .lm-hat { transform-origin: 37px 21px; }
+  .logo-mark .lm-stache { transform-origin: 24px 29px; }
+  .brand:hover .logo-mark .lm-hat { transform: translateY(-2.5px) rotate(-12deg); }
+  .brand:hover .logo-mark .lm-stache { transform: scale(1.08, .94); }
+
+  /* لوگوتایپ «لوطی»: میخک 900 با رنگ متن، و دو نقطه‌ی «ت» که در این وزن یک قرص می‌شوند به رنگ سفالی (هم‌رنگ کاشی نشان).
+     با background-clip:text یک مستطیل سفالی دقیقاً روی نقطه‌ها می‌نشیند؛ مختصات برای همین کلمه و line-height 1.7 اندازه‌گیری شده‌اند. */
+  .wordmark { display: inline-block; font-family: var(--font-display); font-weight: 900; line-height: 1.7; padding-inline: .06em; letter-spacing: 0;
+    color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(var(--color-ember), var(--color-ember)), linear-gradient(var(--color-espresso), var(--color-espresso));
+    background-position: .66em .5em, 0 0; background-size: .38em .19em, 100% 100%; background-repeat: no-repeat; }
+
+
+  /* ─── نوار پایین موبایل: داک شناور ─── */
+  .tabbar { position: fixed; inset-inline: 0; bottom: 0; z-index: 30; pointer-events: none;
+    padding: 0 .75rem calc(.6rem + env(safe-area-inset-bottom)); view-transition-name: tabbar; }
+  /* محوشدن نرم محتوا پشت داک تا کارت‌ها زیرش بریده دیده نشوند */
+  .tabbar::before { content: ""; position: absolute; inset: -1.5rem 0 0; z-index: -1;
+    background: linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-cream) 85%, transparent) 70%);
+    transition: opacity .35s; }
+  html.hdr-hidden .tabbar::before, html.at-foot .tabbar::before,
+  html:has(:is(input:not([type=checkbox], [type=radio], [type=range]), textarea, select, [contenteditable]):focus) .tabbar::before { opacity: 0; }
+  .tabbar-dock { pointer-events: auto; position: relative; margin-inline: auto; max-width: 26rem; height: 4rem;
+    display: grid; grid-template-columns: repeat(5, 1fr); align-items: stretch;
+    border: 1px solid color-mix(in oklab, var(--color-sand-200) 85%, transparent); border-radius: 1.4rem;
+    background: color-mix(in oklab, var(--color-surface) 92%, transparent);
+    -webkit-backdrop-filter: blur(20px) saturate(1.5); backdrop-filter: blur(20px) saturate(1.5);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .7), 0 1px 2px rgb(42 31 26 / .06), 0 14px 32px -12px rgb(42 31 26 / .28);
+    transition: translate .45s var(--ease-spring), opacity .3s; }
+  [data-theme="dark"] .tabbar-dock { border-color: rgb(255 255 255 / .07);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / .05), 0 1px 2px rgb(0 0 0 / .4), 0 16px 36px -10px rgb(0 0 0 / .75); }
+  /* اسکرول رو به پایین (همان وضعیت هدر) یا تایپ با کیبورد گوشی: داک پایین می‌رود */
+  html.hdr-hidden .tabbar-dock,
+  html:has(:is(input:not([type=checkbox], [type=radio], [type=range]), textarea, select, [contenteditable]):focus) .tabbar-dock {
+    translate: 0 calc(100% + 1.25rem); opacity: 0; transition-timing-function: var(--ease-exit), ease; }
+
+  .tab { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .2rem;
+    font-size: 10.5px; color: var(--color-espresso-400); -webkit-tap-highlight-color: transparent; outline: none;
+    transition: color .25s, transform .35s var(--ease-pop); }
+  .tab:active { transform: scale(.9); }
+  .tab-icon { position: relative; isolation: isolate; display: grid; place-items: center; width: 3.25rem; height: 1.9rem; }
+  .tab-icon > .lucide { transition: transform .35s var(--ease-pop); }
+  .tab-label { line-height: 1.1rem; white-space: nowrap; transition: color .25s; }
+  .tab:hover .tab-label, .tab:focus-visible .tab-label { color: var(--color-espresso-700); }
+  .tab:focus-visible .tab-icon { border-radius: 999px; box-shadow: 0 0 0 2px var(--color-ember); }
+  .tab.is-active { color: var(--color-ember); }
+  .tab.is-active .tab-label { color: var(--color-espresso); font-weight: 700; }
+  /* قرص زبانه فعال */
+  .tab-ink { position: absolute; inset: 0; z-index: -1; border-radius: 999px; view-transition-name: tab-ink;
+    background: color-mix(in oklab, var(--color-ember) 14%, transparent);
+    box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--color-ember) 16%, transparent); }
+  /* نشان پیام‌های نخوانده */
+  .tab-badge { position: absolute; top: -.2rem; inset-inline-end: .3rem; min-width: 1.05rem; height: 1.05rem; padding: 0 .25rem;
+    display: grid; place-items: center; border-radius: 999px; background: var(--color-danger); color: #fff;
+    font-size: 9.5px; font-weight: 700; line-height: 1; font-feature-settings: "tnum"; box-shadow: 0 0 0 2px var(--color-surface); }
+  .tab-avatar { width: 1.5rem; height: 1.5rem; font-size: .6rem !important; outline: 1.5px solid var(--color-espresso-300); outline-offset: 0; }
+  .tab.is-active .tab-avatar { outline: 2px solid var(--color-ember); }
+  /* دکمه ثبت آگهی: کاشی سفالی که از لبه داک بیرون زده؛ برچسبش هم‌تراز بقیه می‌ماند */
+  .tab-fab { display: grid; place-items: center; width: 3.1rem; height: 3.1rem; margin-top: -1.2rem; border-radius: 1.1rem; color: #fff;
+    background: linear-gradient(160deg, color-mix(in oklab, var(--color-ember) 82%, #fff) 0%, var(--color-ember) 45%, var(--color-ember-700) 100%);
+    box-shadow: 0 0 0 4px var(--color-cream), inset 0 1px 0 rgb(255 255 255 / .3), 0 10px 20px -6px color-mix(in oklab, var(--color-ember) 65%, transparent);
+    transition: transform .4s var(--ease-pop), box-shadow .3s; }
+  .tab-new { color: var(--color-espresso-700); }
+  .tab-new.is-active .tab-label { color: var(--color-ember); }
+  .tab-fab .lucide { transition: transform .5s var(--ease-pop); }
+  a:hover > .tab-fab .lucide, a:focus-visible > .tab-fab .lucide, .tab-new.is-active .tab-fab .lucide { transform: rotate(90deg); }
+  a:active > .tab-fab { transform: scale(.88); }
+
+  /* نتایج فیلتر آگهی‌ها هنگام بارگذاری کمی محو و فرو می‌روند */
+  #results { transition: opacity .25s ease, filter .25s ease, scale .4s var(--ease-spring); }
+  #results.htmx-request { filter: saturate(.6) blur(1px); scale: .995; }
+}
+
+/* هدر که کنار رفت، ستون‌های چسبان بالا می‌آیند تا جای خالی نماند */
+.hdr-follow { transition: top .45s var(--ease-spring); }
+html.hdr-hidden .hdr-follow { top: 1.5rem; }
+html.hdr-hidden .hdr-follow.is-flush { top: 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  /* ─── ورود صفحه: بلوک‌های اصلی پلکانی بالا می‌آیند ─── */
+  #main > div > :nth-child(-n+8), #main > section:nth-child(-n+2):not(:has(.animate-fade-up)) {
+    animation: rise-in .75s var(--ease-spring) backwards; animation-delay: calc(var(--n, 0) * 70ms + 40ms); }
+
+  /* اولین بازدید در این نشست: اجزای هدر و نوار پایین یکی‌یکی می‌نشینند و لوگو مهر می‌خورد */
+  .intro .card-nav-top > :not(.card-nav-actions), .intro .card-nav-actions > * { animation: drop-in .8s var(--ease-spring) backwards; animation-delay: calc(var(--n, 0) * 70ms + 120ms); }
+  .intro .card-nav-actions > * { animation-delay: calc(var(--n, 0) * 50ms + 260ms); }
+  .intro .brand-mark { animation: stamp .9s var(--ease-pop) .15s backwards; }
+  .intro .tabbar > div > * { animation: rise-in .7s var(--ease-spring) backwards; animation-delay: calc(var(--n, 0) * 55ms + 300ms); }
+
+  /* خط صفحه فعال: اگر صفحه با جابه‌جایی نرم نیامده، از وسط باز می‌شود؛ آیکن زبانه فعال می‌پرد */
+  html:not(.vt-nav) .tab-ink { animation: ink-grow .6s var(--ease-spring) .25s backwards; }
+  .tab.is-active .tab-icon > :is(.lucide, img, span:not(.tab-ink, .tab-badge)) { animation: tab-pop .7s var(--ease-pop) .12s backwards; }
+
+  /* منوی کاربر: گزینه‌ها پشت‌سرهم */
+  .menu-stagger > * { animation: menu-in .4s var(--ease-spring) backwards; animation-delay: calc(var(--n, 0) * 30ms + 60ms); }
+
+  /* قهرمان صفحه اول: تیتر و اجزا پلکانی بالا می‌آیند */
+  .hero-in { animation: hero-in .9s var(--ease-spring) backwards; animation-delay: calc(var(--d, 0) * 90ms + 100ms); }
+  .hc-hat { animation: hat-tip 6s var(--ease-spring) infinite; }
+  .hc-stache { animation: stache-twitch 6s ease-in-out infinite; }
+  .hc-light, .hero-beam { animation: hat-glow 6s ease-in-out infinite; }
+  .hero-coin { animation: coin-rise var(--t, 6s) cubic-bezier(.3, .6, .4, 1) var(--d, 0s) infinite; }
+  @media (prefers-reduced-motion: reduce) { .hc-hat, .hc-stache, .hc-light, .hero-beam { animation: none; } .hero-coin { display: none; } }
+}
+
+/* ─── آشکار شدن هنگام اسکرول (فقط CSS، بدون جاوااسکریپت) ─── */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    #main > section:nth-child(n+3), #main > div .go-card, [data-reveal] {
+      animation: reveal linear both; animation-timeline: view(); animation-range: entry 0% entry 40%; }
+  }
+}
+
+/* ─── جابه‌جایی بین صفحه‌ها (View Transitions بین سندها) ───
+   هدر و نوار پایین ثابت می‌مانند، محتوا محو و جایگزین می‌شود، خط صفحه فعال به لینک جدید می‌لغزد.
+   برگشت (Back) جهت حرکت را برعکس می‌کند. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root) { animation: vt-out .26s var(--ease-exit) both; }
+  ::view-transition-new(root) { animation: vt-in .5s var(--ease-spring) .08s both; }
+  html:active-view-transition-type(back)::view-transition-old(root) { animation-name: vt-out-back; }
+  html:active-view-transition-type(back)::view-transition-new(root) { animation-name: vt-in-back; }
+  ::view-transition-group(site-header), ::view-transition-group(tabbar) { animation-duration: .45s; animation-timing-function: var(--ease-spring); }
+  ::view-transition-group(tab-ink) { animation-duration: .6s; animation-timing-function: cubic-bezier(.34, 1.4, .64, 1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bars i { animation: bars-calm 1.4s ease-in-out infinite; }
+  .bars i:nth-child(2) { animation-delay: .2s; } .bars i:nth-child(3) { animation-delay: .4s; }
+}
+@keyframes bars-calm { 50% { opacity: .35; } }
+
+@keyframes rise-in { from { opacity: 0; transform: translateY(18px); } }
+@keyframes drop-in { from { opacity: 0; transform: translateY(-10px); filter: blur(4px); } }
+@keyframes menu-in { from { opacity: 0; transform: translateY(6px); } }
+@keyframes stamp { from { opacity: 0; transform: scale(.3) rotate(-35deg); } }
+@keyframes ink-grow { from { scale: .35 .7; opacity: 0; } }
+@keyframes tab-pop { 0% { transform: translateY(5px) scale(.6); } 55% { transform: translateY(-3px) scale(1.15); } }
+@keyframes reveal { from { opacity: 0; transform: translateY(32px) scale(.97); } }
+/* سلام لوطی: کلاه آرام بالا می‌رود و کج می‌شود، کمی می‌ماند و برمی‌گردد؛ نور زیرش همزمان پر می‌شود و سبیل یک تاب کوچک می‌خورد */
+@keyframes hat-tip { 0%, 48%, 100% { transform: none; } 60%, 74% { transform: translateY(-3.2px) rotate(-14deg); } 86% { transform: translateY(.3px); } }
+@keyframes hat-glow { 0%, 46%, 100% { opacity: .55; scale: .94 .96; } 62%, 74% { opacity: 1; scale: 1.05 1.08; } }
+@keyframes stache-twitch { 0%, 58%, 70%, 100% { transform: none; } 62% { transform: scale(1.07, .93); } 66% { transform: scale(.97, 1.04); } }
+@keyframes coin-rise { 0% { opacity: 0; transform: translate(0, 0) scale(.6) rotateY(0); } 12% { opacity: 1; }
+  70% { opacity: .9; } 100% { opacity: 0; transform: translate(var(--dx, 0px), calc(var(--h, 260px) * -1)) scale(1) rotateY(540deg); } }
+@keyframes hero-in { from { opacity: 0; transform: translateY(14px); filter: blur(6px); } }
+@keyframes vt-out { to { opacity: 0; transform: translateY(-10px) scale(.985); filter: blur(5px); } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(14px); } }
+@keyframes vt-out-back { to { opacity: 0; transform: translateY(10px) scale(.985); filter: blur(5px); } }
+@keyframes vt-in-back { from { opacity: 0; transform: translateY(-14px); } }
+
+/* ═════════════════════════ پنل مدیریت لوطی ═════════════════════════
+   پوسته‌ی جدا از سایت: نوار کناری تیره‌ی گرم (همیشه تیره، در هر دو تم) + نوار بالای شیشه‌ای + کارت‌ها و جدول‌های داده.
+   رنگ‌های نوار کناری ثابت‌اند چون زمینه‌اش در هر دو تم تیره است. */
+@layer components {
+  .site-announce { background: var(--color-ember-50); color: var(--color-ember-700); border-bottom: 1px solid var(--color-ember-100); }
+  .site-announce.is-warning { background: var(--color-warn-50); color: var(--color-warn-700); border-color: var(--color-warn-100); }
+  .site-announce.is-success { background: var(--color-sage-50); color: var(--color-sage-700); border-color: var(--color-sage-100); }
+
+  .adm { display: grid; min-height: 100dvh; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1024px) { .adm { grid-template-columns: 272px minmax(0, 1fr); } }
+
+  /* ── نوار کناری ── */
+  .adm-side { position: fixed; inset-block: 0; inset-inline-start: 0; z-index: 50; width: 280px; max-width: 86vw; display: flex; flex-direction: column;
+    background: #1D1511; color: #E9DDD0; isolation: isolate; overflow: hidden;
+    transform: translateX(105%); transition: transform .45s var(--ease-spring); }
+  .adm-side.is-open { transform: none; box-shadow: 0 30px 80px -10px rgb(0 0 0 / .55); }
+  .adm-side::before { content: ""; position: absolute; inset: -30% -40% auto; height: 340px; z-index: -1; pointer-events: none;
+    background: radial-gradient(closest-side, rgb(200 85 61 / .28), transparent 72%); }
+  .adm-side::after { content: ""; position: absolute; inset: auto -30% -20%; height: 260px; z-index: -1; pointer-events: none;
+    background: radial-gradient(closest-side, rgb(232 163 61 / .10), transparent 70%); }
+  @media (min-width: 1024px) { .adm-side { position: sticky; top: 0; height: 100dvh; width: auto; max-width: none; transform: none; } }
+  [data-theme="dark"] .adm-side { background: #100B09; box-shadow: inset -1px 0 0 rgb(255 255 255 / .06); }
+  .adm-scrim { position: fixed; inset: 0; z-index: 45; background: rgb(20 14 11 / .55); backdrop-filter: blur(2px); }
+  @media (min-width: 1024px) { .adm-scrim { display: none; } }
+
+  .adm-brand { display: flex; align-items: center; gap: .75rem; padding: 1.25rem 1.25rem 1rem; }
+  .adm-brand-mark { display: grid; place-items: center; width: 2.6rem; height: 2.6rem; border-radius: .9rem; color: #FFF8F4;
+    background: linear-gradient(145deg, #D8664C, #A9432F); box-shadow: 0 8px 20px -8px rgb(200 85 61 / .8), inset 0 1px 0 rgb(255 255 255 / .2); }
+  .adm-pill { display: inline-flex; align-items: center; gap: .3rem; margin-top: .15rem; padding: .05rem .5rem; border-radius: 999px; font-size: .66rem; font-weight: 600;
+    color: #F2C681; background: rgb(232 163 61 / .12); border: 1px solid rgb(232 163 61 / .22); width: fit-content; }
+  .adm-nav { flex: 1; overflow-y: auto; padding: .25rem .75rem 1rem; scrollbar-width: thin; scrollbar-color: rgb(255 255 255 / .12) transparent; }
+  .adm-nav-label { padding: 1.1rem .75rem .45rem; font-size: .68rem; font-weight: 600; letter-spacing: .02em; color: #8A776B; }
+  .adm-link { position: relative; display: flex; align-items: center; gap: .7rem; height: 2.5rem; padding-inline: .75rem; border-radius: .7rem;
+    font-size: .875rem; color: #CDBDAF; transition: background-color .2s, color .2s; }
+  .adm-link .lucide { color: #9C887B; transition: color .2s; }
+  .adm-link:hover { background: rgb(250 246 240 / .05); color: #F6EDE3; }
+  .adm-link:hover .lucide { color: #E3D5C6; }
+  .adm-link.is-active { color: #FFF6EE; font-weight: 600; background: linear-gradient(to left, rgb(200 85 61 / .24), rgb(200 85 61 / .05)); }
+  .adm-link.is-active .lucide { color: #F0A48F; }
+  .adm-link.is-active::before { content: ""; position: absolute; inset-inline-start: -.75rem; inset-block: .55rem; width: 3px; border-radius: 3px; background: #E07A5F; }
+  .adm-link:focus-visible { outline: 2px solid #E8A33D; outline-offset: -2px; }
+  .adm-badge { display: grid; place-items: center; min-width: 1.4rem; height: 1.25rem; padding-inline: .4rem; border-radius: 999px;
+    font-size: .68rem; font-weight: 700; font-feature-settings: "tnum"; background: rgb(250 246 240 / .1); color: #EDE0D3; }
+  .adm-badge.is-ember { background: #C8553D; color: #fff; }
+  .adm-badge.is-saffron { background: #E8A33D; color: #2A1F1A; }
+  .adm-badge.is-sage { background: #3E9461; color: #fff; }
+  .adm-badge.is-danger { background: #CC3A30; color: #fff; }
+  .adm-badge.is-warn { background: #E2B320; color: #2A1F1A; }
+  .adm-user { margin: .75rem; padding: .75rem; border-radius: 1rem; background: rgb(250 246 240 / .05); border: 1px solid rgb(250 246 240 / .07); }
+  .adm-user-act { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: .6rem; color: #B9A595; transition: background-color .2s, color .2s; }
+  .adm-user-act:hover { background: rgb(250 246 240 / .08); color: #FFF6EE; }
+
+  /* ── نوار بالا ── */
+  .adm-top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: .75rem; height: 4rem; padding-inline: clamp(1rem, 2.4vw, 2rem);
+    background: color-mix(in srgb, var(--color-cream) 82%, transparent); backdrop-filter: saturate(1.4) blur(14px); border-bottom: 1px solid var(--color-sand-200); }
+  .adm-crumb { display: flex; align-items: center; gap: .4rem; font-size: .8rem; color: var(--color-espresso-400); min-width: 0; }
+  .adm-crumb b { color: var(--color-espresso); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .adm-search { display: flex; align-items: center; gap: .5rem; height: 2.5rem; width: min(26rem, 100%); padding-inline: .8rem; border-radius: .75rem;
+    border: 1px solid var(--color-sand-200); background: var(--color-surface); color: var(--color-espresso-400); transition: border-color .2s, box-shadow .2s; }
+  .adm-search:focus-within { border-color: var(--color-ember-200); box-shadow: 0 0 0 4px var(--color-ember-50); }
+  .adm-search input { flex: 1; min-width: 0; background: transparent; outline: none; font-size: .85rem; color: var(--color-espresso); }
+  .adm-search input::placeholder { color: var(--color-espresso-300); }
+  .kbd { display: inline-grid; place-items: center; min-width: 1.4rem; height: 1.35rem; padding-inline: .35rem; border-radius: .35rem; font-size: .68rem;
+    color: var(--color-espresso-400); background: var(--color-sand-100); border: 1px solid var(--color-sand-200); border-bottom-width: 2px; font-family: ui-monospace, monospace; }
+  .icon-btn { display: grid; place-items: center; width: 2.5rem; height: 2.5rem; flex-shrink: 0; border-radius: .75rem; border: 1px solid var(--color-sand-200);
+    background: var(--color-surface); color: var(--color-espresso-500); transition: background-color .2s, color .2s, border-color .2s; }
+  .icon-btn:hover { background: var(--color-sand-50); color: var(--color-espresso); border-color: var(--color-sand-300); }
+
+  .adm-content { width: 100%; max-width: 1600px; margin-inline: auto; padding: clamp(1rem, 2.4vw, 2rem) clamp(1rem, 2.4vw, 2rem) 4rem; }
+  /* آیتم‌های گرید عرض حداقلی جدول‌های اسکرول‌دار را به ارث نبرند */
+  .adm-content .grid > * { min-width: 0; }
+  .adm-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem; }
+  .adm-head h1 { font-size: clamp(1.25rem, 1rem + .8vw, 1.6rem); font-weight: 800; letter-spacing: -.01em; line-height: 1.5; }
+  .adm-head p { margin-top: .15rem; font-size: .85rem; color: var(--color-espresso-400); }
+  .adm-enter > * { animation: rise-in .55s var(--ease-spring) both; }
+  .adm-enter > *:nth-child(2) { animation-delay: .04s; } .adm-enter > *:nth-child(3) { animation-delay: .08s; }
+  .adm-enter > *:nth-child(4) { animation-delay: .12s; } .adm-enter > *:nth-child(n+5) { animation-delay: .16s; }
+
+  /* ── رنگ‌مایه‌ها ── */
+  .tone-ember { --t: var(--color-ember); --t-ink: var(--color-ember-700); --t-bg: var(--color-ember-50); --t-line: var(--color-ember-100); }
+  .tone-saffron { --t: var(--color-saffron); --t-ink: var(--color-saffron-700); --t-bg: var(--color-saffron-50); --t-line: var(--color-saffron-100); }
+  .tone-danger { --t: var(--color-danger); --t-ink: var(--color-danger-700); --t-bg: var(--color-danger-50); --t-line: var(--color-danger-100); }
+  .tone-warn { --t: var(--color-warn); --t-ink: var(--color-warn-700); --t-bg: var(--color-warn-50); --t-line: var(--color-warn-100); }
+  .tone-sage { --t: var(--color-sage); --t-ink: var(--color-sage-700); --t-bg: var(--color-sage-50); --t-line: var(--color-sage-100); }
+  .tone-muted { --t: var(--color-espresso-300); --t-ink: var(--color-espresso-500); --t-bg: var(--color-sand-100); --t-line: var(--color-sand-200); }
+
+  /* ── کارت‌ها ── */
+  .adm-card { background: var(--color-surface); border: 1px solid var(--color-sand-200); border-radius: 1.1rem; box-shadow: 0 1px 2px rgb(42 31 26 / .03); min-width: 0; }
+  .adm-card-h { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: 1rem 1.25rem; border-bottom: 1px solid var(--color-sand-200); }
+  .adm-card-h h2 { display: flex; align-items: center; gap: .5rem; font-size: .95rem; font-weight: 700; }
+  .adm-card-h p { font-size: .75rem; color: var(--color-espresso-400); margin-top: .1rem; }
+  .adm-card-b { padding: 1.1rem 1.25rem; }
+  .adm-more { display: inline-flex; align-items: center; gap: .25rem; font-size: .78rem; font-weight: 500; color: var(--color-espresso-500); white-space: nowrap; transition: color .2s; }
+  .adm-more:hover { color: var(--color-ember); }
+
+  .kpi { position: relative; overflow: hidden; display: block; padding: 1.1rem 1.2rem 1rem; background: var(--color-surface); border: 1px solid var(--color-sand-200); border-radius: 1.1rem;
+    transition: box-shadow .25s, transform .25s var(--ease-spring), border-color .25s; }
+  a.kpi:hover { box-shadow: var(--shadow-lift); transform: translateY(-2px); border-color: var(--t-line, var(--color-sand-300)); }
+  .kpi::after { content: ""; position: absolute; inset: auto auto -48px -48px; width: 130px; height: 130px; border-radius: 50%; background: var(--t-bg); opacity: .65; pointer-events: none; }
+  .kpi-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; font-size: .8rem; color: var(--color-espresso-500); }
+  .kpi-ic { display: grid; place-items: center; width: 2.1rem; height: 2.1rem; border-radius: .65rem; background: var(--t-bg); color: var(--t-ink); }
+  .kpi-val { position: relative; z-index: 1; margin-top: .8rem; font-family: var(--font-display); font-size: clamp(1.35rem, 1.1rem + .7vw, 1.7rem); font-weight: 800; letter-spacing: -.01em; line-height: 1.3; font-feature-settings: "tnum"; }
+  .kpi-val small { font-size: .72rem; font-weight: 500; color: var(--color-espresso-400); margin-inline-start: .25rem; }
+  .kpi-foot { position: relative; z-index: 1; display: flex; align-items: center; gap: .5rem; margin-top: .45rem; font-size: .72rem; color: var(--color-espresso-400); }
+
+  .delta { display: inline-flex; align-items: center; gap: .2rem; padding: .05rem .45rem; border-radius: 999px; font-size: .7rem; font-weight: 600; font-feature-settings: "tnum"; }
+  .delta.is-up { background: var(--color-sage-50); color: var(--color-sage-700); }
+  .delta.is-down { background: var(--color-danger-50); color: var(--color-danger-700); }
+  .delta.is-flat { background: var(--color-sand-100); color: var(--color-espresso-400); }
+
+  /* ── برچسب وضعیت ── */
+  .st { display: inline-flex; align-items: center; gap: .4rem; padding: .12rem .6rem; border-radius: 999px; font-size: .74rem; font-weight: 500; white-space: nowrap;
+    border: 1px solid var(--color-sand-200); background: var(--color-sand-50); color: var(--color-espresso-500); }
+  .st i { width: .4rem; height: .4rem; border-radius: 50%; background: var(--color-espresso-300); }
+  .st.is-sage { background: var(--color-sage-50); border-color: var(--color-sage-100); color: var(--color-sage-700); } .st.is-sage i { background: var(--color-sage); }
+  .st.is-saffron { background: var(--color-saffron-50); border-color: var(--color-saffron-100); color: var(--color-saffron-700); } .st.is-saffron i { background: var(--color-saffron); }
+  .st.is-ember { background: var(--color-ember-50); border-color: var(--color-ember-100); color: var(--color-ember-700); } .st.is-ember i { background: var(--color-ember); box-shadow: 0 0 0 3px var(--color-ember-100); }
+  .st.is-danger { background: var(--color-danger-50); border-color: var(--color-danger-100); color: var(--color-danger-700); } .st.is-danger i { background: var(--color-danger); box-shadow: 0 0 0 3px var(--color-danger-100); }
+  .st.is-warn { background: var(--color-warn-50); border-color: var(--color-warn-100); color: var(--color-warn-700); } .st.is-warn i { background: var(--color-warn); }
+  .st.is-info { background: var(--color-surface); color: var(--color-espresso-600); } .st.is-info i { background: var(--color-saffron-600); box-shadow: 0 0 0 3px var(--color-saffron-50); }
+
+  /* ── جدول داده ── */
+  /* contain: paint جلوی نشت عرض جدولِ اسکرول‌دار در RTL را می‌گیرد (وگرنه viewport موبایل پهن می‌شود) */
+  .adm-table-wrap { overflow-x: auto; scrollbar-width: thin; contain: paint; }
+  .adm-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .84rem; }
+  .adm-table th { text-align: start; padding: .6rem 1rem; font-size: .72rem; font-weight: 600; color: var(--color-espresso-400); white-space: nowrap;
+    background: var(--color-sand-50); border-bottom: 1px solid var(--color-sand-200); }
+  .adm-table td { padding: .75rem 1rem; border-bottom: 1px solid var(--color-sand-100); vertical-align: middle; white-space: nowrap; }
+  .adm-table tbody tr:last-child td { border-bottom: 0; }
+  .adm-table tbody tr { transition: background-color .15s; }
+  .adm-table tbody tr:hover { background: var(--color-sand-50); }
+  .adm-table .num { text-align: end; font-feature-settings: "tnum"; }
+  .adm-table .code, .code { direction: ltr; unicode-bidi: isolate; font-family: ui-monospace, "SFMono-Regular", Consolas, monospace; font-size: .76rem; color: var(--color-espresso-400); }
+  .row-link { color: inherit; transition: color .15s; } .row-link:hover { color: var(--color-ember); }
+
+  /* ── زبانه‌ها و فیلترها ── */
+  .tabs-line { display: flex; gap: .25rem; overflow-x: auto; scrollbar-width: none; border-bottom: 1px solid var(--color-sand-200); padding-inline: .75rem; }
+  .tabs-line::-webkit-scrollbar { display: none; }
+  .tabs-line a { display: inline-flex; align-items: center; gap: .4rem; padding: .8rem .7rem .7rem; margin-bottom: -1px; font-size: .84rem; color: var(--color-espresso-500);
+    border-bottom: 2px solid transparent; white-space: nowrap; transition: color .2s, border-color .2s; }
+  .tabs-line a:hover { color: var(--color-espresso); }
+  .tabs-line a.is-active { color: var(--color-espresso); font-weight: 600; border-color: var(--color-ember); }
+  .tab-count { min-width: 1.3rem; padding: 0 .4rem; border-radius: 999px; font-size: .68rem; text-align: center; background: var(--color-sand-100); color: var(--color-espresso-400); font-feature-settings: "tnum"; }
+  .tabs-line a.is-active .tab-count { background: var(--color-ember-50); color: var(--color-ember-700); }
+  .adm-seg { display: inline-flex; gap: 2px; padding: 3px; border-radius: .75rem; background: var(--color-sand); }
+  .adm-seg a, .adm-seg button { padding: .35rem .85rem; border-radius: .55rem; font-size: .8rem; color: var(--color-espresso-500); transition: all .2s; white-space: nowrap; }
+  .adm-seg .is-active { background: var(--color-surface); color: var(--color-espresso); font-weight: 600; box-shadow: var(--shadow-soft); }
+  .adm-filter { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; padding: .8rem 1rem; }
+  .adm-input { height: 2.4rem; padding-inline: .8rem; border-radius: .7rem; border: 1px solid var(--color-sand-200); background: var(--color-surface); font-size: .84rem; color: var(--color-espresso);
+    transition: border-color .2s, box-shadow .2s; outline: none; }
+  .adm-input:focus { border-color: var(--color-ember-200); box-shadow: 0 0 0 4px var(--color-ember-50); }
+  .adm-input::placeholder { color: var(--color-espresso-300); }
+  select.adm-input { padding-inline-end: 2rem; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238F7B6F' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-size: 1rem; background-position: left .6rem center; }
+  textarea.adm-input { height: auto; padding-block: .6rem; line-height: 1.8; resize: vertical; }
+  .adm-label { display: block; margin-bottom: .35rem; font-size: .78rem; font-weight: 600; color: var(--color-espresso-600); }
+  .adm-hint { margin-top: .3rem; font-size: .72rem; color: var(--color-espresso-400); line-height: 1.7; }
+
+  .adm-pager { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .8rem 1rem; border-top: 1px solid var(--color-sand-200); font-size: .78rem; color: var(--color-espresso-400); }
+
+  /* ── نمودارها ── */
+  .chart-bars { display: flex; align-items: flex-end; gap: clamp(2px, .45vw, 7px); height: 190px; border-bottom: 1px solid var(--color-sand-200); }
+  .chart-bars .bar { position: relative; flex: 1; height: 100%; display: flex; align-items: flex-end; cursor: default; }
+  .chart-bars .bar > span { display: block; width: 100%; height: var(--h); min-height: 3px; border-radius: 6px 6px 2px 2px;
+    background: linear-gradient(to top, color-mix(in srgb, var(--t, var(--color-ember)) 50%, transparent), var(--t, var(--color-ember)));
+    transform-origin: bottom; animation: bar-grow .9s var(--ease-spring) both; transition: opacity .2s, filter .2s; }
+  .chart-bars .bar.is-zero > span { background: var(--color-sand-200); }
+  .chart-bars:hover .bar > span { opacity: .45; }
+  .chart-bars .bar:hover > span { opacity: 1; filter: saturate(1.15); }
+  .chart-bars .bar::after { content: attr(data-tip); position: absolute; bottom: calc(var(--h) + .5rem); left: 50%; transform: translate(-50%, 4px); z-index: 5;
+    padding: .3rem .55rem; border-radius: .45rem; font-size: .7rem; line-height: 1.6; white-space: nowrap; pointer-events: none; opacity: 0;
+    background: var(--color-ink); color: var(--color-paper); transition: opacity .15s, transform .2s var(--ease-spring); box-shadow: 0 6px 16px -6px rgb(0 0 0 / .4); }
+  [data-theme="dark"] .chart-bars .bar::after { background: #F3EAE0; color: #2A1F1A; }
+  .chart-bars .bar:hover::after { opacity: 1; transform: translate(-50%, 0); }
+  .chart-bars .bar:first-child::after { left: auto; right: 0; transform: translateY(4px); }
+  .chart-bars .bar:first-child:hover::after { transform: none; }
+  .chart-bars .bar:last-child::after { left: 0; transform: translateY(4px); }
+  .chart-bars .bar:last-child:hover::after { transform: none; }
+  .chart-bars.is-sm { height: 120px; }
+  .chart-axis { display: flex; justify-content: space-between; margin-top: .5rem; font-size: .68rem; color: var(--color-espresso-300); font-feature-settings: "tnum"; }
+  .spark { display: flex; align-items: flex-end; gap: 2px; height: 30px; width: 84px; }
+  .spark i { flex: 1; height: var(--h); min-height: 2px; border-radius: 2px; background: var(--t, var(--color-ember)); opacity: .3; }
+  .spark i:last-child { opacity: 1; }
+
+  .donut { position: relative; width: 11rem; aspect-ratio: 1; flex-shrink: 0; border-radius: 50%; background: var(--g);
+    -webkit-mask: radial-gradient(farthest-side, transparent 63%, #000 64%); mask: radial-gradient(farthest-side, transparent 63%, #000 64%);
+    animation: donut-in 1s var(--ease-spring) both; }
+  .donut-wrap { position: relative; display: grid; place-items: center; }
+  .donut-wrap .donut-c { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+
+  .meter { height: .4rem; border-radius: 999px; background: var(--color-sand-100); overflow: hidden; }
+  .meter > span { display: block; height: 100%; width: var(--w); border-radius: inherit; background: var(--t, var(--color-ember)); animation: meter-in 1s var(--ease-spring) both; transform-origin: right; }
+  .legend-dot { width: .6rem; height: .6rem; border-radius: .2rem; flex-shrink: 0; }
+
+  /* ── فهرست فعالیت و خط زمانی ── */
+  .feed-ic { display: grid; place-items: center; width: 2rem; height: 2rem; flex-shrink: 0; border-radius: .6rem; background: var(--color-sand-100); color: var(--color-espresso-500); }
+  .tl { position: relative; }
+  .tl > li { position: relative; padding-inline-start: 2.75rem; padding-bottom: 1.1rem; }
+  .tl > li::before { content: ""; position: absolute; inset-inline-start: 1rem; top: 2.1rem; bottom: .1rem; width: 1px; background: var(--color-sand-200); }
+  .tl > li:last-child { padding-bottom: 0; }
+  .tl > li:last-child::before { display: none; }
+  .tl .tl-ic { position: absolute; inset-inline-start: 0; top: 0; display: grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%;
+    background: var(--color-surface); border: 1px solid var(--color-sand-200); color: var(--color-espresso-500); }
+  .kv { display: grid; gap: .9rem 1.5rem; grid-template-columns: repeat(auto-fill, minmax(9.5rem, 1fr)); }
+  .kv dt { font-size: .72rem; color: var(--color-espresso-400); }
+  .kv dd { margin-top: .15rem; font-size: .9rem; font-weight: 600; font-feature-settings: "tnum"; }
+
+  .adm-empty { display: flex; flex-direction: column; align-items: center; gap: .5rem; padding: 2.5rem 1rem; text-align: center; font-size: .84rem; color: var(--color-espresso-400); }
+  .adm-empty .feed-ic { width: 2.75rem; height: 2.75rem; border-radius: .9rem; }
+  .adm-bubble { padding: .6rem .85rem; border-radius: .9rem; background: var(--color-sand-50); border: 1px solid var(--color-sand-100); font-size: .84rem; line-height: 1.9; }
+  .adm-bubble.is-staff { background: var(--color-sage-50); border-color: var(--color-sage-100); }
+}
+
+@keyframes bar-grow { from { transform: scaleY(0); } }
+@keyframes donut-in { from { opacity: 0; transform: rotate(-90deg) scale(.85); } }
+@keyframes meter-in { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .adm-enter > *, .chart-bars .bar > span, .donut, .meter > span { animation: none; }
+}
+
+/* ═════════════ نتایج آگهی: چند ستونه یا تک ستونه (انتخاب کاربر → html[data-view="list"]) ═════════════ */
+@layer components {
+  .lgrid { display: grid; gap: .75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (width >= 40rem) { .lgrid { gap: 1rem; } }
+  @media (width >= 48rem) { .lgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (width >= 96rem) { .lgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  @media (width >= 1900px) { .lgrid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+  .go-desc { display: none; }
+  .go-link { display: block; }
+  .view-seg { flex-wrap: nowrap; }
+  .view-seg .seg-name { padding: .45rem .6rem; }
+}
+/* در لایه utilities تا بر کلاس‌های تیلویند خود کارت (aspect، p-4، block) غلبه کند */
+@layer utilities {
+  html[data-view="list"] .lgrid { grid-template-columns: minmax(0, 1fr); gap: .75rem; }
+  html[data-view="list"] .lgrid .go-link { display: flex; flex-direction: row; height: 100%; }
+  /* حالت چندستونه: همه کارت‌های یک ردیف هم‌قد و قیمت همیشه ته کارت */
+  html:not([data-view="list"]) .lgrid .go-link { display: flex; flex-direction: column; height: 100%; }
+  html:not([data-view="list"]) .lgrid .go-body { flex: 1; display: flex; flex-direction: column; }
+  html:not([data-view="list"]) .lgrid .go-foot { margin-top: auto; padding-top: .75rem; }
+  @media (width < 40rem) {
+    /* موبایل دوستونه: کارت جمع‌وجور، چیپ‌ها یک خط، دکمه‌های نشان/مقایسه کنار هم پایین عکس */
+    html:not([data-view="list"]) .lgrid .go-card { container-type: inline-size; border-radius: 14px; }
+    html:not([data-view="list"]) .lgrid .go-body { padding: .7rem .75rem .8rem; }
+    html:not([data-view="list"]) .lgrid .go-body h3 { font-size: .85rem; }
+    html:not([data-view="list"]) .lgrid .go-chips { margin-top: .4rem; flex-wrap: nowrap; overflow: hidden; mask-image: linear-gradient(to left, #000 80%, transparent); }
+    html:not([data-view="list"]) .lgrid .go-chips > * { flex-shrink: 0; }
+    html:not([data-view="list"]) .lgrid .go-foot { padding-top: .55rem; gap: .35rem; }
+    html:not([data-view="list"]) .lgrid .go-price { font-size: .95rem; }
+    html:not([data-view="list"]) .lgrid .go-media .chip { font-size: 10px; padding: .15rem .45rem; }
+    html:not([data-view="list"]) .lgrid .go-media-note { display: none; }
+    html:not([data-view="list"]) .lgrid .go-actions { top: calc(75cqw - 2.5rem); flex-direction: row; }
+  }
+  html[data-view="list"] .lgrid .go-media { flex: none; width: 8.5rem; aspect-ratio: auto; min-height: 9.5rem; }
+  html[data-view="list"] .lgrid .go-body { flex: 1; min-width: 0; display: flex; flex-direction: column; padding: .85rem 1rem; padding-inline-end: 3.25rem; }
+  html[data-view="list"] .lgrid .go-desc { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  html[data-view="list"] .lgrid .go-foot { margin-top: auto; padding-top: .6rem; }
+  @media (width < 40rem) {
+    /* تصویر باریک موبایل: فقط نشان بازی، بدون برچسب نردبان */
+    html[data-view="list"] .lgrid .go-media .is-saffron { display: none; }
+    html[data-view="list"] .lgrid .go-desc { -webkit-line-clamp: 1; }
+    html[data-view="list"] .lgrid .go-chips { flex-wrap: nowrap; overflow: hidden; mask-image: linear-gradient(to left, #000 85%, transparent); }
+    html[data-view="list"] .lgrid .go-chips > * { flex-shrink: 0; }
+  }
+  @media (width >= 40rem) { html[data-view="list"] .lgrid .go-media { width: 13rem; min-height: 10.5rem; } }
+  @media (width >= 64rem) { html[data-view="list"] .lgrid .go-media { width: 15rem; } }
+}
+
+/* ═════════════ صفحه آگهی‌ها: جستجوی موبایل، دراپ‌داون با حرکت پرده‌ای، فوتر کوچک ═════════════ */
+@layer components {
+  .ads-search-ic { display: none; }
+  .ads-filter-n { position: absolute; top: -.35rem; inset-inline-end: -.35rem; display: grid; place-items: center; min-width: 1.15rem; height: 1.15rem; padding-inline: .25rem;
+    border-radius: 999px; background: var(--color-ember); color: #fff; font-size: 10px; line-height: 1; box-shadow: 0 0 0 2px var(--color-paper); }
+
+  /* دراپ‌داون انتخابی */
+  .dd-select { position: relative; }
+  .dd-select.is-block { width: 100%; }
+  .dd-trigger { display: inline-flex; align-items: center; gap: .45rem; height: 2.5rem; padding-inline: .85rem .7rem; border: 1.5px solid var(--color-sand-300); border-radius: 999px;
+    background: var(--color-surface); color: var(--color-espresso); font-size: .85rem; white-space: nowrap; cursor: pointer;
+    transition: border-color .2s, box-shadow .2s, background-color .2s; }
+  .dd-trigger:hover { border-color: var(--color-espresso-300, var(--color-sand-300)); background: var(--color-sand-50); }
+  .dd-trigger:focus-visible, .dd-trigger.is-open { outline: none; border-color: var(--color-ember); box-shadow: 0 0 0 4px color-mix(in oklab, var(--color-ember) 12%, transparent); }
+  .dd-select.is-block .dd-trigger { width: 100%; height: 2.75rem; border-radius: 10px; }
+  .dd-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+  .dd-select.is-block .dd-value { flex: 1; text-align: start; }
+  .dd-chev { flex-shrink: 0; color: var(--color-espresso-400); transition: transform .45s var(--ease-pop); }
+  .dd-trigger.is-open .dd-chev { transform: rotate(180deg); color: var(--color-ember); }
+
+  .dd-panel { position: absolute; top: calc(100% + .45rem); inset-inline-end: 0; z-index: 30; min-width: 13rem; max-height: 19rem; overflow-y: auto; padding: .35rem;
+    background: var(--color-surface); border: 1px solid var(--color-sand-200); border-radius: 1rem; box-shadow: var(--shadow-lift); transform-origin: top center; }
+  .dd-select.is-block .dd-panel { inset-inline: 0; min-width: 0; }
+  .dd-opt { display: flex; width: 100%; align-items: center; justify-content: space-between; gap: .75rem; padding: .55rem .75rem; border-radius: .65rem;
+    font-size: .85rem; text-align: start; color: var(--color-espresso-600, var(--color-espresso)); cursor: pointer; transition: background-color .15s, color .15s; }
+  .dd-opt:hover, .dd-opt:focus-visible { outline: none; background: var(--color-sand-100); color: var(--color-espresso); }
+  .dd-opt[aria-selected="true"] { background: var(--color-ember-50); color: var(--color-ember-700); font-weight: 600; }
+  .dd-tick { flex-shrink: 0; opacity: 0; transform: scale(.4) rotate(-20deg); transition: opacity .2s, transform .4s var(--ease-pop); }
+  .dd-opt[aria-selected="true"] .dd-tick { opacity: 1; transform: none; }
+
+  /* فوتر صفحه‌های آگهی (اقتباس prebuiltui): زمینه قهوه‌ای خیلی تیره و گرم در هر دو تم؛
+     در موبایل تا زیر داک پایین ادامه دارد تا نوار روشن زیر آن نماند */
+  .pb-foot { margin-top: 4rem; padding-block: 3rem; background: #1E1612; color: #FBF3EA; border-top: 1px solid #2E231D; }
+  @media (width < 64rem) { .pb-foot { margin-bottom: calc(-5.75rem - env(safe-area-inset-bottom)); padding-bottom: calc(7.25rem + env(safe-area-inset-bottom)); } }
+  .pb-foot-line { width: 100%; height: 1px; background: linear-gradient(to left, transparent, rgb(251 243 234 / .25), transparent); }
+  .pb-foot a:not([aria-label]) { font-size: .875rem; color: rgb(251 243 234 / .6); transition: color .2s; }
+  .pb-foot a.text-xs { font-size: .75rem; }
+  .pb-foot a:not([aria-label]):hover { color: #FBF3EA; }
+  .pb-foot-field { display: flex; align-items: center; gap: .5rem; width: 100%; max-width: 20rem; height: 3.25rem; border: 1px solid rgb(251 243 234 / .2); border-radius: 999px; overflow: hidden;
+    transition: border-color .2s; }
+  .pb-foot-field:focus-within { border-color: rgb(251 243 234 / .45); }
+  .pb-foot-field input { flex: 1; min-width: 0; height: 100%; padding-inline-start: 1.25rem; background: transparent; border: 0; outline: none; color: #FBF3EA; font-size: .875rem; }
+  .pb-foot-field input::placeholder { color: rgb(251 243 234 / .5); font-size: .75rem; }
+  .pb-foot-field input::-webkit-search-cancel-button { display: none; }
+  .pb-foot-field button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; gap: .35rem; height: 2.5rem; padding-inline: 1.15rem; margin-inline-end: .35rem;
+    border-radius: 999px; background: linear-gradient(to bottom, #D46A4F, #B04631); color: #FFF8F4; font-size: .85rem; cursor: pointer; transition: transform .15s, filter .2s; }
+  .pb-foot-field button:hover { filter: brightness(1.08); }
+  .pb-foot-field button:active { transform: scale(.95); }
+}
+
+/* جستجوی موبایل: به‌جای دایره ذره‌بین تنها، همیشه یک کادر کامل با متن راهنما */
+@layer utilities {
+  @media (width < 64rem) {
+    .gsearch.ads-search { height: 2.75rem; min-height: 2.75rem; }
+    .gsearch.ads-search label { pointer-events: none; }
+    .gsearch.ads-search .input, .gsearch.ads-search .input:is(:focus, :not(:placeholder-shown)) { width: 100%; height: 2.75rem; margin: 0; padding: 0 2.6rem 0 1rem; padding-inline: 2.6rem 1rem;
+      border-radius: 999px; background: var(--color-sand); box-shadow: none; font-size: .875rem; transition: box-shadow .2s, background-color .2s; animation: none; }
+    .gsearch.ads-search .input::placeholder { color: var(--color-espresso-400); }
+    .gsearch.ads-search .input:focus { background: var(--color-surface); box-shadow: 0 0 0 2px var(--color-ember-200) inset; }
+    .gsearch.ads-search .caret { display: none; }
+    .gsearch.ads-search .ads-search-ic { display: block; position: absolute; inset-inline-start: .95rem; top: 50%; translate: 0 -50%; z-index: 2; pointer-events: none; color: var(--color-espresso-400); }
+    .ads-filter-btn { height: 2.75rem; min-width: 2.75rem; border-radius: 999px; }
+  }
+}
+
+/* حرکت دراپ‌داون: پرده‌ای از لبه بالا باز می‌شود، کمی از عمق به جلو می‌چرخد و تار به واضح می‌رسد؛ گزینه‌ها پشت‌سرهم می‌افتند */
+@layer components {
+  .dd-enter { transition: clip-path .55s var(--ease-spring), opacity .25s ease-out, transform .6s var(--ease-spring), filter .4s ease-out; }
+  .dd-from { opacity: 0; clip-path: inset(0 0 100% 0 round 1rem); transform: perspective(800px) rotateX(-14deg) translateY(-6px); filter: blur(4px); }
+  .dd-to { opacity: 1; clip-path: inset(-3rem round 1rem); transform: none; filter: none; }
+  .dd-leave { transition: opacity .16s ease-out, transform .18s var(--ease-exit), filter .18s ease-out; }
+  .dd-out { opacity: 0; transform: translateY(-4px) scale(.98); filter: blur(2px); }
+  .dd-motion > :not(#notif-box), .dd-motion ul > li { animation: dd-item .45s var(--ease-spring) backwards; animation-delay: calc(var(--n, 0) * 32ms + 70ms); }
+  @keyframes dd-item { from { opacity: 0; transform: translateY(-8px) scaleY(.92); transform-origin: top; } }
+  @media (prefers-reduced-motion: reduce) {
+    .dd-enter, .dd-leave { transition: opacity .12s linear; }
+    .dd-from, .dd-out { clip-path: none; transform: none; filter: none; }
+    .dd-motion > *, .dd-motion ul > li, .dd-chev, .dd-tick { animation: none; transition-duration: .01s; }
+  }
+}

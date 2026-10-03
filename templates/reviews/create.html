@@ -1,0 +1,50 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}امتیاز به فروشنده — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-xl px-4 pt-10">
+  <div class="panel p-6 sm:p-8">
+    <div class="flex flex-col items-center text-center">
+      <img src="{% static 'img/illustrations/reviews.svg' %}" alt="" class="h-28">
+      <h1 class="mt-6 font-display text-2xl font-bold">معامله‌ات با {{ o.seller }} چطور بود؟</h1>
+      <p class="mt-2 text-sm text-espresso-500">{{ o.listing.title }}</p>
+    </div>
+
+    <form method="post" class="mt-8" x-data="{ r: 0, labels: ['', 'خیلی بد', 'ضعیف', 'معمولی', 'خوب', 'عالی'] }">
+      {% csrf_token %}
+      <div class="flex flex-col items-center gap-2">
+        {# Rating — uiverse.io/andrew-demchenk0/afraid-yak-81 #}
+        <div class="stars">
+          {% for v in "54321" %}
+          <input type="radio" id="star-{{ v }}" name="rating" value="{{ v }}" @change="r = {{ v }}">
+          <label for="star-{{ v }}" title="{{ v|fa }} ستاره">{% icon "star" "s-one" "1.5" %}{% icon "star" "s-two" "1.5" %}<span class="ombre"></span></label>
+          {% endfor %}
+        </div>
+        <span class="h-6 text-sm font-semibold" :class="r >= 4 ? 'text-sage-700' : r >= 3 ? 'text-warn-700' : 'text-danger-700'" x-text="labels[r]"></span>
+        {% if error %}<p class="field-error">{{ error }}</p>{% endif %}
+      </div>
+
+      <div class="mt-6" x-show="r" x-collapse x-cloak>
+        <div class="mb-3 text-sm text-espresso-500">چه چیزی خوب بود؟ <span class="text-espresso-400">(اختیاری)</span></div>
+        <div class="grid grid-cols-2 gap-3">
+          {% for key, label in tags %}
+          <div>
+            <input type="checkbox" class="gm-check" id="tag-{{ key }}" name="tags" value="{{ key }}">
+            <label class="gm-check-label" for="tag-{{ key }}"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>{{ label }}</label>
+          </div>
+          {% endfor %}
+        </div>
+        <div class="field mt-6" x-data="{ n: 0 }">
+          <textarea class="field-input" name="text" id="r-text" placeholder=" " rows="3" maxlength="500" @input="n = $event.target.value.length"></textarea>
+          <label class="field-label" for="r-text">چند کلمه برای خریداران بعدی</label>
+          <p class="field-hint text-left fa-num" x-text="gm.toFa(n) + '/۵۰۰'"></p>
+        </div>
+      </div>
+
+      <div class="mt-8 flex flex-col-reverse items-center gap-3 sm:flex-row sm:justify-between">
+        <a href="{{ o.get_absolute_url }}" class="text-sm text-espresso-400 hover:text-ember">بعداً</a>
+        <button class="btn-push" :class="!r && 'pointer-events-none opacity-50'"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "send" "size-5" %}ثبت نظر</span></button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

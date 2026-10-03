@@ -1,0 +1,145 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}داشبورد{% endblock %}
+{% block crumb %}داشبورد{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>سلام {{ request.user.display_name|default:"همکار" }}</h1>
+    <p>{{ now|jdate:"%A %d %B %Y" }}<span class="sep" aria-hidden="true"></span>وضعیت لوطی در یک نگاه؛ کارهای منتظر را اول ببینید.</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'panel:stats' %}" class="btn-ghost is-sm">{% icon "chart-no-axes-column" "size-4" %}گزارش کامل</a>
+    <a href="{% url 'panel:orders' %}?s=open" class="btn-grad is-sm">{% icon "receipt-text" "size-4" %}معامله‌های باز</a>
+  </div>
+</div>
+
+{# ── شاخص‌ها ── #}
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <a href="{% url 'panel:orders' %}?s=open" class="kpi tone-sage">
+    <div class="kpi-top">پول پیش لوطی<span class="kpi-ic">{% icon "vault" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ held_total|toman }}<small>تومان</small></div>
+    <div class="kpi-foot">در {{ held_count|fa }} معامله باز</div>
+  </a>
+  <div class="kpi tone-ember">
+    <div class="kpi-top">درآمد کارمزد امروز<span class="kpi-ic">{% icon "hand-coins" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ today_fee|toman }}<small>تومان</small></div>
+    <div class="kpi-foot">از {{ today_done|fa }} معامله تکمیل‌شده</div>
+  </div>
+  <div class="kpi tone-saffron">
+    <div class="kpi-top">حجم ۱۴ روز اخیر<span class="kpi-ic">{% icon "chart-line" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ week_total|toman }}<small>تومان</small></div>
+    <div class="kpi-foot"><span class="spark tone-saffron">{% for p in week|slice:"-10:" %}<i style="--h: {{ p.h }}%"></i>{% endfor %}</span>معامله تکمیل‌شده</div>
+  </div>
+  <a href="{% url 'panel:users' %}?s=new" class="kpi tone-muted">
+    <div class="kpi-top">کاربر تازه امروز<span class="kpi-ic">{% icon "user-plus" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ today_users|fa }}<small>نفر</small></div>
+    <div class="kpi-foot"><span class="inline-flex items-center gap-1"><i class="size-1.5 rounded-full bg-sage"></i>{{ online|fa }} آنلاین</span><span class="sep" aria-hidden="true"></span>{{ active_listings|fa }} آگهی فعال</div>
+  </a>
+</div>
+
+<div class="mt-5 grid gap-5 xl:grid-cols-3">
+  {# ── نمودار ── #}
+  <section class="adm-card xl:col-span-2">
+    <div class="adm-card-h">
+      <div><h2>حجم معاملات تکمیل‌شده</h2><p>۱۴ روز اخیر، به تومان</p></div>
+      <a href="{% url 'panel:stats' %}" class="adm-more">جزئیات{% icon "chevron-left" "size-3.5" %}</a>
+    </div>
+    <div class="adm-card-b pt-8">
+      <div class="chart-bars tone-ember">
+        {% for p in week %}<div class="bar{% if not p.value %} is-zero{% endif %}" style="--h: {{ p.h }}%" data-tip="{{ p.label }} · {{ p.value|toman }} تومان"><span></span></div>{% endfor %}
+      </div>
+      <div class="chart-axis">{% for p in week %}<span>{{ p.short }}</span>{% endfor %}</div>
+    </div>
+  </section>
+
+  {# ── صف‌ها ── #}
+  <section class="adm-card">
+    <div class="adm-card-h"><div><h2>کارهای منتظر شما</h2><p>به ترتیب اولویت</p></div></div>
+    <ul class="divide-y divide-sand-100">
+      <li><a href="{% url 'panel:disputes' %}" class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-sand-50">
+        <span class="kpi-ic tone-danger">{% icon "scale" "size-[18px]" %}</span>
+        <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">گزارش‌های مشکل</span><span class="block text-xs text-espresso-400">پول دو طرف منتظر تصمیم است</span></span>
+        <span class="font-display text-xl font-extrabold fa-num {% if counts.disputes %}text-danger{% else %}text-espresso-300{% endif %}">{{ counts.disputes|fa }}</span>
+      </a></li>
+      <li><a href="{% url 'panel:verify' %}" class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-sand-50">
+        <span class="kpi-ic tone-warn">{% icon "scan-search" "size-[18px]" %}</span>
+        <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">بررسی اکانت</span><span class="block text-xs text-espresso-400">اطلاعات ورود تحویل داده شده</span></span>
+        <span class="font-display text-xl font-extrabold fa-num {% if counts.verify %}text-warn-700{% else %}text-espresso-300{% endif %}">{{ counts.verify|fa }}</span>
+      </a></li>
+      <li><a href="{% url 'panel:listings' %}" class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-sand-50">
+        <span class="kpi-ic tone-sage">{% icon "megaphone" "size-[18px]" %}</span>
+        <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">آگهی منتظر انتشار</span><span class="block text-xs text-espresso-400">{% if SITE_CONF.listing_auto_approve %}انتشار خودکار روشن است{% else %}بازبینی پیش از انتشار{% endif %}</span></span>
+        <span class="font-display text-xl font-extrabold fa-num {% if counts.listings %}text-sage-700{% else %}text-espresso-300{% endif %}">{{ counts.listings|fa }}</span>
+      </a></li>
+      <li><a href="{% url 'panel:reports' %}" class="flex items-center gap-3 px-5 py-3.5 transition hover:bg-sand-50">
+        <span class="kpi-ic tone-muted">{% icon "flag" "size-[18px]" %}</span>
+        <span class="min-w-0 flex-1"><span class="block text-sm font-semibold">گزارش کاربران</span><span class="block text-xs text-espresso-400">آگهی‌های مشکوک</span></span>
+        <span class="font-display text-xl font-extrabold fa-num {% if counts.reports %}text-espresso{% else %}text-espresso-300{% endif %}">{{ counts.reports|fa }}</span>
+      </a></li>
+    </ul>
+  </section>
+</div>
+
+{% if late or expiring %}
+<div class="mt-5 grid gap-5 lg:grid-cols-2">
+  <section class="adm-card">
+    <div class="adm-card-h"><div><h2>{% icon "clock-alert" "size-[18px] text-ember" %}تحویل‌های دیرکرد</h2><p>بیش از {{ SITE_CONF.seller_delivery_hours|fa }} ساعت از پرداخت گذشته و فروشنده تحویل نداده</p></div></div>
+    {% if late %}
+    <ul class="divide-y divide-sand-100">
+      {% for o in late %}
+      <li><a href="{% url 'panel:order' o.code %}" class="flex items-center gap-3 px-5 py-3 text-sm transition hover:bg-sand-50">
+        <span class="code shrink-0">{{ o.code }}</span><span class="min-w-0 flex-1 truncate">{{ o.listing.title }}</span>
+        <span class="shrink-0 text-xs text-danger-700">{{ o.seller }}<span class="sep" aria-hidden="true"></span>{{ o.paid_at|ago }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<div class="adm-empty"><span class="feed-ic">{% icon "circle-check" "size-5" %}</span>همه فروشنده‌ها سر وقت تحویل داده‌اند.</div>{% endif %}
+  </section>
+  <section class="adm-card">
+    <div class="adm-card-h"><div><h2>{% icon "hourglass" "size-[18px] text-warn-700" %}مهلت بررسی رو به پایان</h2><p>کمتر از ۶ ساعت تا تأیید خودکار و واریز پول به فروشنده</p></div></div>
+    {% if expiring %}
+    <ul class="divide-y divide-sand-100">
+      {% for o in expiring %}
+      <li><a href="{% url 'panel:order' o.code %}" class="flex items-center gap-3 px-5 py-3 text-sm transition hover:bg-sand-50">
+        <span class="code shrink-0">{{ o.code }}</span><span class="min-w-0 flex-1 truncate">{{ o.listing.title }}</span>
+        <span class="shrink-0 text-xs text-warn-700">{{ o.buyer }}<span class="sep" aria-hidden="true"></span>تا {{ o.inspection_deadline|jdatetime_fa }}</span>
+      </a></li>
+      {% endfor %}
+    </ul>
+    {% else %}<div class="adm-empty"><span class="feed-ic">{% icon "circle-check" "size-5" %}</span>مهلتی رو به پایان نیست.</div>{% endif %}
+  </section>
+</div>
+{% endif %}
+
+<div class="mt-5 grid gap-5 xl:grid-cols-3">
+  <section class="adm-card overflow-hidden xl:col-span-2">
+    <div class="adm-card-h">
+      <div><h2>آخرین معامله‌ها</h2><p>تازه‌ترین سفارش‌های ثبت‌شده در لوطی</p></div>
+      <a href="{% url 'panel:orders' %}" class="adm-more">همه معامله‌ها{% icon "chevron-left" "size-3.5" %}</a>
+    </div>
+    {% include "panel/_orders_table.html" with rows=recent %}
+  </section>
+
+  <section class="adm-card">
+    <div class="adm-card-h">
+      <div><h2>فعالیت کارشناسان</h2><p>کارهای حساس اخیر</p></div>
+      <a href="{% url 'panel:activity' %}" class="adm-more">همه{% icon "chevron-left" "size-3.5" %}</a>
+    </div>
+    {% if activity %}
+    <ul class="space-y-4 p-5">
+      {% for a in activity %}
+      <li class="flex gap-3">
+        <span class="feed-ic">{% icon a.icon "size-4" %}</span>
+        <div class="min-w-0 text-sm">
+          <p class="leading-6">{% if a.url %}<a href="{{ a.url }}" class="row-link">{{ a.text }}</a>{% else %}{{ a.text }}{% endif %}</p>
+          <p class="mt-0.5 text-xs text-espresso-400">{{ a.actor|default:"سیستم" }}<span class="sep" aria-hidden="true"></span>{{ a.created_at|ago }}</p>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="adm-empty"><span class="feed-ic">{% icon "history" "size-5" %}</span>هنوز کار حساسی ثبت نشده.</div>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

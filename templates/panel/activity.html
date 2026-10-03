@@ -1,0 +1,40 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}فعالیت کارشناسان{% endblock %}
+{% block crumb %}فعالیت کارشناسان{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>فعالیت کارشناسان</h1>
+    <p>دفتر ثبت کارهای حساس: تصمیم‌ها، برگشت پول، اصلاح کیف پول، بستن حساب و تغییر تنظیمات.</p>
+  </div>
+  <form method="get">
+    <label class="flex items-center gap-2 text-xs text-espresso-400">کارشناس
+      <select class="adm-input" name="who" onchange="this.form.submit()">
+        <option value="">همه</option>
+        {% for s in staff_users %}<option value="{{ s.pk }}"{% if who == s.pk|stringformat:"s" %} selected{% endif %}>{{ s }}</option>{% endfor %}
+      </select>
+    </label>
+  </form>
+</div>
+
+<section class="adm-card overflow-hidden">
+  {% if page.object_list %}
+  <ol class="tl p-5 sm:p-6">
+    {% for a in page.object_list %}
+    {% ifchanged %}<li class="!ps-0 !pb-3"><span class="chip is-muted">{{ a.created_at|jdate:"%A %d %B" }}</span></li>{% endifchanged %}
+    <li>
+      <span class="tl-ic">{% icon a.icon "size-4" %}</span>
+      <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-1">
+        <p class="text-sm leading-6">{% if a.url %}<a href="{{ a.url }}" class="row-link">{{ a.text }}</a>{% else %}{{ a.text }}{% endif %}</p>
+        <span class="shrink-0 text-xs text-espresso-400 fa-num" title="{{ a.created_at|jdatetime_fa }}">{{ a.created_at|jdate:"%H:%M" }}</span>
+      </div>
+      <p class="mt-0.5 text-[11px] text-espresso-400">{% if a.actor %}<a href="{% url 'panel:user' a.actor_id %}" class="row-link">{{ a.actor }}</a>{% else %}سیستم{% endif %}<span class="sep" aria-hidden="true"></span>{{ a.created_at|ago }}</p>
+    </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+  <div class="adm-empty"><span class="feed-ic">{% icon "history" "size-5" %}</span>هنوز کار حساسی ثبت نشده.</div>
+  {% endif %}
+  {% include "panel/_pager.html" %}
+</section>
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}تنظیمات و بازی‌ها{% endblock %}
+{% block crumb %}تنظیمات و بازی‌ها{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>تنظیمات سایت</h1>
+    <p>کارمزد، مهلت‌ها و اطلاعیه؛ هر تغییر همان لحظه روی معامله‌های تازه اثر می‌گذارد.{% if conf.updated_by %} آخرین تغییر: {{ conf.updated_by }}، {{ conf.updated_at|ago }}.{% endif %}</p>
+  </div>
+  {% if not request.user.is_superuser %}<span class="chip is-muted">{% icon "lock" "size-3.5" %}فقط مدیر کل می‌تواند تغییر دهد</span>{% endif %}
+</div>
+
+<form method="post" class="grid gap-5 xl:grid-cols-3"
+      x-data="{ pct: {{ form.fee_percent.value|default:0 }}, min: {{ form.fee_min.value|default:0 }}, max: {{ form.fee_max.value|default:0 }}, price: 1000000,
+                tone: '{{ form.announcement_tone.value|default:'info' }}', text: '{{ form.announcement.value|default:''|escapejs }}',
+                get fee() { return Math.round(Math.max(this.min, Math.min(Math.round(this.price * this.pct / 100), this.max)) / 1000) * 1000 },
+                fmt(n) { return Number(n || 0).toLocaleString('fa-IR') } }">
+  {% csrf_token %}
+  <fieldset class="contents" {% if not request.user.is_superuser %}disabled{% endif %}>
+  <div class="space-y-5 xl:col-span-2">
+    {% if form.non_field_errors %}<div class="rounded-xl border border-danger-100 bg-danger-50 p-3 text-sm text-danger-700">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>{% icon "percent" "size-[18px] text-ember" %}کارمزد لوطی</h2><p>درصدی از قیمت معامله، بین حداقل و سقف</p></div></div>
+      <div class="adm-card-b grid gap-4 sm:grid-cols-3">
+        {% for f in form %}{% if f.name == "fee_percent" or f.name == "fee_min" or f.name == "fee_max" %}
+        <label class="block">
+          <span class="adm-label">{{ f.label }}</span>
+          <input class="adm-input w-full ltr fa-num {% if f.errors %}!border-ember{% endif %}" type="number" min="0" name="{{ f.html_name }}" value="{{ f.value|default:'' }}" required
+                 x-model.number="{% if f.name == 'fee_percent' %}pct{% elif f.name == 'fee_min' %}min{% else %}max{% endif %}">
+          {% for e in f.errors %}<span class="adm-hint !text-danger-600">{{ e }}</span>{% endfor %}
+        </label>
+        {% endif %}{% endfor %}
+      </div>
+      <div class="mx-5 mb-5 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-sand-50 p-3.5 text-sm">
+        <span class="text-espresso-400">پیش‌نمایش برای معامله</span>
+        <select class="adm-input !h-9" x-model.number="price" aria-label="قیمت نمونه">
+          <option value="200000">۲۰۰ هزار</option><option value="1000000" selected>۱ میلیون</option><option value="5000000">۵ میلیون</option><option value="20000000">۲۰ میلیون</option>
+        </select>
+        <span class="ms-auto">کارمزد: <b class="fa-num text-ember-700" x-text="fmt(fee)"></b> تومان <span class="text-xs text-espresso-400">(<span x-text="fmt(price ? Math.round(fee * 1000 / price) / 10 : 0)"></span>٪ مؤثر)</span></span>
+      </div>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>{% icon "timer" "size-[18px] text-saffron-700" %}مهلت‌های معامله</h2><p>بعد از این مهلت‌ها سیستم خودکار تصمیم می‌گیرد</p></div></div>
+      <div class="adm-card-b grid gap-4 sm:grid-cols-2">
+        {% for f in form %}{% if f.name == "seller_delivery_hours" or f.name == "inspection_hours" %}
+        <label class="block">
+          <span class="adm-label">{{ f.label }}</span>
+          <input class="adm-input w-full ltr fa-num {% if f.errors %}!border-ember{% endif %}" type="number" min="1" name="{{ f.html_name }}" value="{{ f.value|default:'' }}" required>
+          <span class="adm-hint">{% if f.name == "seller_delivery_hours" %}اگر فروشنده تا این زمان اطلاعات ورود را نفرستد، در «تحویل‌های دیرکرد» داشبورد می‌آید.{% else %}اگر خریدار تا این زمان مشکلی گزارش نکند، پول خودکار به فروشنده می‌رسد.{% endif %}</span>
+          {% for e in f.errors %}<span class="adm-hint !text-danger-600">{{ e }}</span>{% endfor %}
+        </label>
+        {% endif %}{% endfor %}
+      </div>
+    </section>
+
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>{% icon "megaphone" "size-[18px] text-sage-700" %}انتشار آگهی و اطلاعیه</h2></div></div>
+      <div class="adm-card-b space-y-5">
+        <div class="flex items-center justify-between gap-4">
+          <div><div class="text-sm font-semibold">{{ form.listing_auto_approve.label }}</div><p class="adm-hint !mt-0.5">روشن باشد، آگهی‌ها بدون بازبینی کارشناس منتشر می‌شوند.</p></div>
+          <label class="gm-switch shrink-0">
+            <input type="checkbox" name="{{ form.listing_auto_approve.html_name }}" {% if form.listing_auto_approve.value %}checked{% endif %}>
+            <span class="slider"><span class="circle">{% icon "x" "i-cross" "3" %}{% icon "check" "i-check" "3" %}</span></span>
+          </label>
+        </div>
+        <div class="border-t border-sand-100"></div>
+        <div class="grid gap-4 sm:grid-cols-[1fr_11rem]">
+          <label class="block"><span class="adm-label">{{ form.announcement.label }}</span>
+            <input class="adm-input w-full" name="{{ form.announcement.html_name }}" maxlength="200" x-model="text" placeholder="مثلاً: کارمزد معامله‌های بالای ۵ میلیون تا پایان هفته نصف است.">
+          </label>
+          <label class="block"><span class="adm-label">لحن</span>
+            <select class="adm-input w-full" name="{{ form.announcement_tone.html_name }}" x-model="tone">
+              {% for v, label in form.announcement_tone.field.choices %}<option value="{{ v }}"{% if v == form.announcement_tone.value %} selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+          </label>
+        </div>
+        <div>
+          <div class="adm-label">پیش‌نمایش نوار بالای سایت</div>
+          <div class="overflow-hidden rounded-xl border border-sand-200" x-show="text.trim()" x-cloak>
+            <div class="site-announce" :class="'is-' + tone">
+              <div class="flex items-center justify-center gap-2 px-3 py-2 text-center text-xs leading-5">
+                <span x-show="tone === 'warning'">{% icon "triangle-alert" "size-4" %}</span><span x-show="tone === 'success'">{% icon "party-popper" "size-4" %}</span><span x-show="tone === 'info'">{% icon "megaphone" "size-4" %}</span>
+                <span x-text="text"></span>
+              </div>
+            </div>
+          </div>
+          <p class="adm-hint" x-show="!text.trim()">خالی بگذارید تا نواری نمایش داده نشود.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <aside class="space-y-5">
+    <section class="adm-card xl:sticky xl:top-20">
+      <div class="adm-card-h"><div><h2>خلاصه تنظیمات فعلی</h2></div></div>
+      <dl class="kv adm-card-b fa-num">
+        <div><dt>کارمزد</dt><dd>{{ conf.fee_percent|fa }}٪</dd></div>
+        <div><dt>بازه کارمزد</dt><dd>{{ conf.fee_min|toman }} تا {{ conf.fee_max|toman }}</dd></div>
+        <div><dt>مهلت تحویل</dt><dd>{{ conf.seller_delivery_hours|fa }} ساعت</dd></div>
+        <div><dt>مهلت بررسی</dt><dd>{{ conf.inspection_hours|fa }} ساعت</dd></div>
+        <div><dt>انتشار آگهی</dt><dd>{% if conf.listing_auto_approve %}خودکار{% else %}با بازبینی{% endif %}</dd></div>
+      </dl>
+      {% if request.user.is_superuser %}
+      <div class="border-t border-sand-100 p-4">
+        <button class="btn-grad is-sm w-full">{% icon "save" "size-4" %}ذخیره تنظیمات</button>
+      </div>
+      {% endif %}
+    </section>
+  </aside>
+  </fieldset>
+</form>
+
+{# ── بازی‌ها ── #}
+<section class="adm-card mt-5 overflow-hidden" id="games">
+  <div class="adm-card-h"><div><h2>{% icon "gamepad-2" "size-[18px] text-espresso-400" %}بازی‌های بازار</h2><p>بازی غیرفعال از صفحه اصلی و فرم ثبت آگهی پنهان می‌شود؛ آگهی‌های فعلی‌اش دست نمی‌خورد.</p></div></div>
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead><tr><th>بازی</th><th>پلتفرم‌ها</th><th class="num">آگهی فعال</th><th class="num">فروخته</th><th>وضعیت</th><th><span class="sr-only">تغییر وضعیت</span></th></tr></thead>
+      <tbody>
+        {% for g in games %}
+        <tr class="{% if not g.is_active %}opacity-60{% endif %}">
+          <td><a href="{{ g.get_absolute_url }}" target="_blank" rel="noopener" class="row-link flex items-center gap-3">
+            <span class="grid size-9 shrink-0 place-items-center rounded-xl" style="background: color-mix(in srgb, {{ g.tone }} 14%, transparent); color: {{ g.tone }}">{% icon g.icon "size-[18px]" %}</span>
+            <span><span class="block font-medium">{{ g.name }}</span><span class="block text-xs text-espresso-400 ltr text-end">{{ g.name_en }}</span></span>
+          </a></td>
+          <td><span class="flex flex-wrap gap-1">{% for k, label in g.platform_choices %}<span class="chip is-muted !py-0 text-[11px]">{{ label }}</span>{% endfor %}</span></td>
+          <td class="num">{{ g.n_active|fa }}</td>
+          <td class="num">{{ g.n_sold|fa }}</td>
+          <td>{% if g.is_active %}<span class="st is-sage"><i></i>در بازار</span>{% else %}<span class="st is-muted"><i></i>پنهان</span>{% endif %}</td>
+          <td class="text-end">
+            {% if request.user.is_superuser %}
+            <form method="post" action="{% url 'panel:game_toggle' g.pk %}">{% csrf_token %}
+              <button class="btn-ghost is-sm{% if g.is_active %} is-danger{% endif %}">{% if g.is_active %}{% icon "eye-off" "size-4" %}پنهان کن{% else %}{% icon "eye" "size-4" %}نمایش بده{% endif %}</button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+{% endblock %}

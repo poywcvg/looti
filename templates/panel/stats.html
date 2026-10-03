@@ -1,0 +1,151 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}آمار و گزارش{% endblock %}
+{% block crumb %}آمار و گزارش{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>آمار و گزارش</h1>
+    <p>عملکرد بازار در {{ days|fa }} روز اخیر، در مقایسه با {{ days|fa }} روز پیش از آن</p>
+  </div>
+  <nav class="adm-seg" aria-label="بازه زمانی">
+    {% for d, label in ranges %}<a href="?d={{ d }}" class="{% if d == days %}is-active{% endif %}"{% if d == days %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2 sm:[&>*:last-child]:col-span-2 lg:grid-cols-6 lg:[&>*]:col-span-2 lg:[&>*:nth-child(n+4)]:col-span-3 2xl:grid-cols-5 2xl:[&>*]:col-span-1 2xl:[&>*:nth-child(n+4)]:col-span-1">
+  {% for k in kpis %}
+  <div class="kpi tone-{{ k.tone }}">
+    <div class="kpi-top">{{ k.label }}<span class="kpi-ic">{% icon k.icon "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ k.value }}<small>{{ k.unit }}</small></div>
+    <div class="kpi-foot">{% delta k.delta %}نسبت به دوره قبل</div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="mt-5 grid gap-5 xl:grid-cols-3">
+  <section class="adm-card xl:col-span-2">
+    <div class="adm-card-h"><div><h2>حجم معاملات تکمیل‌شده</h2><p>مجموع قیمت معامله‌های تکمیل‌شده در هر روز</p></div></div>
+    <div class="adm-card-b pt-8">
+      <div class="chart-bars tone-ember">
+        {% for p in gmv_series %}<div class="bar{% if not p.value %} is-zero{% endif %}" style="--h: {{ p.h }}%" data-tip="{{ p.label }} · {{ p.value|toman }} تومان"><span></span></div>{% endfor %}
+      </div>
+      <div class="chart-axis"><span>{{ gmv_series.0.label }}</span><span>{% with gmv_series|last as l %}{{ l.label }}{% endwith %}</span></div>
+    </div>
+  </section>
+
+  <section class="adm-card">
+    <div class="adm-card-h"><div><h2>وضعیت سفارش‌ها</h2><p>{{ total_created|fa }} سفارش ثبت‌شده در این بازه</p></div></div>
+    <div class="adm-card-b">
+      <div class="donut-wrap">
+        <div class="donut" style="--g: {{ donut }}"></div>
+        <div class="donut-c"><span class="font-display text-2xl font-extrabold fa-num">{{ total_created|fa }}</span><span class="text-xs text-espresso-400">سفارش</span></div>
+      </div>
+      <ul class="mt-5 space-y-2 text-sm">
+        {% for b in breakdown %}
+        <li class="flex items-center gap-2"><i class="legend-dot" style="background: {{ b.color }}"></i><span class="flex-1 truncate text-espresso-600">{{ b.label }}</span><span class="fa-num font-semibold">{{ b.n|fa }}</span><span class="w-10 text-end text-xs text-espresso-400 fa-num">{{ b.pct|fa }}٪</span></li>
+        {% empty %}
+        <li class="adm-empty !p-4">در این بازه سفارشی ثبت نشده.</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </section>
+</div>
+
+<div class="mt-5 grid gap-5 lg:grid-cols-2 xl:grid-cols-4">
+  <div class="kpi tone-muted">
+    <div class="kpi-top">میانگین هر معامله<span class="kpi-ic">{% icon "receipt-text" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ avg_ticket|toman }}<small>تومان</small></div>
+    <div class="kpi-foot">معامله‌های تکمیل‌شده</div>
+  </div>
+  <div class="kpi tone-sage">
+    <div class="kpi-top">زمان کل معامله<span class="kpi-ic">{% icon "timer" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{% if avg_close_h is not None %}{{ avg_close_h|fa }}<small>ساعت</small>{% else %}—{% endif %}</div>
+    <div class="kpi-foot">میانگین برای معامله‌های تکمیل‌شده</div>
+  </div>
+  <div class="kpi {% if dispute_rate > 5 %}tone-danger{% else %}tone-warn{% endif %}">
+    <div class="kpi-top">نرخ گزارش مشکل<span class="kpi-ic">{% icon "scale" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ dispute_rate|fa }}<small>٪</small></div>
+    <div class="kpi-foot">{{ disputes_n|fa }} پرونده از معامله‌های پرداخت‌شده</div>
+  </div>
+  <div class="kpi tone-ember">
+    <div class="kpi-top">تعهد کیف پول‌ها<span class="kpi-ic">{% icon "wallet" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ liability|toman }}<small>تومان</small></div>
+    <div class="kpi-foot">+ {{ held_total|toman }} تومان پیش لوطی</div>
+  </div>
+</div>
+
+<div class="mt-5 grid gap-5 xl:grid-cols-3">
+  <section class="adm-card">
+    <div class="adm-card-h"><div><h2>قیف معامله</h2><p>از ثبت سفارش تا پایان</p></div></div>
+    <div class="adm-card-b space-y-5">
+      {% for label, n, pct in funnel %}
+      <div class="{% cycle 'tone-saffron' 'tone-ember' 'tone-sage' %}">
+        <div class="mb-2 flex items-center justify-between text-sm"><span class="text-espresso-600">{{ label }}</span><span class="fa-num"><b>{{ n|fa }}</b> <span class="text-xs text-espresso-400">({{ pct|fa }}٪)</span></span></div>
+        <div class="meter"><span style="--w: {{ pct }}%"></span></div>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="adm-card">
+    <div class="adm-card-h"><div><h2>سفارش‌های ثبت‌شده</h2><p>همه وضعیت‌ها، روزانه</p></div></div>
+    <div class="adm-card-b pt-8">
+      <div class="chart-bars is-sm tone-saffron">
+        {% for p in orders_series %}<div class="bar{% if not p.value %} is-zero{% endif %}" style="--h: {{ p.h }}%" data-tip="{{ p.label }} · {{ p.value|fa }} سفارش"><span></span></div>{% endfor %}
+      </div>
+      <div class="chart-axis"><span>{{ orders_series.0.label }}</span><span>{% with orders_series|last as l %}{{ l.label }}{% endwith %}</span></div>
+    </div>
+  </section>
+
+  <section class="adm-card">
+    <div class="adm-card-h"><div><h2>ثبت‌نام‌ها</h2><p>کاربران تازه، روزانه</p></div></div>
+    <div class="adm-card-b pt-8">
+      <div class="chart-bars is-sm tone-sage">
+        {% for p in users_series %}<div class="bar{% if not p.value %} is-zero{% endif %}" style="--h: {{ p.h }}%" data-tip="{{ p.label }} · {{ p.value|fa }} نفر"><span></span></div>{% endfor %}
+      </div>
+      <div class="chart-axis"><span>{{ users_series.0.label }}</span><span>{% with users_series|last as l %}{{ l.label }}{% endwith %}</span></div>
+    </div>
+  </section>
+</div>
+
+<div class="mt-5 grid gap-5 lg:grid-cols-2">
+  <section class="adm-card">
+    <div class="adm-card-h"><div><h2>بازی‌های پرفروش</h2><p>بر اساس حجم معاملات تکمیل‌شده</p></div></div>
+    {% if top_games %}
+    <ul class="space-y-4 p-5">
+      {% for g in top_games %}
+      <li class="flex items-center gap-3">
+        <span class="grid size-9 shrink-0 place-items-center rounded-xl" style="background: color-mix(in srgb, {{ g.tone }} 14%, transparent); color: {{ g.tone }}">{% icon g.icon "size-[18px]" %}</span>
+        <div class="min-w-0 flex-1">
+          <div class="mb-1.5 flex items-center justify-between gap-2 text-sm"><span class="truncate font-medium">{{ g.name }}</span><span class="shrink-0 fa-num"><b>{{ g.gmv|toman }}</b> <span class="text-xs text-espresso-400">تومان · {{ g.n|fa }} معامله</span></span></div>
+          <div class="meter"><span style="--w: {{ g.share }}%; --t: {{ g.tone }}"></span></div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}<div class="adm-empty"><span class="feed-ic">{% icon "gamepad-2" "size-5" %}</span>در این بازه معامله تکمیل‌شده‌ای نیست.</div>{% endif %}
+  </section>
+
+  <section class="adm-card overflow-hidden">
+    <div class="adm-card-h"><div><h2>فروشنده‌های برتر</h2><p>بیشترین فروش تکمیل‌شده در این بازه</p></div></div>
+    {% if top_sellers %}
+    <div class="adm-table-wrap">
+      <table class="adm-table">
+        <thead><tr><th>#</th><th>فروشنده</th><th class="num">معامله</th><th class="num">حجم (تومان)</th><th>اعتماد</th></tr></thead>
+        <tbody>
+          {% for u in top_sellers %}
+          <tr>
+            <td class="text-espresso-400 fa-num">{{ forloop.counter|fa }}</td>
+            <td><a href="{% url 'panel:user' u.pk %}" class="row-link flex items-center gap-2.5">{% include "components/avatar.html" with u=u size="size-8" %}<span class="font-medium">{{ u }}</span></a></td>
+            <td class="num">{{ u.n|fa }}</td>
+            <td class="num font-semibold">{{ u.gmv|toman }}</td>
+            <td><span class="chip is-{% if u.trust_score >= 70 %}sage{% elif u.trust_score >= 40 %}saffron{% else %}muted{% endif %} fa-num">{{ u.trust_score|fa }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}<div class="adm-empty"><span class="feed-ic">{% icon "store" "size-5" %}</span>در این بازه فروشی تکمیل نشده.</div>{% endif %}
+  </section>
+</div>
+{% endblock %}

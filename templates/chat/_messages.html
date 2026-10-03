@@ -1,0 +1,12 @@
+{% for m in msgs %}
+<div class="flex {% if m.sender == me %}justify-end{% else %}justify-start{% endif %} {% if fresh %}animate-fade-up{% endif %}" data-id="{{ m.pk }}" data-mine="{% if m.sender == me %}1{% else %}0{% endif %}">
+  <div class="max-w-[78%]">
+    <div class="whitespace-pre-line rounded-2xl px-4 py-2.5 text-sm leading-6 {% if m.sender == me %}rounded-bl-md bg-ember text-white{% else %}rounded-br-md bg-surface text-espresso shadow-soft{% endif %}">{{ m.text }}</div>
+    <div class="mt-1 flex items-center gap-1 px-1 text-[11px] text-espresso-400 {% if m.sender == me %}justify-end{% else %}justify-start{% endif %}">
+      {% if m.flagged %}<span class="inline-flex items-center gap-0.5 text-warn-700" title="راه ارتباطی خارج از سایت حذف شد">{% icon "shield-alert" "size-3" %}محافظت‌شده</span><span><span class="sep" aria-hidden="true"></span></span>{% endif %}
+      <span class="fa-num">{{ m.created_at|date:"H:i"|fa }}</span>
+      {% if m.sender == me %}{% if m.is_read %}{% icon "check-check" "size-3.5 text-sage" %}{% else %}{% icon "check" "size-3.5" %}{% endif %}{% endif %}
+    </div>
+  </div>
+</div>
+{% endfor %}

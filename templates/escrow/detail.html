@@ -1,0 +1,333 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}سفارش {{ o.code }} — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+{% with l=o.listing S=o.Status %}
+<div class="wrap pt-8">
+  <a href="{% url 'accounts:dashboard' %}?tab={% if role == 'seller' %}sales{% else %}purchases{% endif %}" class="inline-flex items-center gap-1.5 text-sm text-espresso-500 hover:text-ember">{% icon "arrow-right" "size-4" %}سفارش‌های من</a>
+
+  {# ─── سرصفحه ─── #}
+  <div class="mt-3 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex min-w-0 items-center gap-3">
+      <a href="{{ l.get_absolute_url }}" class="size-14 shrink-0 overflow-hidden rounded-2xl bg-sand-100">
+        {% if l.cover %}<img src="{{ l.cover.image.url }}" alt="" class="size-full object-cover">{% else %}<span class="grid size-full place-items-center" style="color: {{ l.game.tone }}">{% icon l.game.icon "size-6" %}</span>{% endif %}
+      </a>
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-2">
+          <h1 class="font-display text-xl font-bold">سفارش <span class="ltr latin inline-block">{{ o.code }}</span></h1>
+          <span class="chip is-{{ o.status_tone }}">{{ o.get_status_display }}</span>
+        </div>
+        <a href="{{ l.get_absolute_url }}" class="mt-0.5 block truncate text-sm text-espresso-500 hover:text-ember">{{ l.title }}</a>
+      </div>
+    </div>
+    <div class="flex items-center gap-2 text-xs text-espresso-400">{% icon "calendar" "size-4" %}{{ o.created_at|jdatetime_fa }}</div>
+  </div>
+
+  {# ─── مراحل ─── #}
+  {% if o.status != S.CANCELLED and o.status != S.REFUNDED %}
+  <ol class="panel mt-6 grid grid-cols-5 gap-1 p-4 sm:p-5">
+    {% for s in o.steps %}
+    <li class="relative flex flex-col items-center text-center">
+      {% if not forloop.first %}<span class="absolute left-1/2 top-5 h-0.5 w-full -translate-y-1/2 {% if s.done or s.current %}bg-sage{% else %}bg-sand-200{% endif %}" aria-hidden="true"></span>{% endif %}
+      <span class="relative grid size-10 place-items-center rounded-full ring-4 ring-surface transition
+        {% if s.done %}bg-sage text-white{% elif s.current and o.status == S.DISPUTED %}bg-danger text-white{% elif s.current %}bg-warn text-ink animate-pulse{% else %}bg-sand-100 text-espresso-300{% endif %}">
+        {% if s.done %}{% icon "check" "size-5" "2.5" %}{% elif s.current and o.status == S.DISPUTED %}{% icon "scale" "size-5" %}{% else %}{% icon s.icon "size-5" %}{% endif %}
+      </span>
+      <span class="mt-2 text-[11px] leading-4 sm:text-xs {% if s.current %}font-semibold text-espresso{% else %}text-espresso-400{% endif %}">{{ s.label }}</span>
+    </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+
+  <div class="mt-6 grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div class="min-w-0 space-y-6">
+
+      {# ═══════ کارت اقدام بر اساس وضعیت و نقش ═══════ #}
+      <section class="panel overflow-hidden">
+      {% if o.status == S.PENDING_PAYMENT %}
+        {% if role == "buyer" %}
+        <div class="grid gap-6 p-6 sm:grid-cols-[1fr_180px] sm:items-center">
+          <div>
+            <h2 class="font-display text-lg font-bold">پرداخت امن، قدم اول</h2>
+            <p class="mt-2 text-sm leading-7 text-espresso-500">پولت مستقیم به فروشنده نمی‌رسد؛ در حساب امانی {{ SITE_NAME }} قفل می‌شود و فقط وقتی اکانت را تحویل گرفتی و تأیید کردی آزاد می‌شود.</p>
+            <dl class="mt-4 space-y-2 rounded-xl bg-sand-50 p-4 text-sm">
+              <div class="flex justify-between"><dt class="text-espresso-500">مبلغ قابل پرداخت</dt><dd class="font-display text-base font-bold fa-num">{{ o.buyer_total|toman }} تومان</dd></div>
+              {% if shortfall and shortfall < o.buyer_total %}
+              <div class="flex justify-between text-xs"><dt class="text-espresso-400">از کیف پول</dt><dd class="fa-num">{{ request.user.wallet_balance|toman }}</dd></div>
+              <div class="flex justify-between text-xs"><dt class="text-espresso-400">از درگاه بانکی</dt><dd class="fa-num">{{ shortfall|toman }}</dd></div>
+              {% elif not shortfall %}
+              <div class="flex items-center gap-1.5 text-xs text-sage-700">{% icon "wallet" "size-3.5" %}کامل از موجودی کیف پولت کم می‌شود.</div>
+              {% endif %}
+            </dl>
+            <div class="mt-5 flex flex-wrap items-center gap-3">
+              <form method="post" action="{% url 'escrow:pay' o.code %}" x-data="{ busy: false }" @submit="busy = true">
+                {% csrf_token %}
+                <button class="btn-push is-sage" :class="busy && 'pointer-events-none opacity-70'"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "lock-keyhole" "size-5" %}{% if shortfall %}پرداخت و قفل در امانت{% else %}قفل مبلغ در امانت{% endif %}</span></button>
+              </form>
+              <form method="post" action="{% url 'escrow:cancel' o.code %}" data-confirm="سفارش لغو شود؟" data-confirm-text="آگهی دوباره برای بقیه آزاد می‌ماند." data-confirm-ok="لغو سفارش">
+                {% csrf_token %}<button class="btn-ghost is-sm">انصراف</button>
+              </form>
+            </div>
+          </div>
+          <img src="{% static 'img/illustrations/safe.svg' %}" alt="" class="mx-auto hidden h-36 sm:block">
+        </div>
+        {% else %}
+        <div class="flex items-center gap-4 p-6">
+          <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-warn-50 text-warn-700">{% icon "hourglass" "size-6" %}</span>
+          <div><h2 class="font-semibold">منتظر پرداخت خریدار</h2><p class="mt-1 text-sm text-espresso-500">تا پرداخت نشده، آگهی‌ات برای بقیه هم فعال است. بعد از پرداخت خبرت می‌کنیم.</p></div>
+        </div>
+        {% endif %}
+
+      {% elif o.status == S.PAID %}
+        {% if role == "seller" %}
+        <div class="p-6" x-data="countdown('{{ o.seller_deadline|date:'c' }}')">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 class="font-display text-lg font-bold">پول قفل شد؛ نوبت تحویل توست</h2>
+              <p class="mt-1 text-sm text-espresso-500">اطلاعات ورود را فقط همین‌جا بنویس. رمزنگاری می‌شود و اول واسط بررسی‌اش می‌کند.</p>
+            </div>
+            <span class="chip is-warn fa-num">{% icon "timer" "size-3.5" %}<span x-text="label"></span></span>
+          </div>
+          <form method="post" action="{% url 'escrow:deliver' o.code %}" class="mt-6 grid gap-4 sm:grid-cols-2" x-data="{ show: false }" data-confirm="اطلاعات ارسال شود؟" data-confirm-text="قبل از ارسال یک بار دیگر رمزها را چک کن." data-confirm-ok="ارسال برای واسط" data-confirm-tone="sage">
+            {% csrf_token %}
+            <div class="field"><input class="field-input ltr text-left" name="login" id="c-login" placeholder=" " required autocomplete="off"><label class="field-label" for="c-login">نام کاربری یا ایمیل ورود</label></div>
+            <div class="field">
+              <input class="field-input ltr text-left" :type="show ? 'text' : 'password'" name="password" id="c-pass" placeholder=" " required autocomplete="new-password">
+              <label class="field-label" for="c-pass">رمز عبور اکانت</label>
+              <button type="button" class="field-suffix pointer-events-auto hover:text-ember" @click="show = !show" :aria-label="show ? 'پنهان کردن' : 'نمایش'"><span x-show="!show">{% icon "eye" "size-4" %}</span><span x-show="show" x-cloak>{% icon "eye-off" "size-4" %}</span></button>
+            </div>
+            <div class="field"><input class="field-input ltr text-left" name="email" id="c-email" placeholder=" " autocomplete="off"><label class="field-label" for="c-email">ایمیل متصل (اختیاری)</label></div>
+            <div class="field"><input class="field-input ltr text-left" :type="show ? 'text' : 'password'" name="email_password" id="c-epass" placeholder=" " autocomplete="new-password"><label class="field-label" for="c-epass">رمز ایمیل (اختیاری)</label></div>
+            <div class="field sm:col-span-2"><textarea class="field-input ltr text-left" name="recovery" id="c-rec" placeholder=" " rows="2"></textarea><label class="field-label" for="c-rec">کدهای بازیابی / پشتیبان</label></div>
+            <div class="field sm:col-span-2"><textarea class="field-input" name="notes" id="c-notes" placeholder=" " rows="2"></textarea><label class="field-label" for="c-notes">توضیح برای خریدار (مثلاً روش ورود)</label></div>
+            <div class="flex flex-wrap items-center gap-3 sm:col-span-2">
+              <button class="btn-push is-sage"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "send" "size-5" %}ارسال امن برای واسط</span></button>
+              <span class="flex items-center gap-1.5 text-xs text-espresso-400">{% icon "lock" "size-3.5" %}رمزنگاری AES؛ حتی در پایگاه داده خوانا نیست.</span>
+            </div>
+          </form>
+          <form method="post" action="{% url 'escrow:cancel' o.code %}" class="mt-4 border-t border-dashed border-sand-200 pt-4" data-confirm="از فروش منصرف شدی؟" data-confirm-text="کل مبلغ به خریدار برمی‌گردد و آگهی دوباره فعال می‌شود." data-confirm-ok="لغو و برگشت پول">
+            {% csrf_token %}<button class="text-xs text-espresso-400 hover:text-ember">نمی‌توانم تحویل بدهم؛ لغو سفارش</button>
+          </form>
+        </div>
+        {% else %}
+        <div class="grid gap-6 p-6 sm:grid-cols-[1fr_160px] sm:items-center" x-data="countdown('{{ o.seller_deadline|date:'c' }}')">
+          <div>
+            <h2 class="font-display text-lg font-bold">پولت پیش لوطی قفل است</h2>
+            <p class="mt-2 text-sm leading-7 text-espresso-500">فروشنده باید تا پایان مهلت، اطلاعات اکانت را برای واسط بفرستد. اگر نفرستد، می‌توانی سفارش را لغو کنی و کل مبلغ برمی‌گردد.</p>
+            <div class="mt-4 inline-flex items-center gap-2 rounded-xl bg-warn-50 px-4 py-2.5 text-sm text-warn-700">{% icon "timer" "size-4" %}مهلت فروشنده: <b class="fa-num" x-text="label"></b></div>
+            <form method="post" action="{% url 'escrow:cancel' o.code %}" class="mt-4" x-show="left <= 0" x-cloak data-confirm="سفارش لغو شود؟" data-confirm-text="کل مبلغ به کیف پولت برمی‌گردد." data-confirm-ok="لغو و برگشت پول">
+              {% csrf_token %}<button class="btn-ghost is-sm is-danger">{% icon "undo-2" "size-4" %}لغو و بازگشت پول</button>
+            </form>
+          </div>
+          <img src="{% static 'img/illustrations/pending-approval.svg' %}" alt="" class="mx-auto hidden h-32 sm:block">
+        </div>
+        {% endif %}
+
+      {% elif o.status == S.VERIFYING %}
+        <div class="grid gap-6 p-6 sm:grid-cols-[1fr_160px] sm:items-center">
+          <div>
+            <h2 class="font-display text-lg font-bold">واسط در حال بررسی اکانت است</h2>
+            <p class="mt-2 text-sm leading-7 text-espresso-500">کارشناس {{ SITE_NAME }} وارد اکانت می‌شود و مشخصاتش را با آگهی تطبیق می‌دهد. معمولاً کمتر از یک ساعت طول می‌کشد.</p>
+            <div class="mt-4 flex items-center gap-2 text-sm text-sage-700">{% include "components/loader.html" with cls="text-[.36rem] text-sage-700" label="در حال بررسی" %}در حال بررسی</div>
+            {% if role == "mediator" %}<a href="{% url 'panel:verify' %}" class="btn-grad is-sm is-sage mt-4">{% icon "scan-search" "size-4" %}رفتن به صف بررسی</a>{% endif %}
+          </div>
+          <img src="{% static 'img/illustrations/security-on.svg' %}" alt="" class="mx-auto hidden h-32 sm:block">
+        </div>
+
+      {% elif o.status == S.DELIVERED %}
+        <div class="p-6" x-data="countdown('{{ o.inspection_deadline|date:'c' }}')">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              {% if role == "buyer" %}
+              <h2 class="font-display text-lg font-bold">اکانت تحویل شد؛ حالا بررسی کن</h2>
+              <p class="mt-1 text-sm text-espresso-500">وارد شو، رمزها و ایمیل را عوض کن و مشخصات را چک کن. اگر همه‌چیز درست بود تأیید کن.</p>
+              {% else %}
+              <h2 class="font-display text-lg font-bold">خریدار در حال بررسی اکانت است</h2>
+              <p class="mt-1 text-sm text-espresso-500">با تأیید خریدار یا پایان مهلت، {{ o.seller_payout|toman }} تومان به کیف پولت واریز می‌شود.</p>
+              {% endif %}
+            </div>
+            <span class="chip is-warn fa-num">{% icon "timer" "size-3.5" %}<span x-text="label"></span></span>
+          </div>
+          {% if role == "buyer" %}
+          <div class="mt-6 flex flex-wrap items-center gap-3">
+            <form method="post" action="{% url 'escrow:confirm' o.code %}" data-confirm="همه‌چیز درست است؟" data-confirm-text="با تأیید، پول به فروشنده می‌رسد و دیگر قابل برگشت نیست." data-confirm-ok="تأیید و پرداخت" data-confirm-tone="sage">
+              {% csrf_token %}
+              <button class="btn-push is-sage"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "badge-check" "size-5" %}اکانت سالم است، تأیید می‌کنم</span></button>
+            </form>
+            <a href="#dispute" class="btn-ghost is-sm" @click="$dispatch('open-dispute')">{% icon "life-buoy" "size-4" %}مشکلی هست</a>
+          </div>
+          {% endif %}
+        </div>
+
+      {% elif o.status == S.DISPUTED %}
+        <div class="p-6">
+          <div class="flex items-start gap-4">
+            <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-danger-50 text-danger-700">{% icon "scale" "size-6" %}</span>
+            <div>
+              <h2 class="font-display text-lg font-bold">مشکل در حال بررسی است</h2>
+              <p class="mt-1 text-sm leading-7 text-espresso-500">پول تا تصمیم واسط پیش لوطی قفل است و هیچ‌کس به آن دسترسی ندارد. توضیح و عکس‌ها را در گفتگوی پایین بفرست.</p>
+            </div>
+          </div>
+          {% if dispute %}
+          <div class="mt-5 rounded-xl border border-danger-100 bg-danger-50/40 p-4 text-sm">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <span class="font-semibold">{{ dispute.get_reason_display }}</span>
+              <span class="text-xs text-espresso-400">{% if dispute.opened_by == request.user %}ثبت‌شده توسط شما{% else %}ثبت‌شده توسط {{ dispute.opened_by }}{% endif %}<span class="sep" aria-hidden="true"></span>{{ dispute.created_at|ago }}</span>
+            </div>
+            <p class="mt-2 whitespace-pre-line leading-7 text-espresso-600">{{ dispute.text }}</p>
+          </div>
+          {% if role == "mediator" %}<a href="{% url 'panel:disputes' %}" class="btn-grad is-sm mt-4">{% icon "gavel" "size-4" %}ثبت تصمیم در پنل</a>{% endif %}
+          {% endif %}
+        </div>
+
+      {% elif o.status == S.COMPLETED %}
+        <div class="grid gap-6 p-6 sm:grid-cols-[1fr_160px] sm:items-center">
+          <div>
+            <h2 class="font-display text-lg font-bold">معامله با موفقیت تمام شد</h2>
+            {% if role == "buyer" %}
+            <p class="mt-2 text-sm leading-7 text-espresso-500">اکانت مال توست. اگر هنوز رمز و ایمیل را عوض نکرده‌ای، همین حالا انجامش بده.</p>
+            {% if not has_review %}<a href="{% url 'reviews:create' o.code %}" class="btn-grad is-saffron is-sm mt-4">{% icon "star" "size-4" %}امتیاز به فروشنده</a>{% endif %}
+            {% else %}
+            <p class="mt-2 text-sm leading-7 text-espresso-500"><b class="fa-num">{{ o.seller_payout|toman }}</b> تومان به کیف پولت واریز شد.</p>
+            <a href="{% url 'accounts:wallet' %}" class="btn-grad is-sage is-sm mt-4">{% icon "wallet" "size-4" %}کیف پول</a>
+            {% endif %}
+          </div>
+          <img src="{% static 'img/illustrations/order-confirmed.svg' %}" alt="" class="mx-auto hidden h-32 sm:block">
+        </div>
+
+      {% else %}
+        <div class="flex items-center gap-4 p-6">
+          <span class="grid size-12 shrink-0 place-items-center rounded-2xl bg-sand-100 text-espresso-500">{% if o.status == S.REFUNDED %}{% icon "undo-2" "size-6" %}{% else %}{% icon "circle-slash" "size-6" %}{% endif %}</span>
+          <div>
+            <h2 class="font-semibold">{{ o.get_status_display }}</h2>
+            <p class="mt-1 text-sm text-espresso-500">{% if o.status == S.REFUNDED %}{% if role == "buyer" %}کل مبلغ به کیف پولت برگشت.{% else %}مبلغ به خریدار برگشت و آگهی دوباره فعال شد.{% endif %}{% else %}این سفارش بسته شده است.{% endif %}</p>
+          </div>
+        </div>
+      {% endif %}
+      </section>
+
+      {# ═══════ اطلاعات ورود (فقط خریدار) ═══════ #}
+      {% if credentials %}
+      <section class="panel p-6" x-data="{ reveal: false }">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="flex items-center gap-2 font-semibold">{% icon "key-round" "size-5 text-saffron-700" %}اطلاعات ورود اکانت</h2>
+          <button type="button" class="btn-ghost is-sm" @click="reveal = !reveal"><span x-show="!reveal">{% icon "eye" "size-4" %}</span><span x-show="reveal" x-cloak>{% icon "eye-off" "size-4" %}</span><span x-text="reveal ? 'پنهان کن' : 'نمایش'"></span></button>
+        </div>
+        {% if cred_note %}<p class="mt-3 flex gap-2 rounded-xl bg-sage-50 p-3 text-sm text-sage-800">{% icon "shield-check" "size-4 shrink-0 mt-1" %}یادداشت واسط: {{ cred_note }}</p>{% endif %}
+        <dl class="mt-4 divide-y divide-sand-100">
+          {% if credentials.login %}<div class="flex items-center justify-between gap-3 py-3"><dt class="text-sm text-espresso-500">نام کاربری</dt><dd class="flex items-center gap-2" x-data="copy('{{ credentials.login|escapejs }}')"><span class="ltr font-mono text-sm">{{ credentials.login }}</span><button type="button" class="text-espresso-400 hover:text-ember" @click="run()" aria-label="کپی"><span x-show="!done">{% icon "copy" "size-4" %}</span><span x-show="done" x-cloak class="text-sage">{% icon "check" "size-4" %}</span></button></dd></div>{% endif %}
+          {% if credentials.password %}<div class="flex items-center justify-between gap-3 py-3"><dt class="text-sm text-espresso-500">رمز عبور</dt><dd class="flex items-center gap-2" x-data="copy('{{ credentials.password|escapejs }}')"><span class="ltr font-mono text-sm" x-text="reveal ? '{{ credentials.password|escapejs }}' : '••••••••'"></span><button type="button" class="text-espresso-400 hover:text-ember" @click="run()" aria-label="کپی"><span x-show="!done">{% icon "copy" "size-4" %}</span><span x-show="done" x-cloak class="text-sage">{% icon "check" "size-4" %}</span></button></dd></div>{% endif %}
+          {% if credentials.email %}<div class="flex items-center justify-between gap-3 py-3"><dt class="text-sm text-espresso-500">ایمیل</dt><dd class="flex items-center gap-2" x-data="copy('{{ credentials.email|escapejs }}')"><span class="ltr font-mono text-sm">{{ credentials.email }}</span><button type="button" class="text-espresso-400 hover:text-ember" @click="run()" aria-label="کپی"><span x-show="!done">{% icon "copy" "size-4" %}</span><span x-show="done" x-cloak class="text-sage">{% icon "check" "size-4" %}</span></button></dd></div>{% endif %}
+          {% if credentials.email_password %}<div class="flex items-center justify-between gap-3 py-3"><dt class="text-sm text-espresso-500">رمز ایمیل</dt><dd class="flex items-center gap-2" x-data="copy('{{ credentials.email_password|escapejs }}')"><span class="ltr font-mono text-sm" x-text="reveal ? '{{ credentials.email_password|escapejs }}' : '••••••••'"></span><button type="button" class="text-espresso-400 hover:text-ember" @click="run()" aria-label="کپی"><span x-show="!done">{% icon "copy" "size-4" %}</span><span x-show="done" x-cloak class="text-sage">{% icon "check" "size-4" %}</span></button></dd></div>{% endif %}
+          {% if credentials.recovery %}<div class="py-3"><dt class="text-sm text-espresso-500">کدهای بازیابی</dt><dd class="ltr mt-2 whitespace-pre-line rounded-lg bg-sand-50 p-3 font-mono text-xs" x-show="reveal" x-cloak>{{ credentials.recovery }}</dd><dd class="mt-2 text-xs text-espresso-400" x-show="!reveal">برای دیدن «نمایش» را بزن.</dd></div>{% endif %}
+          {% if credentials.notes %}<div class="py-3"><dt class="text-sm text-espresso-500">توضیح فروشنده</dt><dd class="mt-1 whitespace-pre-line text-sm leading-7">{{ credentials.notes }}</dd></div>{% endif %}
+        </dl>
+        <p class="mt-3 flex items-center gap-1.5 text-xs text-danger-600">{% icon "triangle-alert" "size-3.5" %}اولین کار: رمز اکانت و ایمیل را عوض کن.</p>
+      </section>
+      {% endif %}
+
+      {# ═══════ گزارش مشکل ═══════ #}
+      {% if role != "mediator" and o.status == S.PAID or role != "mediator" and o.status == S.VERIFYING or role != "mediator" and o.status == S.DELIVERED %}
+      <section id="dispute" class="panel p-6" x-data="{ open: false }" @open-dispute.window="open = true">
+        <button type="button" class="flex w-full items-center justify-between gap-3 text-right" @click="open = !open" :aria-expanded="open">
+          <span class="flex items-center gap-2 font-semibold">{% icon "life-buoy" "size-5 text-ember" %}گزارش مشکل</span>
+          <span class="transition" :class="open && 'rotate-180'">{% icon "chevron-down" "size-5 text-espresso-400" %}</span>
+        </button>
+        <div x-show="open" x-collapse x-cloak>
+          <p class="mt-3 text-sm leading-7 text-espresso-500">اگر به توافق نرسیدید، واسط بی‌طرف پرونده را بررسی می‌کند. تا تصمیم نهایی پول قفل می‌ماند.</p>
+          <form method="post" action="{% url 'escrow:dispute' o.code %}" class="mt-4 space-y-4">
+            {% csrf_token %}
+            <div class="grid gap-2 sm:grid-cols-2">
+              {% for v, t in dispute_reasons %}
+              <div>
+                <input type="radio" class="gm-check" id="dr-{{ v }}" name="reason" value="{{ v }}" {% if forloop.first %}checked{% endif %}>
+                <label class="gm-check-label" for="dr-{{ v }}"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>{{ t }}</label>
+              </div>
+              {% endfor %}
+            </div>
+            <div class="field"><textarea class="field-input" name="text" id="d-text" placeholder=" " rows="3" minlength="10" required></textarea><label class="field-label" for="d-text">دقیقاً چه اتفاقی افتاده؟</label></div>
+            <button class="btn-grad is-sm">{% icon "scale" "size-4" %}ثبت گزارش مشکل</button>
+          </form>
+        </div>
+      </section>
+      {% endif %}
+
+      {# ═══════ گفتگوی سه‌طرفه ═══════ #}
+      <section id="thread" class="panel p-6">
+        <div class="flex items-center justify-between gap-3">
+          <h2 class="flex items-center gap-2 font-semibold">{% icon "messages-square" "size-5 text-ember" %}گفتگوی سفارش</h2>
+          <span class="text-xs text-espresso-400">خریدار، فروشنده و واسط</span>
+        </div>
+        <div id="thread-list" class="mt-5 max-h-[28rem] space-y-4 overflow-y-auto pe-1">
+          {% for m in thread %}
+            {% include "escrow/_message.html" with me=request.user %}
+          {% empty %}
+            <p id="thread-empty" class="py-6 text-center text-sm text-espresso-400">هنوز پیامی نیست. هر سؤالی درباره تحویل داری همین‌جا بپرس؛ واسط هم می‌بیند.</p>
+          {% endfor %}
+        </div>
+        {% if o.is_open %}
+        <form class="mt-5" hx-post="{% url 'escrow:message' o.code %}" hx-target="#thread-list" hx-swap="beforeend" x-data="chatGuard"
+              hx-on::after-request="if (event.detail.successful) { this.reset(); this.text.dispatchEvent(new Event('input')); document.getElementById('thread-empty')?.remove(); const l = document.getElementById('thread-list'); l.scrollTop = l.scrollHeight; }">
+          {% csrf_token %}
+          <div class="flex items-end gap-2">
+            <div class="field flex-1"><textarea class="field-input !min-h-[48px]" name="text" id="t-text" placeholder=" " rows="1" maxlength="1000" x-model="text" required @keydown.enter.prevent.exact="$el.form.requestSubmit()"></textarea><label class="field-label" for="t-text">پیام شما…</label></div>
+            <button class="btn-grad h-12 !px-4" aria-label="ارسال">{% icon "send-horizontal" "size-5 -scale-x-100" %}</button>
+          </div>
+          <p x-show="risky" x-cloak class="mt-2 flex items-center gap-1.5 text-xs text-danger-600">{% icon "shield-alert" "size-3.5" %}شماره یا آیدی خارج از سایت خودکار حذف می‌شود؛ معامله بیرون از واسط بی‌پشتوانه است.</p>
+        </form>
+        {% endif %}
+      </section>
+    </div>
+
+    {# ═══════ ستون کناری ═══════ #}
+    <aside class="space-y-4 lg:sticky lg:top-24 hdr-follow lg:self-start">
+      <div class="panel p-5">
+        <div class="text-sm font-semibold text-espresso-500">جزئیات مالی</div>
+        <dl class="mt-4 space-y-2.5 text-sm">
+          <div class="flex justify-between"><dt class="text-espresso-500">قیمت توافقی</dt><dd class="fa-num">{{ o.price|toman }}</dd></div>
+          <div class="flex justify-between"><dt class="text-espresso-500">کارمزد واسط</dt><dd class="fa-num">{{ o.fee|toman }}</dd></div>
+          {% if role == "seller" %}
+          <div class="flex justify-between border-t border-dashed border-sand-300 pt-2.5 font-semibold"><dt>سهم شما</dt><dd class="fa-num text-sage-700">{{ o.seller_payout|toman }} تومان</dd></div>
+          {% else %}
+          <div class="flex justify-between border-t border-dashed border-sand-300 pt-2.5 font-semibold"><dt>پرداخت خریدار</dt><dd class="fa-num">{{ o.buyer_total|toman }} تومان</dd></div>
+          {% endif %}
+        </dl>
+        {% if o.is_open and o.status != S.PENDING_PAYMENT %}
+        <div class="mt-4 flex items-center gap-2 rounded-xl bg-sage-50 p-3 text-xs leading-5 text-sage-800">{% icon "vault" "size-4 shrink-0" %}مبلغ در حساب امانی قفل است.</div>
+        {% endif %}
+      </div>
+
+      <div class="panel space-y-4 p-5">
+        <div class="text-sm font-semibold text-espresso-500">طرفین معامله</div>
+        <a href="{% url 'accounts:profile' o.seller.pk %}" class="flex items-center gap-3 hover:text-ember">
+          {% include "components/avatar.html" with u=o.seller %}
+          <span class="min-w-0"><span class="block text-xs text-espresso-400">فروشنده{% if role == "seller" %} (شما){% endif %}</span><span class="block truncate text-sm font-medium">{{ o.seller }}</span></span>
+        </a>
+        <a href="{% url 'accounts:profile' o.buyer.pk %}" class="flex items-center gap-3 hover:text-ember">
+          {% include "components/avatar.html" with u=o.buyer %}
+          <span class="min-w-0"><span class="block text-xs text-espresso-400">خریدار{% if role == "buyer" %} (شما){% endif %}</span><span class="block truncate text-sm font-medium">{{ o.buyer }}</span></span>
+        </a>
+        <div class="flex items-center gap-3">
+          <span class="grid size-10 shrink-0 place-items-center rounded-full bg-sage-50 text-sage-700 ring-2 ring-surface">{% icon "shield-check" "size-5" %}</span>
+          <span class="min-w-0"><span class="block text-xs text-espresso-400">واسط امین</span><span class="block truncate text-sm font-medium">{% if o.mediator %}{{ o.mediator }}{% else %}تیم {{ SITE_NAME }}{% endif %}</span></span>
+        </div>
+      </div>
+
+      <div class="panel p-5">
+        <div class="text-sm font-semibold text-espresso-500">تاریخچه</div>
+        <ol class="relative mt-4 space-y-4 border-r-2 border-sand-100 pr-5">
+          {% for e in events %}
+          <li class="relative">
+            <span class="absolute -right-[31px] top-0 grid size-6 place-items-center rounded-full bg-surface text-espresso-500 ring-2 ring-sand-100 {% if forloop.first %}!bg-saffron !text-ink !ring-saffron-100{% endif %}">{% icon e.icon "size-3.5" %}</span>
+            <p class="text-sm leading-6">{{ e.text }}</p>
+            <p class="mt-0.5 text-xs text-espresso-400">{{ e.created_at|jdatetime_fa }}</p>
+          </li>
+          {% empty %}
+          <li class="text-sm text-espresso-400">رویدادی ثبت نشده.</li>
+          {% endfor %}
+        </ol>
+      </div>
+    </aside>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}تنظیمات حساب — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl px-4 pt-8">
+  <a href="{% url 'accounts:dashboard' %}" class="inline-flex items-center gap-1.5 text-sm text-espresso-500 hover:text-ember">{% icon "arrow-right" "size-4" %}داشبورد</a>
+  <h1 class="mt-3 font-display text-2xl font-bold">تنظیمات حساب</h1>
+  <p class="mt-1 text-sm text-espresso-500">این اطلاعات روی صفحه فروشندگی‌ات دیده می‌شود؛ شماره موبایل هیچ‌وقت نمایش داده نمی‌شود.</p>
+
+  <form method="post" enctype="multipart/form-data" class="mt-8 space-y-6" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}<div class="rounded-xl bg-danger-50 p-4 text-sm text-danger-700">{{ form.non_field_errors|join:" " }}</div>{% endif %}
+
+    <section class="panel p-6">
+      <h2 class="flex items-center gap-2 font-sans font-bold">{% icon "circle-user-round" "size-5 text-ember" %}نمایه</h2>
+      <div class="mt-5 grid gap-6 sm:grid-cols-[160px_1fr]"
+           x-data="{ url: '{% if request.user.avatar %}{{ request.user.avatar.url }}{% endif %}', over: false,
+                     pick(f) { if (f && f.type.startsWith('image/')) { this.url = URL.createObjectURL(f) } } }">
+        {# Input file — uiverse.io/escannord/good-insect-28 #}
+        <label class="file-drop !min-h-[160px] !rounded-full !p-0 overflow-hidden" :class="over && 'is-over'"
+               @dragover.prevent="over = true" @dragleave="over = false"
+               @drop.prevent="over = false; $refs.av.files = $event.dataTransfer.files; pick($event.dataTransfer.files[0])">
+          <template x-if="url"><img :src="url" alt="" class="size-full object-cover"></template>
+          <template x-if="!url"><span class="flex flex-col items-center gap-2 text-xs">{% icon "image-plus" "size-7" "1.5" %}تصویر نمایه</span></template>
+          <input type="file" name="avatar" accept="image/*" class="sr-only" x-ref="av" @change="pick($event.target.files[0])">
+        </label>
+        <div class="space-y-5">
+          <div>
+            <div class="field">
+              <input class="field-input {% if form.display_name.errors %}is-invalid{% endif %}" name="display_name" id="f-name" placeholder=" " maxlength="40" value="{{ form.display_name.value|default:'' }}">
+              <label class="field-label" for="f-name">نام نمایشی</label>
+            </div>
+            {% for e in form.display_name.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">مثلاً «آرش | فروشگاه اسکین»</p>{% endfor %}
+          </div>
+          <div x-data="{ n: {{ form.bio.value|default:''|length }} }">
+            <div class="field">
+              <textarea class="field-input !min-h-[96px]" name="bio" id="f-bio" placeholder=" " maxlength="200" @input="n = $event.target.value.length">{{ form.bio.value|default:'' }}</textarea>
+              <label class="field-label" for="f-bio">درباره من</label>
+            </div>
+            <p class="field-hint flex justify-between"><span>کوتاه بنویس چه بازی‌هایی کار می‌کنی و کی پاسخ می‌دهی.</span><span class="fa-num" x-text="gm.toFa(n) + '/۲۰۰'"></span></p>
+          </div>
+        </div>
+      </div>
+      {% for e in form.avatar.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+    </section>
+
+    <section class="panel p-6">
+      <h2 class="flex items-center gap-2 font-sans font-bold">{% icon "landmark" "size-5 text-sage-700" %}حساب بانکی برای برداشت پول</h2>
+      <p class="mt-1 text-sm text-espresso-500">پول فروش‌هایت از کیف پول به همین شبا واریز می‌شود. ثبت شبا ۵ امتیاز به اعتمادت اضافه می‌کند.</p>
+      <div class="mt-5">
+        <div class="field">
+          <input class="field-input ltr fa-num text-left tracking-wider {% if form.sheba.errors %}is-invalid{% endif %}" name="sheba" id="f-sheba" placeholder=" " inputmode="numeric" maxlength="30" value="{{ form.sheba.value|default:'' }}">
+          <label class="field-label" for="f-sheba">شماره شبا</label>
+        </div>
+        {% for e in form.sheba.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">۲۴ رقم بعد از IR؛ به نام خودت باشد.</p>{% endfor %}
+      </div>
+    </section>
+
+    <section class="panel flex items-center gap-4 p-6">
+      <span class="grid size-11 shrink-0 place-items-center rounded-xl bg-sand text-espresso-500">{% icon "smartphone" "size-5" %}</span>
+      <div class="flex-1">
+        <div class="font-medium">شماره موبایل</div>
+        <div class="ltr fa-num text-right text-sm text-espresso-400">{{ request.user.phone|mask_phone }}</div>
+      </div>
+      <span class="chip is-sage">{% icon "badge-check" "size-3.5" %}تأییدشده</span>
+    </section>
+
+    <div class="flex justify-end">
+      <button class="btn-push"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "save" "size-5" %}ذخیره تغییرات</span></button>
+    </div>
+  </form>
+
+  {# ═══ امنیت و ورود — نام کاربری/ایمیل و رمز، کنار ورود پیامکی ═══ #}
+  <section id="security" class="panel mt-10 scroll-mt-24 p-6">
+    <h2 class="flex items-center gap-2 font-sans font-bold">{% icon "key-round" "size-5 text-saffron-700" %}ورود با رمز</h2>
+    <p class="mt-1 text-sm font-light text-espresso-500">ورود پیامکی همیشه فعال است. اگر بخواهی، با نام کاربری یا ایمیل و رمز هم وارد شو. ایمیل و نام کاربری فقط برای ورود است و به کسی نشان داده نمی‌شود.</p>
+
+    <form method="post" action="{% url 'accounts:settings_identity' %}" class="mt-6 grid gap-5 sm:grid-cols-2" novalidate>
+      {% csrf_token %}
+      <div>
+        <div class="field">
+          <input class="field-input ltr text-left {% if identity_form.username.errors %}is-invalid{% endif %}" name="username" id="f-username" placeholder=" " maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" value="{{ identity_form.username.value|default:'' }}">
+          <label class="field-label" for="f-username">نام کاربری</label>
+        </div>
+        {% for e in identity_form.username.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">حروف انگلیسی کوچک، عدد، نقطه یا _</p>{% endfor %}
+      </div>
+      <div>
+        <div class="field">
+          <input class="field-input ltr text-left {% if identity_form.email.errors %}is-invalid{% endif %}" name="email" id="f-email" type="email" placeholder=" " maxlength="254" autocomplete="email" value="{{ identity_form.email.value|default:'' }}">
+          <label class="field-label" for="f-email">ایمیل</label>
+        </div>
+        {% for e in identity_form.email.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">اختیاری</p>{% endfor %}
+      </div>
+      <div class="sm:col-span-2 flex justify-end">
+        <button class="btn-ghost is-sm">{% icon "at-sign" "size-4" %}ذخیره شناسه‌ها</button>
+      </div>
+    </form>
+
+    <div class="my-6 h-px bg-sand-200"></div>
+
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <span class="grid size-10 place-items-center rounded-xl {% if request.user.has_usable_password %}bg-sage-50 text-sage-700{% else %}bg-sand text-espresso-500{% endif %}">{% icon "lock-keyhole" "size-5" %}</span>
+        <div>
+          <div class="font-medium">رمز عبور</div>
+          <div class="text-xs text-espresso-400">{% if request.user.has_usable_password %}تعیین شده؛ می‌توانی با رمز وارد شوی.{% else %}هنوز رمزی نگذاشته‌ای.{% endif %}</div>
+        </div>
+      </div>
+      {% if request.user.has_usable_password %}<span class="chip is-sage">{% icon "shield-check" "size-3.5" %}فعال</span>{% else %}<span class="chip is-muted">{% icon "shield-off" "size-3.5" %}غیرفعال</span>{% endif %}
+    </div>
+
+    <form method="post" action="{% url 'accounts:settings_password' %}" class="mt-6 grid gap-5 sm:grid-cols-2" novalidate x-data="{ show: false }">
+      {% csrf_token %}
+      <input type="text" name="username" value="{{ request.user.username|default:request.user.phone }}" autocomplete="username" class="hidden" tabindex="-1" aria-hidden="true">
+      {% if require_current %}
+      <div class="sm:col-span-2">
+        <div class="field">
+          <input class="field-input ltr text-left {% if password_form.current_password.errors %}is-invalid{% endif %}" name="current_password" id="f-cur" :type="show ? 'text' : 'password'" type="password" placeholder=" " autocomplete="current-password" maxlength="128">
+          <label class="field-label" for="f-cur">رمز فعلی</label>
+        </div>
+        {% for e in password_form.current_password.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">یادت نیست؟ خارج شو و با کد پیامکی وارد شو؛ تا {{ 15|fa }} دقیقه بعد، رمز فعلی لازم نیست.</p>{% endfor %}
+      </div>
+      {% endif %}
+      <div>
+        <div class="field">
+          <input class="field-input ltr text-left {% if password_form.new_password1.errors %}is-invalid{% endif %}" name="new_password1" id="f-pw1" :type="show ? 'text' : 'password'" type="password" placeholder=" " autocomplete="new-password" maxlength="128">
+          <label class="field-label" for="f-pw1">رمز تازه</label>
+        </div>
+        {% for e in password_form.new_password1.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">حداقل ۸ نویسه، فقط عدد نباشد.</p>{% endfor %}
+      </div>
+      <div>
+        <div class="field">
+          <input class="field-input ltr text-left {% if password_form.new_password2.errors %}is-invalid{% endif %}" name="new_password2" id="f-pw2" :type="show ? 'text' : 'password'" type="password" placeholder=" " autocomplete="new-password" maxlength="128">
+          <label class="field-label" for="f-pw2">تکرار رمز تازه</label>
+        </div>
+        {% for e in password_form.new_password2.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+      </div>
+      <div class="sm:col-span-2 flex flex-wrap items-center justify-between gap-3">
+        {# Checkbox — uiverse.io (همان gm-check سایت) #}
+        <span><input type="checkbox" class="gm-check" id="f-showpw" x-model="show"><label class="gm-check-label !text-sm" for="f-showpw"><span class="gm-check-box"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>نمایش رمزها</label></span>
+        <button class="btn-grad is-sage is-sm">{% icon "key-round" "size-4" %}{% if request.user.has_usable_password %}تغییر رمز{% else %}تعیین رمز{% endif %}</button>
+      </div>
+    </form>
+
+    {% if request.user.has_usable_password %}
+    <form method="post" action="{% url 'accounts:settings_password_remove' %}" class="mt-6 flex flex-wrap items-end gap-3 rounded-xl border border-dashed border-sand-300 p-4" x-data="{ open: false }">
+      {% csrf_token %}
+      <p class="flex-1 text-xs leading-6 text-espresso-500">نمی‌خواهی با رمز وارد شوی؟ رمز را حذف کن تا ورود فقط پیامکی باشد.</p>
+      <button type="button" class="btn-ghost is-sm is-danger" x-show="!open" @click="open = true">{% icon "trash-2" "size-4" %}حذف رمز</button>
+      <div class="flex w-full flex-wrap gap-2" x-show="open" x-collapse x-cloak>
+        {% if require_current %}<div class="field flex-1"><input class="field-input !h-11 ltr text-left" name="current_password" id="f-rm" type="password" placeholder=" " autocomplete="current-password"><label class="field-label" for="f-rm">رمز فعلی</label></div>{% endif %}
+        <button class="btn-ghost is-sm is-danger">{% icon "check" "size-4" %}تأیید حذف</button>
+        <button type="button" class="btn-ghost is-sm" @click="open = false">انصراف</button>
+      </div>
+    </form>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

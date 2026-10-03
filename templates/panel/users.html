@@ -1,0 +1,80 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}کاربران{% endblock %}
+{% block crumb %}کاربران{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>کاربران</h1>
+    <p>حساب‌ها، کیف پول‌ها و نقش‌ها؛ برای بستن حساب، اصلاح موجودی یا ارسال اعلان وارد پرونده کاربر شوید.</p>
+  </div>
+</div>
+
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="kpi tone-ember">
+    <div class="kpi-top">همه کاربران<span class="kpi-ic">{% icon "users-round" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ summary.total|fa }}<small>نفر</small></div>
+    <div class="kpi-foot"><span class="delta is-up">+{{ summary.new|fa }}</span>در ۷ روز اخیر</div>
+  </div>
+  <div class="kpi tone-saffron">
+    <div class="kpi-top">موجودی کیف پول‌ها<span class="kpi-ic">{% icon "wallet" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ summary.wallets|toman }}<small>تومان</small></div>
+    <div class="kpi-foot">تعهد لوطی به کاربران</div>
+  </div>
+  <a href="?s=staff" class="kpi tone-sage">
+    <div class="kpi-top">کارشناسان واسط<span class="kpi-ic">{% icon "shield-check" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ summary.staff|fa }}<small>نفر</small></div>
+    <div class="kpi-foot">دسترسی به این پنل</div>
+  </a>
+  <a href="?s=blocked" class="kpi tone-muted">
+    <div class="kpi-top">حساب‌های بسته<span class="kpi-ic">{% icon "user-x" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ summary.blocked|fa }}<small>نفر</small></div>
+    <div class="kpi-foot">امکان ورود و معامله ندارند</div>
+  </a>
+</div>
+
+<section class="adm-card mt-5 overflow-hidden">
+  <nav class="tabs-line px-3" aria-label="گروه کاربران">
+    {% for key, label in tabs %}<a href="?s={{ key }}&o={{ sort }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="{% if key == tab %}is-active{% endif %}"{% if key == tab %} aria-current="page"{% endif %}>{{ label }}</a>{% endfor %}
+  </nav>
+  <form class="adm-filter border-b border-sand-100" method="get">
+    <input type="hidden" name="s" value="{{ tab }}">
+    <label class="relative min-w-0 flex-1 sm:max-w-sm">
+      <span class="sr-only">جستجوی کاربر</span>
+      <span class="pointer-events-none absolute inset-y-0 start-3 grid place-items-center text-espresso-300">{% icon "search" "size-4" %}</span>
+      <input class="adm-input w-full !ps-9" name="q" value="{{ q }}" placeholder="موبایل، نام کاربری، نام یا ایمیل">
+    </label>
+    <label class="flex items-center gap-2 text-xs text-espresso-400">مرتب‌سازی
+      <select class="adm-input" name="o" onchange="this.form.submit()">
+        {% for key, label in sorts %}<option value="{{ key }}"{% if key == sort %} selected{% endif %}>{{ label }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="btn-ghost is-sm">اعمال</button>
+  </form>
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead><tr><th>کاربر</th><th>موبایل</th><th>نقش</th><th class="num">فروش موفق</th><th class="num">آگهی فعال</th><th class="num">کیف پول (تومان)</th><th>اعتماد</th><th>آخرین بازدید</th><th>عضویت</th></tr></thead>
+      <tbody>
+        {% for u in page.object_list %}
+        <tr class="{% if not u.is_active %}opacity-60{% endif %}">
+          <td><a href="{% url 'panel:user' u.pk %}" class="row-link flex items-center gap-2.5">
+            <span class="relative">{% include "components/avatar.html" with u=u size="size-9" %}{% if u.is_online %}<i class="absolute -bottom-0.5 -end-0.5 size-2.5 rounded-full border-2 border-surface bg-sage"></i>{% endif %}</span>
+            <span class="min-w-0"><span class="block truncate font-medium">{{ u }}</span>{% if u.username %}<span class="block text-xs text-espresso-400 ltr text-end">@{{ u.username }}</span>{% endif %}</span>
+          </a></td>
+          <td class="ltr text-end fa-num text-espresso-600">{{ u.phone|mask_phone }}</td>
+          <td>{% if not u.is_active %}<span class="st is-danger"><i></i>بسته</span>{% elif u.is_superuser %}<span class="st is-saffron"><i></i>مدیر کل</span>{% elif u.is_staff %}<span class="st is-sage"><i></i>واسط</span>{% else %}<span class="text-xs text-espresso-400">کاربر</span>{% endif %}</td>
+          <td class="num">{{ u.n_sales|fa }}</td>
+          <td class="num">{{ u.n_listings|fa }}</td>
+          <td class="num font-semibold">{{ u.wallet_balance|toman }}</td>
+          <td><span class="chip is-{% if u.trust_score >= 70 %}sage{% elif u.trust_score >= 40 %}saffron{% else %}muted{% endif %} fa-num">{{ u.trust_score|fa }}</span></td>
+          <td class="text-xs text-espresso-400">{% if u.is_online %}<span class="text-sage-700">آنلاین</span>{% elif u.last_seen %}{{ u.last_seen|ago }}{% else %}—{% endif %}</td>
+          <td class="text-xs text-espresso-400" title="{{ u.date_joined|jdatetime_fa }}">{{ u.date_joined|jdate }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="9"><div class="adm-empty"><span class="feed-ic">{% icon "user-search" "size-5" %}</span>کاربری با این شرایط پیدا نشد.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "panel/_pager.html" %}
+</section>
+{% endblock %}

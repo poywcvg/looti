@@ -1,0 +1,13 @@
+{% if bookmarked is True or l.pk in bookmarked %}{% firstof "1" as is_on %}{% endif %}
+<form hx-post="{% url 'listings:bookmark' l.code %}" hx-swap="outerHTML" hx-target="this" hx-indicator="none" class="contents">
+  <input type="hidden" name="variant" value="{{ variant|default:'icon' }}">
+  {% if variant == "full" %}
+    <button class="btn-ghost w-full {% if is_on %}!border-ember-200 !bg-ember-50 text-ember-700{% endif %}" aria-pressed="{% if is_on %}true{% else %}false{% endif %}">
+      {% if is_on %}{% icon "bookmark-check" "size-4" %}ذخیره شد{% else %}{% icon "bookmark" "size-4" %}ذخیره{% endif %}
+    </button>
+  {% else %}
+    <button class="grid size-8 place-items-center rounded-full bg-surface/95 shadow-soft transition hover:scale-110 {% if is_on %}text-ember{% else %}text-espresso-500{% endif %}" aria-label="{% if is_on %}حذف از ذخیره‌ها{% else %}ذخیره آگهی{% endif %}" aria-pressed="{% if is_on %}true{% else %}false{% endif %}">
+      {% if is_on %}{% icon "bookmark-check" "size-4" %}{% else %}{% icon "bookmark" "size-4" %}{% endif %}
+    </button>
+  {% endif %}
+</form>

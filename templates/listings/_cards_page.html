@@ -1,0 +1,6 @@
+{% for l in page %}<div class="animate-fade-up">{% include "components/listing_card.html" with show_actions=True %}</div>{% endfor %}
+{% if page.has_next %}
+<div class="col-span-full flex flex-col items-center gap-3 py-10 text-xs text-espresso-400" hx-get="{% url 'listings:list' %}?{% if query %}{{ query }}&{% endif %}page={{ page.next_page_number }}" hx-trigger="revealed" hx-swap="outerHTML" hx-indicator="none">
+  {% include "components/loader.html" with cls="text-[.7rem]" label="در حال آوردن آگهی‌های بیشتر" %}آگهی‌های بیشتر…
+</div>
+{% endif %}

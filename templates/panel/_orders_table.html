@@ -1,0 +1,27 @@
+{% load ui adm %}
+<div class="adm-table-wrap">
+  <table class="adm-table">
+    <thead><tr><th>سفارش</th><th>آگهی</th><th>خریدار</th><th>فروشنده</th><th class="num">مبلغ (تومان)</th><th>وضعیت</th><th>زمان</th><th><span class="sr-only">باز کردن</span></th></tr></thead>
+    <tbody>
+      {% for o in rows %}
+      <tr>
+        <td><a href="{% url 'panel:order' o.code %}" class="code row-link">{{ o.code }}</a></td>
+        <td class="max-w-[16rem]">
+          <a href="{% url 'panel:order' o.code %}" class="row-link flex min-w-0 items-center gap-2">
+            <span class="grid size-7 shrink-0 place-items-center rounded-lg" style="background: color-mix(in srgb, {{ o.listing.game.tone }} 14%, transparent); color: {{ o.listing.game.tone }}">{% icon o.listing.game.icon "size-4" %}</span>
+            <span class="truncate">{{ o.listing.title }}</span>
+          </a>
+        </td>
+        <td><a href="{% url 'panel:user' o.buyer_id %}" class="row-link text-espresso-600">{{ o.buyer }}</a></td>
+        <td><a href="{% url 'panel:user' o.seller_id %}" class="row-link text-espresso-600">{{ o.seller }}</a></td>
+        <td class="num font-semibold">{{ o.buyer_total|toman }}</td>
+        <td>{% order_status o %}</td>
+        <td class="text-xs text-espresso-400" title="{{ o.created_at|jdatetime_fa }}">{{ o.created_at|ago }}</td>
+        <td class="!ps-0"><a href="{% url 'panel:order' o.code %}" class="grid size-7 place-items-center rounded-lg text-espresso-300 hover:bg-sand hover:text-espresso" aria-label="جزئیات {{ o.code }}">{% icon "chevron-left" "size-4" %}</a></td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="8"><div class="adm-empty"><span class="feed-ic">{% icon "inbox" "size-5" %}</span>سفارشی با این شرایط پیدا نشد.</div></td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

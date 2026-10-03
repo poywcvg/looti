@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}گفتگو با {{ other }} — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+{% with l=conv.listing %}
+<div class="wrap max-sm:px-0 sm:pt-6">
+  <div class="grid overflow-hidden border-sand-200 bg-surface sm:rounded-2xl sm:border sm:shadow-soft lg:grid-cols-[320px_1fr]">
+    {# ─── فهرست گفتگوها (دسکتاپ) ─── #}
+    <aside class="hidden border-l border-sand-100 lg:block">
+      <div class="flex h-16 items-center border-b border-sand-100 px-4 font-display font-bold">پیام‌ها</div>
+      <div class="max-h-[calc(100vh-12rem)] overflow-y-auto">{% include "chat/_list.html" %}</div>
+    </aside>
+
+    {# ─── گفتگو ─── #}
+    <section class="flex h-[calc(100dvh-8rem)] min-w-0 flex-col sm:h-[calc(100vh-10rem)]">
+      <header class="flex h-16 shrink-0 items-center gap-3 border-b border-sand-100 px-3 sm:px-4">
+        <a href="{% url 'chat:inbox' %}" class="grid size-9 place-items-center rounded-full hover:bg-sand lg:hidden" aria-label="بازگشت">{% icon "arrow-right" "size-5" %}</a>
+        <a href="{% url 'accounts:profile' other.pk %}" class="flex min-w-0 items-center gap-3">
+          <span class="relative">{% include "components/avatar.html" with u=other %}{% if other.is_online %}<span class="absolute bottom-0 left-0 size-3 rounded-full bg-sage ring-2 ring-surface"></span>{% endif %}</span>
+          <span class="min-w-0">
+            <span class="block truncate font-semibold">{{ other }}</span>
+            <span class="block text-xs {% if other.is_online %}text-sage-700{% else %}text-espresso-400{% endif %}">{% if other.is_online %}آنلاین{% elif other.last_seen %}آخرین بازدید {{ other.last_seen|ago }}{% else %}{% if other == conv.seller %}فروشنده{% else %}خریدار{% endif %}{% endif %}</span>
+          </span>
+        </a>
+      </header>
+
+      {# کارت آگهی: یک قدم تا خرید امن #}
+      <div class="flex shrink-0 items-center gap-3 border-b border-sand-100 bg-cream/60 px-3 py-2.5 sm:px-4">
+        <a href="{{ l.get_absolute_url }}" class="size-11 shrink-0 overflow-hidden rounded-xl bg-sand-100">
+          {% if l.cover %}<img src="{{ l.cover.image.url }}" alt="" class="size-full object-cover">{% else %}<span class="grid size-full place-items-center" style="color: {{ l.game.tone }}">{% icon l.game.icon "size-5" %}</span>{% endif %}
+        </a>
+        <a href="{{ l.get_absolute_url }}" class="min-w-0 flex-1">
+          <span class="block truncate text-sm font-medium">{{ l.title }}</span>
+          <span class="text-xs text-espresso-500 fa-num">{{ l.price|toman }} تومان</span>
+        </a>
+        {% if request.user == conv.buyer and l.is_available %}
+        <form method="post" action="{% url 'escrow:buy' l.code %}" data-confirm="خرید امن آغاز شود؟" data-confirm-text="مبلغ تا تأیید تو پیش واسط می‌ماند." data-confirm-ok="ادامه خرید" data-confirm-tone="sage">
+          {% csrf_token %}<button class="btn-grad is-sage is-sm">{% icon "shield-check" "size-4" %}<span class="hidden sm:inline">خرید امن</span><span class="sm:hidden">خرید</span></button>
+        </form>
+        {% elif not l.is_available %}
+        <span class="chip is-muted">{{ l.get_status_display }}</span>
+        {% endif %}
+      </div>
+
+      {# پیام‌ها #}
+      <div id="msgs" class="flex-1 space-y-3 overflow-y-auto bg-sand-50/60 px-3 py-5 sm:px-6" x-data x-init="$el.scrollTop = $el.scrollHeight">
+        <div class="mx-auto mb-4 flex max-w-sm items-start gap-2 rounded-xl bg-saffron-50 px-3 py-2.5 text-xs leading-5 text-saffron-800">
+          {% icon "shield-alert" "size-4 shrink-0" %}
+          <span>پرداخت فقط از دکمه «خرید امن». شماره، آیدی و لینک خارج از سایت خودکار پوشانده می‌شود.</span>
+        </div>
+        {% include "chat/_messages.html" with me=request.user %}
+      </div>
+      <div class="hidden" hx-get="{% url 'chat:poll' conv.pk %}" hx-trigger="every 4s [!document.hidden]" hx-target="#msgs" hx-swap="beforeend" hx-indicator="none"
+           hx-vals='js:{after: (Array.from(document.querySelectorAll("#msgs [data-mine=\"0\"]")).pop() || {dataset: {id: 0}}).dataset.id}'
+           hx-on::after-swap="const l = document.getElementById('msgs'); l.scrollTop = l.scrollHeight"></div>
+
+      {# نوشتن پیام #}
+      <form class="shrink-0 border-t border-sand-100 p-3 sm:p-4" hx-post="{% url 'chat:send' conv.pk %}" hx-target="#msgs" hx-swap="beforeend" hx-indicator="none" x-data="chatGuard"
+            hx-on::after-request="if (event.detail.successful) { this.reset(); this.text.dispatchEvent(new Event('input')); const l = document.getElementById('msgs'); l.scrollTop = l.scrollHeight; }">
+        {% csrf_token %}
+        {% if quick %}
+        <div class="no-scrollbar -mx-1 mb-3 flex gap-2 overflow-x-auto px-1">
+          {% for q in quick %}<button type="button" class="chip is-muted shrink-0 hover:!bg-ember-50 hover:!text-ember-700" @click="text = '{{ q|escapejs }}'; $nextTick(() => $el.form.requestSubmit())">{{ q }}</button>{% endfor %}
+        </div>
+        {% endif %}
+        <p x-show="risky" x-cloak class="mb-2 flex items-center gap-1.5 text-xs text-danger-600">{% icon "shield-alert" "size-3.5" %}راه ارتباطی بیرون از سایت پوشانده می‌شود. معامله بیرون از واسط هیچ پشتوانه‌ای ندارد.</p>
+        <div class="flex items-end gap-2">
+          <textarea name="text" rows="1" maxlength="1000" x-model="text" placeholder="پیام بنویس…" required
+                    class="max-h-32 min-h-12 flex-1 resize-none rounded-2xl border border-sand-200 bg-sand-50 px-4 py-3 text-sm outline-none transition focus:border-ember focus:bg-surface"
+                    @input="$el.style.height = 'auto'; $el.style.height = $el.scrollHeight + 'px'"
+                    @keydown.enter.prevent.exact="text.trim() && $el.form.requestSubmit()"></textarea>
+          <button class="btn-grad size-12 shrink-0 !p-0 justify-center" aria-label="ارسال" :disabled="!text.trim()">{% icon "send-horizontal" "size-5 -scale-x-100" %}</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}

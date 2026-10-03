@@ -1,0 +1,11 @@
+<div class="flex gap-2.5 animate-fade-up {% if m.sender == me %}flex-row-reverse{% endif %}">
+  {% include "components/avatar.html" with u=m.sender size="size-8" %}
+  <div class="max-w-[80%] {% if m.sender == me %}text-left{% endif %}">
+    <div class="mb-1 flex items-center gap-1.5 text-xs text-espresso-400 {% if m.sender == me %}justify-end{% endif %}">
+      <span class="font-medium text-espresso-600">{% if m.sender == me %}شما{% else %}{{ m.sender }}{% endif %}</span>
+      {% if m.sender.is_staff %}<span class="chip is-sage !px-1.5 !py-0 !text-[10px]">{% icon "shield-check" "size-3" %}واسط</span>{% endif %}
+      <span>{{ m.created_at|ago }}</span>
+    </div>
+    <div class="inline-block whitespace-pre-line rounded-2xl px-4 py-2.5 text-right text-sm leading-6 {% if m.sender == me %}rounded-tl-md bg-ember text-white{% elif m.sender.is_staff %}rounded-tr-md bg-sage-50 text-sage-900 ring-1 ring-sage-100{% else %}rounded-tr-md bg-sand-100 text-espresso{% endif %}">{{ m.text }}</div>
+  </div>
+</div>

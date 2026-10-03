@@ -1,0 +1,254 @@
+{% load static %}<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#FAF6F0">
+  {# تم قبل از رسم صفحه تعیین می‌شود تا صفحه یک لحظه سفید نپرد #}
+  <script>(function(){var t;try{t=localStorage.getItem("gm-theme")}catch(e){}if(t!=="dark"&&t!=="light")t=matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light";document.documentElement.dataset.theme=t;if(t==="dark")document.querySelector('meta[name="theme-color"]').content="#15100D";try{if(localStorage.getItem("gm-view")==="list")document.documentElement.dataset.view="list"}catch(e){}})();</script>
+  {# حرکت: اولین بازدید نشست (معرفی هدر) و جهت جابه‌جایی صفحه — باید پیش از اولین رسم ثبت شود #}
+  <script>(function(){var d=document.documentElement;try{if(!sessionStorage.getItem("gm-intro")){sessionStorage.setItem("gm-intro","1");d.classList.add("intro")}}catch(e){}addEventListener("pagereveal",function(e){if(!e.viewTransition)return;d.classList.add("vt-nav");try{var a=navigation.activation;if(a.navigationType==="traverse"&&a.from&&a.entry.index<a.from.index)e.viewTransition.types.add("back")}catch(x){}})})();</script>
+  <title>{% block title %}{{ SITE_NAME }} — {{ SITE_TAGLINE }}{% endblock %}</title>
+  <meta name="description" content="{% block description %}خرید و فروش اکانت بازی با واسط امن لوطی؛ پول شما تا تأیید اکانت پیش ما امن می‌ماند.{% endblock %}">
+  <link rel="preload" href="{% static 'fonts/Mikhak-Regular.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'fonts/Mikhak-Bold.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="{% static 'fonts/Mikhak-Black.woff2' %}" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  <link rel="icon" href="{% static 'img/brand/favicon.svg' %}" type="image/svg+xml">
+  <link rel="mask-icon" href="{% static 'img/brand/looti-mark-mono.svg' %}" color="#C8553D">
+  <script src="{% static 'vendor/htmx.min.js' %}" defer></script>
+  <script src="{% static 'js/app.js' %}" defer></script>
+  <script src="{% static 'vendor/alpine-collapse.min.js' %}" defer></script>
+  <script src="{% static 'vendor/alpine.min.js' %}" defer></script>
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}min-h-dvh flex flex-col pb-[calc(5.75rem+env(safe-area-inset-bottom))] lg:pb-0{% endblock %}"
+      hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}' hx-indicator="#top-loader"
+      x-data="palette" @keydown.window="onKey($event)">
+
+  <div id="top-loader" class="page-loader" aria-hidden="true">{% include "components/loader.html" with cls="text-[.42rem]" %}<span>کمی صبر کنید…</span></div>
+  <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:right-2 focus:z-[80] bg-surface rounded-lg px-4 py-2 shadow-soft">پرش به محتوا</a>
+
+  {% block header %}
+  {% if SITE_CONF.announcement %}
+  <div class="site-announce is-{{ SITE_CONF.announcement_tone }}" role="status">
+    <div class="wrap flex items-center justify-center gap-2 py-2 text-center text-xs leading-5 sm:text-[13px]">
+      {% if SITE_CONF.announcement_tone == "warning" %}{% icon "triangle-alert" "size-4 shrink-0" %}{% elif SITE_CONF.announcement_tone == "success" %}{% icon "party-popper" "size-4 shrink-0" %}{% else %}{% icon "megaphone" "size-4 shrink-0" %}{% endif %}
+      <span>{{ SITE_CONF.announcement }}</span>
+    </div>
+  </div>
+  {% endif %}
+  {# ═══ Header — اقتباس از React Bits «CardNav» (GSAP → Alpine + CSS؛ راست‌به‌چپ و پالت لوطی) ═══ #}
+  {# نوار ۶۰ پیکسلی شناور؛ همبرگر کارت را قد می‌دهد و سه کارت با فاصله از پایین بالا می‌آیند. همان کارت روی موبایل جای کشوی منو را گرفته. #}
+  <header class="site-header sticky top-0 z-40 w-full px-[var(--gutter)] pt-3"
+          x-data="siteHeader" :class="{ 'is-hidden': hidden, 'is-scrolled': scrolled }" @keydown.escape.window="menu = false">
+    <div class="relative mx-auto h-[60px] w-full max-w-[calc(var(--wrap-max)-2*var(--gutter))]">
+      <nav x-ref="nav" class="card-nav absolute inset-x-0 top-0" :class="menu && 'is-open'" aria-label="ناوبری اصلی" @click.outside="menu = false">
+        <div class="card-nav-top">
+          <button type="button" class="hamburger" :class="menu && 'is-open'" @click="menu = !menu"
+                  :aria-label="menu ? 'بستن منو' : 'باز کردن منو'" :aria-expanded="menu.toString()" aria-controls="card-nav-content">
+            <span class="hamburger-line"></span><span class="hamburger-line"></span>
+          </button>
+
+          <a href="{% url 'core:home' %}" class="brand card-nav-logo flex items-center gap-2 rounded-md px-1.5 py-1" aria-label="{{ SITE_NAME }} — صفحه اصلی">
+            <span class="brand-mark grid size-9 place-items-center rounded-xl bg-ember text-[#FFF8F4] shadow-soft">{% logo_mark "size-8" %}</span>
+            <span class="wordmark hidden text-[1.4rem] min-[360px]:inline-block">{{ SITE_NAME }}</span>
+          </a>
+
+          <div class="card-nav-actions">
+            <button type="button" @click="show()" aria-label="جستجو" class="hdr-icon">
+              {% icon "search" "size-5" %}
+            </button>
+            {% include "components/theme_switch.html" with cls="mx-1 hidden sm:inline-block" %}
+            {% if user.is_authenticated %}
+              <div class="relative" @click.outside="notif = false">
+                <button type="button" class="hdr-icon" aria-label="اعلان‌ها"
+                        @click="notif = !notif" hx-get="{% url 'notifications:dropdown' %}" hx-target="#notif-box" hx-trigger="click once" hx-indicator="#notif-box">
+                  {% icon "bell" "size-5" %}
+                  {% if unread_notifications %}<span class="absolute top-1.5 left-1.5 grid min-w-4 h-4 place-items-center rounded-full bg-danger px-1 text-[10px] text-white">{{ unread_notifications|fa }}</span>{% endif %}
+                </button>
+                <div x-cloak x-show="notif" x-transition:enter="dd-enter" x-transition:enter-start="dd-from" x-transition:enter-end="dd-to"
+                     x-transition:leave="dd-leave" x-transition:leave-start="dd-to" x-transition:leave-end="dd-out" class="dd-motion origin-top-left absolute left-0 top-12 w-[22rem] panel shadow-lift overflow-hidden max-sm:fixed max-sm:inset-x-3 max-sm:top-[4.75rem] max-sm:w-auto">
+                  <div id="notif-box">
+                    <div class="grid place-items-center py-10">{% include "components/loader.html" with cls="text-[.6rem]" label="در حال دریافت اعلان‌ها" %}</div>
+                  </div>
+                </div>
+              </div>
+              <div class="relative" @click.outside="user = false">
+                <button type="button" @click="user = !user" class="flex items-center rounded-full p-0.5 transition hover:bg-sand" aria-label="منوی حساب">
+                  {% include "components/avatar.html" with u=user size="size-9" %}
+                </button>
+                <div x-cloak x-show="user" x-transition:enter="dd-enter" x-transition:enter-start="dd-from" x-transition:enter-end="dd-to"
+                     x-transition:leave="dd-leave" x-transition:leave-start="dd-to" x-transition:leave-end="dd-out" class="menu-stagger origin-top-left absolute left-0 top-12 w-64 panel p-2 shadow-lift max-sm:fixed max-sm:inset-x-3 max-sm:top-[4.75rem] max-sm:w-auto">
+                  <div class="flex items-center gap-3 rounded-xl bg-cream p-3">
+                    {% include "components/avatar.html" with u=user size="size-10" %}
+                    <div class="min-w-0">
+                      <div class="truncate font-display font-semibold">{{ user.display_name }}</div>
+                      <div class="text-xs text-espresso-400 ltr text-right">{{ user.phone|mask_phone }}</div>
+                    </div>
+                  </div>
+                  <a href="{% url 'accounts:wallet' %}" class="mt-2 flex items-center justify-between rounded-lg px-3 py-2.5 text-sm hover:bg-sand">
+                    <span class="flex items-center gap-2">{% icon "wallet" "size-4 text-saffron-600" %}کیف پول</span>
+                    <span class="fa-num text-espresso-500">{{ user.wallet_balance|toman }}</span>
+                  </a>
+                  <a href="{% url 'accounts:dashboard' %}" class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-sand">{% icon "layout-dashboard" "size-4 text-espresso-400" %}آگهی‌ها و معاملات من</a>
+                  <a href="{% url 'listings:saved' %}" class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-sand">{% icon "bookmark" "size-4 text-espresso-400" %}ذخیره‌ها</a>
+                  <a href="{% url 'accounts:profile' user.pk %}" class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-sand">{% icon "id-card" "size-4 text-espresso-400" %}پروفایل عمومی</a>
+                  <a href="{% url 'accounts:settings' %}" class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm hover:bg-sand">{% icon "settings" "size-4 text-espresso-400" %}تنظیمات</a>
+                  {% if user.is_staff %}
+                    <a href="{% url 'panel:dashboard' %}" class="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-sage-700 hover:bg-sage-50">{% icon "scale" "size-4" %}میز کار واسط</a>
+                  {% endif %}
+                  <form method="post" action="{% url 'accounts:logout' %}" class="mt-1 border-t border-sand-200 pt-1">{% csrf_token %}
+                    <button class="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm text-danger-600 hover:bg-danger-50">{% icon "log-out" "size-4" %}خروج</button>
+                  </form>
+                </div>
+              </div>
+            {% else %}
+              <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="hdr-icon md:hidden" aria-label="ورود">{% icon "log-in" "size-5" %}</a>
+              <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="hidden h-11 items-center rounded-lg px-3 text-sm font-medium text-espresso-700 transition hover:bg-sand md:inline-flex">ورود</a>
+            {% endif %}
+            <a href="{% url 'listings:create_pick' %}" class="card-nav-cta">{% icon "plus" "size-4" %}ثبت آگهی</a>
+          </div>
+        </div>
+
+        {% url 'listings:list' as n_list %}{% url 'listings:create_pick' as n_new %}{% url 'listings:compare' as n_cmp %}{% url 'core:how' as n_how %}{% url 'core:rules' as n_rules %}{% url 'accounts:dashboard' as n_me %}{% url 'chat:inbox' as n_chat %}{% url 'accounts:wallet' as n_wallet %}
+        <div id="card-nav-content" class="card-nav-content" :aria-hidden="(!menu).toString()" aria-hidden="true">
+          <div x-ref="cards" class="card-nav-cards">
+            <section class="nav-card is-c1" style="--i:0">
+              <h2 class="nav-card-label">بازار</h2>
+              <div class="nav-card-links">
+                <a href="{{ n_list }}" class="nav-card-link" {% if request.path == n_list %}aria-current="page"{% endif %}>{% icon "arrow-up-left" "size-4" %}همه آگهی‌ها</a>
+                <a href="{{ n_new }}" class="nav-card-link" {% if request.path == n_new %}aria-current="page"{% endif %}>{% icon "arrow-up-left" "size-4" %}ثبت آگهی رایگان</a>
+                <a href="{{ n_cmp }}" class="nav-card-link" {% if request.path == n_cmp %}aria-current="page"{% endif %}>{% icon "arrow-up-left" "size-4" %}مقایسه آگهی‌ها</a>
+              </div>
+            </section>
+            <section class="nav-card is-c2" style="--i:1">
+              <h2 class="nav-card-label">معامله امن</h2>
+              <div class="nav-card-links">
+                <a href="{{ n_how }}" class="nav-card-link" {% if request.path == n_how %}aria-current="page"{% endif %}>{% icon "arrow-up-left" "size-4" %}واسط امن چطور کار می‌کند</a>
+                <a href="{{ n_rules }}" class="nav-card-link" {% if request.path == n_rules %}aria-current="page"{% endif %}>{% icon "arrow-up-left" "size-4" %}قوانین و راهنما</a>
+                {% if user.is_staff %}
+                  <a href="{% url 'panel:dashboard' %}" class="nav-card-link">{% icon "arrow-up-left" "size-4" %}میز کار واسط</a>
+                {% endif %}
+              </div>
+            </section>
+            <section class="nav-card is-c3" style="--i:2">
+              <div class="flex items-start justify-between gap-3">
+                <h2 class="nav-card-label">{% if user.is_authenticated %}لوطی من{% else %}شروع کن{% endif %}</h2>
+                {% include "components/theme_switch.html" with cls="sm:hidden" %}
+              </div>
+              <div class="nav-card-links">
+                {% if user.is_authenticated %}
+                  <a href="{{ n_me }}" class="nav-card-link" {% if request.path == n_me %}aria-current="page"{% endif %}>{% icon "arrow-up-left" "size-4" %}آگهی‌ها و معاملات من</a>
+                  <a href="{{ n_chat }}" class="nav-card-link" {% if request.path == n_chat %}aria-current="page"{% endif %}>{% icon "arrow-up-left" "size-4" %}پیام‌ها{% if unread_messages %}<span class="nav-card-badge">{{ unread_messages|fa }}</span>{% endif %}</a>
+                  <a href="{{ n_wallet }}" class="nav-card-link" {% if request.path == n_wallet %}aria-current="page"{% endif %}>{% icon "arrow-up-left" "size-4" %}کیف پول<span class="fa-num ms-auto text-xs opacity-75">{{ user.wallet_balance|toman }}</span></a>
+                {% else %}
+                  <a href="{% url 'accounts:login' %}?next={{ request.get_full_path|urlencode }}" class="nav-card-link">{% icon "arrow-up-left" "size-4" %}ورود</a>
+                  <a href="{% url 'accounts:register' %}?next={{ request.get_full_path|urlencode }}" class="nav-card-link">{% icon "arrow-up-left" "size-4" %}ثبت‌نام</a>
+                  <a href="{{ n_how }}" class="nav-card-link">{% icon "arrow-up-left" "size-4" %}چرا پول من امن است؟</a>
+                {% endif %}
+              </div>
+            </section>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+  {% endblock header %}
+
+  <main id="main" class="flex-1">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}{% include "partials/mini_footer.html" %}{% endblock footer %}
+
+  {% block tabbar %}
+  {% comment %}نوار پایین موبایل: داک شناور هم‌خانواده‌ی کارت هدر. با اسکرول رو به پایین (html.hdr-hidden) و هنگام تایپ کنار می‌رود.
+     قرص سفالی زبانه فعال بین صفحه‌ها به زبانه جدید می‌لغزد (view-transition-name: tab-ink){% endcomment %}
+  {% tab_active as tab %}
+  <nav class="tabbar lg:hidden" aria-label="ناوبری اصلی">
+    <div class="tabbar-dock">
+      <a href="{% url 'listings:saved' %}" class="tab{% if tab == 'saved' %} is-active" aria-current="page{% endif %}">
+        <span class="tab-icon">{% if tab == 'saved' %}<span class="tab-ink" aria-hidden="true"></span>{% icon "bookmark-check" "size-5" %}{% else %}{% icon "bookmark" "size-5" %}{% endif %}</span><span class="tab-label">ذخیره‌ها</span>
+      </a>
+      <a href="{% url 'listings:list' %}" class="tab{% if tab == 'ads' %} is-active" aria-current="page{% endif %}">
+        <span class="tab-icon">{% if tab == 'ads' %}<span class="tab-ink" aria-hidden="true"></span>{% endif %}{% icon "layout-grid" "size-5" %}</span><span class="tab-label">آگهی‌ها</span>
+      </a>
+      <a href="{% url 'listings:create_pick' %}" class="tab tab-new{% if tab == 'new' %} is-active" aria-current="page{% endif %}">
+        <span class="tab-fab">{% icon "plus" "size-6" "2.4" %}</span><span class="tab-label">ثبت آگهی</span>
+      </a>
+      <a href="{% url 'chat:inbox' %}" class="tab{% if tab == 'chat' %} is-active" aria-current="page{% endif %}">
+        <span class="tab-icon">{% if tab == 'chat' %}<span class="tab-ink" aria-hidden="true"></span>{% endif %}{% icon "message-circle" "size-5" %}{% if unread_messages %}<span class="tab-badge">{% if unread_messages > 9 %}+{{ 9|fa }}{% else %}{{ unread_messages|fa }}{% endif %}<span class="sr-only"> پیام نخوانده</span></span>{% endif %}</span><span class="tab-label">پیام‌ها</span>
+      </a>
+      <a href="{% url 'accounts:dashboard' %}" class="tab{% if tab == 'me' %} is-active" aria-current="page{% endif %}">
+        <span class="tab-icon">{% if tab == 'me' %}<span class="tab-ink" aria-hidden="true"></span>{% endif %}{% if user.is_authenticated %}{% include "components/avatar.html" with u=user size="tab-avatar" %}{% else %}{% icon "circle-user-round" "size-5" %}{% endif %}</span><span class="tab-label">لوطی من</span>
+      </a>
+    </div>
+  </nav>
+
+  {# نوار شناور مقایسه #}
+  <div id="compare-bar" hx-get="{% url 'listings:compare_bar' %}" hx-trigger="{% if compare_ids %}load, {% endif %}compare-changed from:body" hx-swap="innerHTML" hx-indicator="none"></div>
+  {% endblock tabbar %}
+
+  {# ═══ پالت جستجو (Ctrl+K) — ساختار دیالوگ فرمان هدر 21st.dev ═══ #}
+  <div x-cloak x-show="open" class="fixed inset-0 z-[60]" @keydown.escape.window="open = false" role="dialog" aria-modal="true" aria-label="جستجو">
+    <div class="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" x-show="open" x-transition.opacity @click="open = false"></div>
+    <div class="relative mx-auto mt-[12vh] w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-sand-200 bg-surface p-1 shadow-lift"
+         x-show="open" x-transition:enter="transition duration-300 ease-spring" x-transition:enter-start="opacity-0 scale-95 -translate-y-3"
+         x-transition:leave="transition duration-150 ease-in" x-transition:leave-end="opacity-0 scale-[.98]"
+         @keydown.arrow-down.prevent="move(1)" @keydown.arrow-up.prevent="move(-1)">
+      <form action="{% url 'listings:list' %}" class="flex h-16 items-center gap-2 border-b border-sand-200 px-2" role="search">
+        <div class="gsearch flex-1">
+          <label for="gs-palette">جستجو در لوطی</label>
+          <input id="gs-palette" class="input" type="search" x-ref="q" name="q" autocomplete="off" placeholder="نام بازی، اسکین، رنک یا کد آگهی…"
+                 hx-get="{% url 'core:search_suggest' %}" hx-trigger="input changed delay:220ms, focus once" hx-target="#palette-results" hx-indicator="#palette-spin">
+          <span class="caret" aria-hidden="true"></span>
+        </div>
+        <span id="palette-spin" class="htmx-indicator flex">{% include "components/loader.html" with cls="text-[.38rem]" label="در حال جستجو" %}</span>
+        <kbd class="ltr rounded border border-sand-300 bg-sand px-1.5 py-0.5 text-[10px] text-espresso-500">Esc</kbd>
+      </form>
+      <div id="palette-results" class="max-h-[380px] overflow-y-auto p-1"></div>
+    </div>
+  </div>
+
+  {# ═══ پیام‌ها (Toast) — uiverse.io/akshat-patel28/quick-baboon-29 ═══ #}
+  <div class="pointer-events-none fixed inset-x-0 bottom-[calc(6rem+env(safe-area-inset-bottom))] z-[70] flex flex-col items-center gap-3 px-4 lg:bottom-6 lg:items-start lg:pl-6" aria-live="polite"
+       x-data x-init="{% for m in messages %}$store.toasts.push('{{ m.tags|default:'info'|escapejs }}', '{% if m.level_tag == 'success' %}انجام شد{% elif m.level_tag == 'error' %}خطا{% elif m.level_tag == 'warning' %}توجه{% else %}پیام لوطی{% endif %}', '{{ m.message|escapejs }}');{% endfor %}">
+    <template x-for="t in $store.toasts.items" :key="t.id">
+      <div class="toast pointer-events-auto animate-fade-up" :class="{ 'is-error': t.kind === 'error', 'is-warning': t.kind === 'warning', 'is-info': t.kind === 'info' }" role="status">
+        {% include "components/toast_wave.html" %}
+        <div class="toast-icon">
+          <template x-if="t.kind === 'success'"><span>{% icon "circle-check" "size-5" %}</span></template>
+          <template x-if="t.kind === 'error'"><span>{% icon "circle-alert" "size-5" %}</span></template>
+          <template x-if="t.kind === 'warning'"><span>{% icon "triangle-alert" "size-5" %}</span></template>
+          <template x-if="t.kind === 'info'"><span>{% icon "info" "size-5" %}</span></template>
+        </div>
+        <div class="z-[1] min-w-0 flex-1">
+          <p class="toast-title" x-text="t.title"></p>
+          <p class="toast-text leading-6" x-text="t.text"></p>
+        </div>
+        <button type="button" class="z-[1] grid size-7 place-items-center rounded-full text-espresso-400 hover:bg-sand" @click="$store.toasts.remove(t.id)" aria-label="بستن">{% icon "x" "size-4" %}</button>
+      </div>
+    </template>
+  </div>
+
+  {# ═══ پنجره تأیید — uiverse.io/Yaya12085/grumpy-fox-39 ═══ #}
+  <div x-data x-cloak x-show="$store.confirm.open" class="fixed inset-0 z-[75] grid place-items-center p-4" @keydown.escape.window="$store.confirm.open = false">
+    <div class="absolute inset-0 bg-ink/45" @click="$store.confirm.open = false" x-show="$store.confirm.open" x-transition.opacity></div>
+    <div class="confirm-card relative" :class="$store.confirm.tone === 'sage' && 'is-sage'" x-show="$store.confirm.open" x-transition:enter="transition duration-300 ease-pop" x-transition:enter-start="opacity-0 scale-90 translate-y-2">
+      <div class="confirm-icon">
+        <template x-if="$store.confirm.tone === 'sage'"><span>{% icon "shield-check" "size-6" %}</span></template>
+        <template x-if="$store.confirm.tone !== 'sage'"><span>{% icon "triangle-alert" "size-6" %}</span></template>
+      </div>
+      <span class="confirm-title" x-text="$store.confirm.title"></span>
+      <p class="confirm-msg" x-show="$store.confirm.text" x-text="$store.confirm.text"></p>
+      <div class="confirm-actions">
+        <button type="button" class="confirm-ok" @click="$store.confirm.accept()" x-text="$store.confirm.ok"></button>
+        <button type="button" class="confirm-cancel" @click="$store.confirm.open = false">انصراف</button>
+      </div>
+    </div>
+  </div>
+
+  {% block scripts %}{% endblock %}
+</body>
+</html>

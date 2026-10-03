@@ -1,0 +1,7 @@
+<form hx-post="{% url 'listings:compare_toggle' l.code %}" hx-swap="outerHTML" hx-target="this" hx-indicator="none" class="contents">
+  {% if l.code in compare_ids %}
+    <button class="grid size-8 place-items-center rounded-full bg-sage text-white shadow-soft transition hover:scale-110" aria-label="حذف از مقایسه" aria-pressed="true">{% icon "git-compare" "size-4" %}</button>
+  {% else %}
+    <button class="grid size-8 place-items-center rounded-full bg-surface/95 text-espresso-500 shadow-soft transition hover:scale-110" aria-label="افزودن به مقایسه" aria-pressed="false">{% icon "git-compare" "size-4" %}</button>
+  {% endif %}
+</form>

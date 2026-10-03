@@ -1,0 +1,35 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}معامله‌ها{% endblock %}
+{% block crumb %}معامله‌ها{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>معامله‌ها</h1>
+    <p>همه سفارش‌های امانی لوطی؛ روی هر ردیف بزنید تا پرونده کامل و اقدام‌های واسط باز شود.</p>
+  </div>
+  <div class="flex flex-wrap gap-2 text-xs">
+    <span class="chip is-muted fa-num">{% icon "sigma" "size-3.5" %}{{ sum.s|default:0|toman }} تومان</span>
+    <span class="chip is-sage fa-num">{% icon "hand-coins" "size-3.5" %}کارمزد {{ sum.f|default:0|toman }}</span>
+  </div>
+</div>
+
+<section class="adm-card overflow-hidden">
+  <nav class="tabs-line px-3" aria-label="فیلتر وضعیت">
+    {% for key, label, ic, n in tabs %}
+    <a href="?s={{ key }}{% if q %}&q={{ q|urlencode }}{% endif %}" class="{% if key == tab %}is-active{% endif %}"{% if key == tab %} aria-current="page"{% endif %}>{% icon ic "size-4" %}{{ label }}<span class="tab-count fa-num">{{ n|fa }}</span></a>
+    {% endfor %}
+  </nav>
+  <form class="adm-filter border-b border-sand-100" method="get">
+    <input type="hidden" name="s" value="{{ tab }}">
+    <label class="relative min-w-0 flex-1 sm:max-w-sm">
+      <span class="sr-only">جستجو در معامله‌ها</span>
+      <span class="pointer-events-none absolute inset-y-0 start-3 grid place-items-center text-espresso-300">{% icon "search" "size-4" %}</span>
+      <input class="adm-input w-full !ps-9" name="q" value="{{ q }}" placeholder="کد سفارش، آگهی، موبایل یا نام کاربر">
+    </label>
+    <button class="btn-ghost is-sm">اعمال</button>
+    {% if q %}<a href="?s={{ tab }}" class="adm-more">{% icon "x" "size-3.5" %}پاک کردن جستجو</a>{% endif %}
+  </form>
+  {% include "panel/_orders_table.html" with rows=page.object_list %}
+  {% include "panel/_pager.html" %}
+</section>
+{% endblock %}

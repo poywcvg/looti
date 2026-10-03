@@ -1,0 +1,167 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}{{ u }}{% endblock %}
+{% block crumb %}<a href="{% url 'panel:users' %}" class="font-normal text-espresso-400 hover:text-ember">کاربران</a> / {{ u }}{% endblock %}
+{% block panel %}
+{# ── سربرگ پروفایل ── #}
+<section class="adm-card relative mb-5 overflow-hidden">
+  <div class="absolute inset-x-0 top-0 h-24 bg-gradient-to-l from-ember-50 via-saffron-50 to-sand-50" aria-hidden="true"></div>
+  <div class="relative flex flex-wrap items-end gap-4 px-5 pb-5 pt-10">
+    <span class="relative">{% include "components/avatar.html" with u=u size="size-20 !text-2xl !ring-4" %}{% if u.is_online %}<i class="absolute bottom-1 end-1 size-4 rounded-full border-[3px] border-surface bg-sage" title="آنلاین"></i>{% endif %}</span>
+    <div class="min-w-0 flex-1 basis-60">
+      <div class="flex flex-wrap items-center gap-2">
+        <h1 class="font-display text-xl font-extrabold">{{ u }}</h1>
+        {% if not u.is_active %}<span class="st is-danger"><i></i>بسته</span>{% elif u.is_superuser %}<span class="st is-saffron"><i></i>مدیر کل</span>{% elif u.is_staff %}<span class="st is-sage"><i></i>کارشناس واسط</span>{% endif %}
+        <span class="chip is-{% if u.trust_level.1 == 'sand' %}muted{% else %}{{ u.trust_level.1 }}{% endif %} fa-num">{% icon "shield-check" "size-3.5" %}اعتماد {{ u.trust_score|fa }} · {{ u.trust_level.0 }}</span>
+      </div>
+      <p class="mt-1 flex flex-wrap items-center text-sm text-espresso-400">
+        <span class="ltr fa-num">{{ u.phone }}</span>
+        {% if u.username %}<span class="sep" aria-hidden="true"></span><span class="ltr">@{{ u.username }}</span>{% endif %}
+        {% if u.email %}<span class="sep" aria-hidden="true"></span><span class="ltr">{{ u.email }}</span>{% endif %}
+        <span class="sep" aria-hidden="true"></span>عضو از {{ u.date_joined|jdate }}
+        <span class="sep" aria-hidden="true"></span>{% if u.is_online %}آنلاین{% elif u.last_seen %}بازدید {{ u.last_seen|ago }}{% else %}بدون بازدید{% endif %}
+      </p>
+    </div>
+    <a href="{% url 'accounts:profile' u.pk %}" target="_blank" rel="noopener" class="btn-ghost is-sm">{% icon "external-link" "size-4" %}پروفایل عمومی</a>
+  </div>
+</section>
+
+<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+  <div class="kpi tone-saffron">
+    <div class="kpi-top">موجودی کیف پول<span class="kpi-ic">{% icon "wallet" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ u.wallet_balance|toman }}<small>تومان</small></div>
+    <div class="kpi-foot">{% if u.sheba %}شبا ثبت شده{% else %}بدون شبا{% endif %}</div>
+  </div>
+  <div class="kpi tone-sage">
+    <div class="kpi-top">فروش موفق<span class="kpi-ic">{% icon "badge-check" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ stats.sales|fa }}<small>معامله</small></div>
+    <div class="kpi-foot fa-num">{{ stats.sales_gmv|toman }} تومان<span class="sep" aria-hidden="true"></span>{{ stats.purchases|fa }} خرید</div>
+  </div>
+  <div class="kpi tone-ember">
+    <div class="kpi-top">معامله باز<span class="kpi-ic">{% icon "loader" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ stats.open|fa }}<small>سفارش</small></div>
+    <div class="kpi-foot">{{ stats.disputes|fa }} گزارش مشکل در کل</div>
+  </div>
+  <div class="kpi tone-muted">
+    <div class="kpi-top">آگهی‌ها<span class="kpi-ic">{% icon "megaphone" "size-[18px]" %}</span></div>
+    <div class="kpi-val">{{ stats.listings|fa }}<small>آگهی</small></div>
+    <div class="kpi-foot">{% if stats.reports %}<span class="text-danger-700">{{ stats.reports|fa }} گزارش تخلف</span>{% else %}بدون گزارش تخلف{% endif %}</div>
+  </div>
+</div>
+
+<div class="mt-5 grid gap-5 xl:grid-cols-3">
+  <div class="space-y-5 xl:col-span-2">
+    <section class="adm-card overflow-hidden">
+      <div class="adm-card-h">
+        <div><h2>معامله‌های اخیر</h2><p>به عنوان خریدار یا فروشنده</p></div>
+        <a href="{% url 'panel:orders' %}?q={{ u.phone }}" class="adm-more">همه{% icon "chevron-left" "size-3.5" %}</a>
+      </div>
+      {% include "panel/_orders_table.html" with rows=orders %}
+    </section>
+
+    <section class="adm-card overflow-hidden">
+      <div class="adm-card-h">
+        <div><h2>آگهی‌ها</h2><p>تازه‌ترین آگهی‌های این کاربر</p></div>
+        <a href="{% url 'panel:listings_all' %}?q={{ u.phone }}" class="adm-more">همه{% icon "chevron-left" "size-3.5" %}</a>
+      </div>
+      {% if listings %}
+      <div class="grid gap-3 p-4 sm:grid-cols-2">
+        {% for l in listings %}
+        <a href="{{ l.get_absolute_url }}" target="_blank" rel="noopener" class="flex items-center gap-3 rounded-xl border border-sand-100 p-2.5 transition hover:border-sand-200 hover:bg-sand-50">
+          {% if l.cover %}<img src="{{ l.cover.image.url }}" alt="" class="size-12 shrink-0 rounded-lg object-cover">{% else %}<span class="grid size-12 shrink-0 place-items-center rounded-lg" style="background: color-mix(in srgb, {{ l.game.tone }} 14%, transparent); color: {{ l.game.tone }}">{% icon l.game.icon "size-5" %}</span>{% endif %}
+          <span class="min-w-0 flex-1">
+            <span class="block truncate text-sm font-medium">{{ l.title }}</span>
+            <span class="mt-1 flex items-center gap-2 text-xs text-espresso-400"><span class="fa-num">{{ l.price|toman }}</span>{% listing_status l %}</span>
+          </span>
+        </a>
+        {% endfor %}
+      </div>
+      {% else %}<div class="adm-empty"><span class="feed-ic">{% icon "megaphone" "size-5" %}</span>آگهی‌ای ثبت نکرده.</div>{% endif %}
+    </section>
+
+    <section class="adm-card overflow-hidden">
+      <div class="adm-card-h"><div><h2>تراکنش‌های کیف پول</h2><p>۱۲ گردش آخر</p></div></div>
+      <div class="adm-table-wrap">
+        <table class="adm-table">
+          <thead><tr><th>نوع</th><th>شرح</th><th class="num">مبلغ</th><th class="num">مانده</th><th>زمان</th></tr></thead>
+          <tbody>
+            {% for t in txs %}
+            <tr>
+              <td><span class="flex items-center gap-2"><span class="feed-ic !size-7">{% icon t.icon "size-3.5" %}</span>{{ t.get_kind_display }}</span></td>
+              <td class="max-w-[16rem] truncate text-espresso-500">{% if t.order %}<a href="{% url 'panel:order' t.order.code %}" class="code row-link">{{ t.order.code }}</a> {% endif %}{{ t.description }}</td>
+              <td class="num font-semibold {% if t.amount > 0 %}text-sage-700{% else %}text-danger-700{% endif %}">{% if t.amount > 0 %}+{% endif %}{{ t.amount|toman }}</td>
+              <td class="num text-espresso-500">{{ t.balance_after|toman }}</td>
+              <td class="text-xs text-espresso-400" title="{{ t.created_at|jdatetime_fa }}">{{ t.created_at|ago }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="5"><div class="adm-empty"><span class="feed-ic">{% icon "wallet" "size-5" %}</span>تراکنشی ندارد.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  {# ── اقدام‌ها ── #}
+  <div class="space-y-5">
+    {% if u != request.user and not u.is_superuser or request.user.is_superuser and u != request.user %}
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>{% icon "user-cog" "size-[18px] text-espresso-400" %}دسترسی حساب</h2></div></div>
+      <div class="adm-card-b space-y-3">
+        <form method="post" action="{% url 'panel:user_action' u.pk %}"
+              data-confirm data-confirm-text="{% if u.is_active %}کاربر دیگر نمی‌تواند وارد شود و آگهی‌های فعالش بسته می‌شود.{% else %}کاربر دوباره می‌تواند وارد شود و معامله کند.{% endif %}" data-confirm-ok="{% if u.is_active %}حساب را ببند{% else %}فعال کن{% endif %}"{% if not u.is_active %} data-confirm-tone="sage"{% endif %}>
+          {% csrf_token %}<input type="hidden" name="action" value="block">
+          {% if u.is_active %}
+          <button class="btn-ghost is-sm is-danger w-full">{% icon "user-x" "size-4" %}بستن حساب</button>
+          {% else %}
+          <button class="btn-grad is-sage is-sm w-full">{% icon "user-check" "size-4" %}باز کردن حساب</button>
+          {% endif %}
+        </form>
+        {% if request.user.is_superuser %}
+        <form method="post" action="{% url 'panel:user_action' u.pk %}" data-confirm data-confirm-text="{% if u.is_staff %}دسترسی این کاربر به پنل مدیریت برداشته می‌شود.{% else %}این کاربر به پنل مدیریت و اطلاعات ورود اکانت‌ها دسترسی پیدا می‌کند.{% endif %}" data-confirm-ok="تأیید">
+          {% csrf_token %}<input type="hidden" name="action" value="staff">
+          <button class="btn-ghost is-sm w-full">{% icon "user-round-cog" "size-4" %}{% if u.is_staff %}برداشتن از کارشناسی{% else %}کارشناس واسط کن{% endif %}</button>
+        </form>
+        {% endif %}
+      </div>
+    </section>
+    {% endif %}
+
+    {% if request.user.is_superuser %}
+    <section class="adm-card" x-data="{ dir: 'credit' }">
+      <div class="adm-card-h"><div><h2>{% icon "pencil-line" "size-[18px] text-espresso-400" %}اصلاح موجودی</h2><p>با دلیل در تراکنش‌های کاربر ثبت و اعلان می‌شود.</p></div></div>
+      <form method="post" action="{% url 'panel:user_action' u.pk %}" class="adm-card-b space-y-3"
+            data-confirm data-confirm-text="موجودی کیف پول کاربر تغییر می‌کند. مطمئنید؟" data-confirm-ok="ثبت اصلاح">
+        {% csrf_token %}<input type="hidden" name="action" value="wallet"><input type="hidden" name="dir" :value="dir" value="credit">
+        <div class="adm-seg w-full [&>button]:flex-1">
+          <button type="button" :class="{ 'is-active': dir === 'credit' }" class="is-active" @click="dir = 'credit'">{% icon "plus" "size-3.5 inline" %} افزایش</button>
+          <button type="button" :class="{ 'is-active': dir === 'debit' }" @click="dir = 'debit'">{% icon "minus" "size-3.5 inline" %} کاهش</button>
+        </div>
+        <label class="block"><span class="adm-label">مبلغ (تومان)</span><input class="adm-input w-full ltr fa-num" name="amount" inputmode="numeric" required placeholder="۵۰٬۰۰۰"></label>
+        <label class="block"><span class="adm-label">دلیل</span><input class="adm-input w-full" name="note" minlength="3" maxlength="150" required placeholder="مثلاً: جبران تأخیر درگاه"></label>
+        <button class="btn-grad is-saffron is-sm w-full">{% icon "check" "size-4" %}ثبت اصلاح</button>
+      </form>
+    </section>
+    {% endif %}
+
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>{% icon "bell-ring" "size-[18px] text-espresso-400" %}ارسال اعلان</h2><p>در اعلان‌های کاربر نمایش داده می‌شود.</p></div></div>
+      <form method="post" action="{% url 'panel:user_action' u.pk %}" class="adm-card-b space-y-3">
+        {% csrf_token %}<input type="hidden" name="action" value="notify">
+        <label class="block"><span class="adm-label">عنوان</span><input class="adm-input w-full" name="title" maxlength="120" required></label>
+        <label class="block"><span class="adm-label">متن (اختیاری)</span><textarea class="adm-input w-full" name="body" rows="3" maxlength="300"></textarea></label>
+        <button class="btn-ghost is-sm w-full">{% icon "send-horizontal" "size-4" %}ارسال اعلان</button>
+      </form>
+    </section>
+
+    {% if u.bio or u.sheba %}
+    <section class="adm-card">
+      <div class="adm-card-h"><div><h2>اطلاعات تکمیلی</h2></div></div>
+      <dl class="adm-card-b space-y-3 text-sm">
+        {% if u.bio %}<div><dt class="text-xs text-espresso-400">درباره</dt><dd class="mt-0.5 leading-7">{{ u.bio }}</dd></div>{% endif %}
+        {% if u.sheba %}<div><dt class="text-xs text-espresso-400">شبا</dt><dd class="mt-0.5 ltr text-end font-mono text-xs">IR{{ u.sheba }}</dd></div>{% endif %}
+      </dl>
+    </section>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

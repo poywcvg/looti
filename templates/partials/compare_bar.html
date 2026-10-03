@@ -1,0 +1,10 @@
+{% if compare_ids %}
+<div class="fixed inset-x-0 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-30 flex justify-center px-4 lg:bottom-6 animate-fade-up">
+  <div class="flex items-center gap-3 rounded-full border border-sand-200 bg-ink py-2 pe-2 ps-5 text-sm text-white shadow-lift">
+    {% icon "git-compare" "size-4 text-saffron" %}
+    <span>{{ compare_ids|length|fa }} آگهی برای مقایسه</span>
+    <a href="{% url 'listings:compare' %}?clear=1" class="text-white/60 hover:text-white">پاک کردن</a>
+    <a href="{% url 'listings:compare' %}" class="rounded-full bg-saffron px-4 py-1.5 font-display font-semibold text-ink hover:bg-saffron-600">مقایسه کن</a>
+  </div>
+</div>
+{% endif %}

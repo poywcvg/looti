@@ -1,0 +1,35 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}گزارش‌های کاربران{% endblock %}
+{% block crumb %}گزارش‌های کاربران{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>گزارش‌های کاربران</h1>
+    <p>آگهی‌هایی که کاربران مشکوک دانسته‌اند؛ با «توقف»، آگهی از بازار برداشته و فروشنده مطلع می‌شود.</p>
+  </div>
+</div>
+
+<section class="adm-card overflow-hidden">
+  {% if items %}
+  <ul class="divide-y divide-sand-100">
+    {% for r in items %}
+    <li class="flex flex-col gap-3 p-5 sm:flex-row sm:items-center">
+      <span class="feed-ic hidden sm:grid">{% icon "flag" "size-4" %}</span>
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2"><span class="st is-danger"><i></i>{{ r.get_reason_display }}</span><span class="text-xs text-espresso-400">{{ r.reporter }}<span class="sep" aria-hidden="true"></span>{{ r.created_at|ago }}</span></div>
+        <a href="{{ r.listing.get_absolute_url }}" target="_blank" rel="noopener" class="mt-1.5 block truncate font-medium hover:text-ember">{{ r.listing.title }} <span class="code text-xs text-espresso-400">{{ r.listing.code }}</span></a>
+        {% if r.text %}<p class="mt-1 text-sm leading-6 text-espresso-500">{{ r.text }}</p>{% endif %}
+      </div>
+      <form method="post" action="{% url 'panel:report_decide' r.pk %}" class="flex shrink-0 gap-2">
+        {% csrf_token %}
+        <button name="decision" value="remove" class="btn-ghost is-sm is-danger">{% icon "eye-off" "size-4" %}توقف آگهی</button>
+        <button name="decision" value="dismiss" class="btn-ghost is-sm">{% icon "check" "size-4" %}بی‌مورد</button>
+      </form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <div class="adm-empty !py-16"><span class="feed-ic">{% icon "shield-check" "size-5" %}</span><b class="text-espresso">گزارشی نیست</b>کاربران گزارش بازی ثبت نکرده‌اند.</div>
+  {% endif %}
+</section>
+{% endblock %}

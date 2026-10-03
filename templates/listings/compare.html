@@ -1,0 +1,122 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}مقایسه آگهی‌ها — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="wrap pt-8">
+  <div class="flex flex-wrap items-end justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold md:text-3xl">مقایسه کنار هم</h1>
+      <p class="mt-1 text-sm text-espresso-500">تا ۴ آگهی را ردیف‌به‌ردیف بسنج؛ بهترین مقدار هر ردیف رنگی شده است.</p>
+    </div>
+    {% if items %}<a href="?clear=1" class="btn-ghost is-sm is-danger">{% icon "trash-2" "size-4" %}پاک کردن همه</a>{% endif %}
+  </div>
+
+  {% if items %}
+  <div class="no-scrollbar -mx-4 mt-8 overflow-x-auto px-4 pb-4">
+    <table class="w-full min-w-[640px] border-separate border-spacing-0 text-sm">
+      <thead>
+        <tr>
+          <th class="w-36 align-bottom"></th>
+          {% for it in items %}
+          <th class="p-2 align-top font-normal">
+            <div class="relative rounded-2xl border border-sand-200 bg-surface p-3 text-right shadow-soft {% if it.price == cheapest and items|length > 1 %}ring-2 ring-sage{% endif %}">
+              <form hx-post="{% url 'listings:compare_toggle' it.code %}" hx-swap="none" hx-on::after-request="location.reload()" class="absolute left-2 top-2 z-10">
+                <button class="grid size-7 place-items-center rounded-full bg-surface/95 text-espresso-500 shadow-soft hover:text-ember" aria-label="حذف از مقایسه">{% icon "x" "size-3.5" %}</button>
+              </form>
+              <a href="{{ it.get_absolute_url }}" class="block">
+                <div class="aspect-[4/3] overflow-hidden rounded-xl bg-sand-100">
+                  {% if it.cover %}<img src="{{ it.cover.image.url }}" alt="" class="size-full object-cover">
+                  {% else %}<div class="grid size-full place-items-center" style="color: {{ it.game.tone }}">{% icon it.game.icon "size-10" "1.5" %}</div>{% endif %}
+                </div>
+                <div class="mt-3 line-clamp-2 min-h-[2.5rem] font-semibold leading-5 text-espresso hover:text-ember">{{ it.title }}</div>
+              </a>
+              {% if it.price == cheapest and items|length > 1 %}<span class="chip is-sage mt-2">{% icon "trending-down" "size-3.5" %}ارزان‌ترین</span>{% endif %}
+            </div>
+          </th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody class="[&_td]:border-b [&_td]:border-sand-100 [&_td]:px-3 [&_td]:py-3.5 [&_th]:border-b [&_th]:border-sand-100 [&_th]:py-3.5">
+        <tr>
+          <th class="text-right font-normal text-espresso-500">قیمت</th>
+          {% for it in items %}<td class="font-display text-base font-bold fa-num {% if it.price == cheapest %}text-sage-700{% endif %}">{{ it.price|toman }} <span class="text-xs font-normal text-espresso-400">تومان</span></td>{% endfor %}
+        </tr>
+        <tr>
+          <th class="text-right font-normal text-espresso-500">بازی</th>
+          {% for it in items %}<td><span class="inline-flex items-center gap-1.5">{% icon it.game.icon "size-4" %}{{ it.game.name }}</span></td>{% endfor %}
+        </tr>
+        <tr>
+          <th class="text-right font-normal text-espresso-500">پلتفرم</th>
+          {% for it in items %}<td><span class="inline-flex items-center gap-1.5">{% icon it.platform_icon "size-4 text-espresso-400" %}{{ it.get_platform_display }}</span></td>{% endfor %}
+        </tr>
+        <tr>
+          <th class="text-right font-normal text-espresso-500">لول</th>
+          {% for it in items %}<td class="fa-num">{{ it.level|fa|default:"—" }}</td>{% endfor %}
+        </tr>
+        <tr>
+          <th class="text-right font-normal text-espresso-500">امتیاز سلامت</th>
+          {% for it in items %}{% with h=it.health %}
+          <td>
+            <div class="flex items-center gap-2">
+              <div class="h-2 w-20 overflow-hidden rounded-full bg-sand-100"><div class="h-full rounded-full {% if h.score >= 75 %}bg-sage{% elif h.score >= 50 %}bg-warn{% else %}bg-danger{% endif %}" style="width: {{ h.score }}%"></div></div>
+              <span class="fa-num font-semibold">{{ h.score|fa }}</span>
+            </div>
+          </td>
+          {% endwith %}{% endfor %}
+        </tr>
+        <tr>
+          <th class="text-right font-normal text-espresso-500">ایمیل</th>
+          {% for it in items %}<td class="text-xs leading-5">{% if it.email_access == "none" %}<span class="text-espresso-400">{{ it.get_email_access_display }}</span>{% else %}<span class="inline-flex items-center gap-1 text-sage-700">{% icon "mail-check" "size-4 shrink-0" %}{{ it.get_email_access_display }}</span>{% endif %}</td>{% endfor %}
+        </tr>
+        <tr>
+          <th class="text-right font-normal text-espresso-500">مالک اول</th>
+          {% for it in items %}<td>{% if it.first_owner %}{% icon "circle-check" "size-5 text-sage" %}{% else %}{% icon "minus" "size-5 text-sand-300" %}{% endif %}</td>{% endfor %}
+        </tr>
+        <tr>
+          <th class="text-right font-normal text-espresso-500">بدون بن</th>
+          {% for it in items %}<td>{% if it.ban_free %}{% icon "circle-check" "size-5 text-sage" %}{% else %}{% icon "minus" "size-5 text-sand-300" %}{% endif %}</td>{% endfor %}
+        </tr>
+        <tr>
+          <th class="text-right font-normal text-espresso-500">دومرحله‌ای</th>
+          {% for it in items %}<td>{% if it.has_2fa %}{% icon "circle-check" "size-5 text-sage" %}{% else %}{% icon "minus" "size-5 text-sand-300" %}{% endif %}</td>{% endfor %}
+        </tr>
+        {% for label, vals in rows %}
+        <tr>
+          <th class="text-right font-normal text-espresso-500">{{ label }}</th>
+          {% for v in vals %}<td class="fa-num">{% if v is True %}{% icon "circle-check" "size-5 text-sage" %}{% elif v == "" or v is None or v is False %}<span class="text-sand-300">—</span>{% else %}{{ v|fa }}{% endif %}</td>{% endfor %}
+        </tr>
+        {% endfor %}
+        <tr>
+          <th class="text-right font-normal text-espresso-500">فروشنده</th>
+          {% for it in items %}
+          <td>
+            <a href="{% url 'accounts:profile' it.seller.pk %}" class="flex items-center gap-2 hover:text-ember">
+              {% include "components/avatar.html" with u=it.seller size="size-8" %}
+              <span class="min-w-0">
+                <span class="block truncate">{{ it.seller }}</span>
+                <span class="text-xs text-espresso-400 fa-num">اعتماد {{ it.seller.trust_score|fa }}{% if it.seller.rating %}<span class="sep" aria-hidden="true"></span>{% icon "star" "inline size-3 text-saffron" %} {{ it.seller.rating|fa }}{% endif %}</span>
+              </span>
+            </a>
+          </td>
+          {% endfor %}
+        </tr>
+        <tr>
+          <th></th>
+          {% for it in items %}
+          <td class="!border-0 pt-5">
+            {% if it.is_available %}
+            <a href="{{ it.get_absolute_url }}" class="btn-grad is-sm w-full justify-center">{% icon "shield-check" "size-4" %}خرید امن</a>
+            {% else %}
+            <span class="chip is-muted w-full justify-center">فعلاً در دسترس نیست</span>
+            {% endif %}
+          </td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    {% url 'listings:list' as list_url %}
+    {% empty_state "هنوز چیزی برای مقایسه نیست" "روی دکمه مقایسه کارت آگهی‌ها بزن تا این‌جا کنار هم بنشینند." "no-data" list_url "دیدن آگهی‌ها" %}
+  {% endif %}
+</div>
+{% endblock %}

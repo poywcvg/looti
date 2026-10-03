@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}{% if mode == "register" %}ثبت‌نام در{% else %}ورود به{% endif %} {{ SITE_NAME }}{% endblock %}
+{% block content %}
+{% comment %}کارت ورود و ثبت‌نام: پنل سفالی روی یک نیمه می‌نشیند و با دکمه‌اش به نیمه‌ی دیگر می‌لغزد؛ فرم ورود (کد پیامکی یا رمز) و فرم ثبت‌نام جایشان را عوض می‌کنند.
+   آدرس هم با حالت عوض می‌شود (/account/login/ و /account/register/). مرحله‌ی واردکردن کد (verify.html) همان فرم OTP قبلی است.{% endcomment %}
+<div class="wrap flex min-h-[calc(100dvh-var(--head-h))] flex-col items-center justify-center py-10"
+     x-data="{ view: '{% if mode == "register" %}register{% else %}login{% endif %}', method: '{% if mode == "password" %}password{% else %}otp{% endif %}', show: false, show2: false,
+               go(v) {
+                 this.view = v;
+                 history.replaceState(null, '', (v === 'register' ? '{% url "accounts:register" %}' : '{% url "accounts:login" %}') + location.search);
+                 document.title = (v === 'register' ? 'ثبت‌نام در ' : 'ورود به ') + '{{ SITE_NAME }}';
+                 setTimeout(() => this.focusFirst(), 450);
+               },
+               pick(m) { this.method = m; this.$nextTick(() => setTimeout(() => this.focusFirst(), 320)); },
+               focusFirst() { const r = this.$refs; (this.view === 'register' ? r.regName : this.method === 'otp' ? r.phone : r.ident).focus({ preventScroll: true }); } }">
+  <div class="auth-card {% if mode == 'register' %}is-reg{% endif %}" :class="{ 'is-reg': view === 'register' }">
+    <div class="auth-bg" aria-hidden="true">{% logo_mark "auth-bg-mark" %}</div>
+
+    <div class="auth-hero is-login" :inert="view !== 'login'" {% if mode == 'register' %}inert{% endif %}>
+      <h2 class="font-display text-2xl font-extrabold">تازه‌واردی؟</h2>
+      <p>با نام کاربری، رمز و شماره موبایل در یک دقیقه حساب بساز و امن بخر و بفروش.</p>
+      <button type="button" class="auth-switch" @click="go('register')">{% icon "user-plus" "size-4" %}ثبت‌نام</button>
+    </div>
+    <div class="auth-hero is-reg" :inert="view !== 'register'" {% if mode != 'register' %}inert{% endif %}>
+      <h2 class="font-display text-2xl font-extrabold">حساب داری؟</h2>
+      <p>با کد پیامکی یا رمزی که گذاشته‌ای وارد شو و معامله‌هایت را دنبال کن.</p>
+      <button type="button" class="auth-switch" @click="go('login')">{% icon "log-in" "size-4" %}ورود</button>
+    </div>
+
+    {# ورود: کد پیامکی یا رمز عبور #}
+    <div class="auth-form is-login" :inert="view !== 'login'" {% if mode == 'register' %}inert{% endif %}>
+      <h1 class="font-display text-2xl font-extrabold">ورود به لوطی</h1>
+      {# Radio (segmented) — uiverse.io با پالت لوطی، همان کنترل صفحه کیف پول #}
+      <div class="seg mt-5" aria-label="روش ورود">
+        <label class="seg-item"><input type="radio" name="auth-method" value="otp" :checked="method === 'otp'" @change="pick('otp')" {% if mode != "password" %}checked{% endif %}><span class="seg-name">{% icon "message-square-text" "size-4" %}کد پیامکی</span></label>
+        <label class="seg-item"><input type="radio" name="auth-method" value="password" :checked="method === 'password'" @change="pick('password')" {% if mode == "password" %}checked{% endif %}><span class="seg-name">{% icon "key-round" "size-4" %}رمز عبور</span></label>
+      </div>
+
+      <div class="grid [&>*]:col-start-1 [&>*]:row-start-1">
+        <form method="post" action="{% url 'accounts:login' %}" novalidate x-show="method === 'otp'"
+              x-transition:enter="transition duration-300 ease-out delay-150" x-transition:enter-start="opacity-0 translate-x-3"
+              x-transition:leave="transition duration-150 ease-in" x-transition:leave-end="opacity-0 -translate-x-3" {% if mode == "password" %}x-cloak{% endif %}>
+          {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+          <p class="mt-4 text-sm font-light leading-7 text-espresso-500">شماره موبایلت را وارد کن تا کد ورود برایت پیامک شود.</p>
+          {# Input — uiverse.io/Alien14k/honest-goat-49 #}
+          <div class="field mt-5">
+            <input x-ref="phone" class="field-input ltr text-left fa-num tracking-wider {% if form.phone.errors %}is-invalid{% endif %}" id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder=" " value="{{ form.phone.value|default:'' }}" {% if mode == "otp" or not mode %}autofocus{% endif %} maxlength="14" required>
+            <label class="field-label" for="phone">شماره موبایل</label>
+          </div>
+          {% for e in form.phone.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">مثل ۰۹۱۲۳۴۵۶۷۸۹</p>{% endfor %}
+          <button class="btn-push is-block mt-6"><span class="shadow"></span><span class="edge"></span><span class="front">دریافت کد{% icon "arrow-left" "size-4" %}</span></button>
+        </form>
+
+        <form method="post" action="{% url 'accounts:login_password' %}" novalidate x-show="method === 'password'"
+              x-transition:enter="transition duration-300 ease-out delay-150" x-transition:enter-start="opacity-0 -translate-x-3"
+              x-transition:leave="transition duration-150 ease-in" x-transition:leave-end="opacity-0 translate-x-3" {% if mode != "password" %}x-cloak{% endif %}>
+          {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+          {% if pw_error %}{% alert variant="destructive" appearance="light" size="sm" cls="mt-4" %}{{ pw_error }}{% endalert %}{% endif %}
+          <div class="field mt-6">
+            <input x-ref="ident" class="field-input ltr text-left {% if pw_error %}is-invalid{% endif %}" id="identifier" name="identifier" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder=" " value="{{ pw_form.identifier.value|default:'' }}" {% if mode == "password" %}autofocus{% endif %} maxlength="254" required>
+            <label class="field-label" for="identifier">موبایل، نام کاربری یا ایمیل</label>
+          </div>
+          <div class="field mt-5">
+            <input class="field-input ltr text-left {% if pw_error %}is-invalid{% endif %}" id="password" name="password" :type="show ? 'text' : 'password'" type="password" autocomplete="current-password" placeholder=" " maxlength="128" required>
+            <label class="field-label" for="password">رمز عبور</label>
+            <button type="button" class="absolute inset-y-0 end-3 my-auto grid size-8 place-items-center rounded-lg text-espresso-400 transition hover:bg-sand hover:text-espresso" @click="show = !show" :aria-label="show ? 'پنهان کردن رمز' : 'نمایش رمز'" :aria-pressed="show">
+              <span x-show="!show">{% icon "eye" "size-4" %}</span><span x-show="show" x-cloak>{% icon "eye-off" "size-4" %}</span>
+            </button>
+          </div>
+          <p class="field-hint">رمز را فراموش کرده‌ای؟ <button type="button" class="text-ember underline-offset-4 hover:underline" @click="pick('otp')">با کد پیامکی وارد شو</button> و از تنظیمات رمز تازه بگذار.</p>
+          <button class="btn-push is-block mt-6"><span class="shadow"></span><span class="edge"></span><span class="front">ورود{% icon "arrow-left" "size-4" %}</span></button>
+        </form>
+      </div>
+      <p class="auth-terms">ورود شما به معنای پذیرش <a href="{% url 'core:rules' %}">قوانین لوطی</a> است.</p>
+    </div>
+
+    {# ثبت‌نام: نام نمایشی، نام کاربری، موبایل و رمز؛ بعد همان کد پیامکی #}
+    <form class="auth-form is-reg" method="post" action="{% url 'accounts:register' %}" novalidate :inert="view !== 'register'" {% if mode != 'register' %}inert{% endif %}>
+      {% csrf_token %}<input type="hidden" name="next" value="{{ next }}">
+      <h1 class="font-display text-2xl font-extrabold">ساخت حساب</h1>
+      <p class="mt-2 text-sm font-light leading-7 text-espresso-500">بعد از این فرم یک کد پیامکی می‌گیری؛ حساب با تأیید همان کد ساخته می‌شود.</p>
+      <div class="field mt-5">
+        <input x-ref="regName" class="field-input {% if reg_form.display_name.errors %}is-invalid{% endif %}" id="r-name" name="display_name" autocomplete="nickname" placeholder=" " value="{{ reg_form.display_name.value|default:'' }}" {% if mode == "register" %}autofocus{% endif %} maxlength="40" required>
+        <label class="field-label" for="r-name">نام نمایشی</label>
+      </div>
+      {% for e in reg_form.display_name.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">همین نام روی آگهی‌ها و نظرها دیده می‌شود.</p>{% endfor %}
+      <div class="field mt-4">
+        <input class="field-input ltr text-left {% if reg_form.username.errors %}is-invalid{% endif %}" id="r-user" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" placeholder=" " value="{{ reg_form.username.value|default:'' }}" maxlength="30" required>
+        <label class="field-label" for="r-user">نام کاربری</label>
+      </div>
+      {% for e in reg_form.username.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">حروف انگلیسی کوچک، عدد، نقطه یا _ ؛ برای ورود با رمز.</p>{% endfor %}
+      <div class="field mt-4">
+        <input class="field-input ltr text-left fa-num tracking-wider {% if reg_form.phone.errors %}is-invalid{% endif %}" id="r-phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel" placeholder=" " value="{{ reg_form.phone.value|default:'' }}" maxlength="14" required>
+        <label class="field-label" for="r-phone">شماره موبایل</label>
+      </div>
+      {% for e in reg_form.phone.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+      <div class="field mt-4">
+        <input class="field-input ltr text-left {% if reg_form.password.errors %}is-invalid{% endif %}" id="r-pass" name="password" :type="show2 ? 'text' : 'password'" type="password" autocomplete="new-password" placeholder=" " maxlength="128" required>
+        <label class="field-label" for="r-pass">رمز عبور</label>
+        <button type="button" class="absolute inset-y-0 end-3 my-auto grid size-8 place-items-center rounded-lg text-espresso-400 transition hover:bg-sand hover:text-espresso" @click="show2 = !show2" :aria-label="show2 ? 'پنهان کردن رمز' : 'نمایش رمز'" :aria-pressed="show2">
+          <span x-show="!show2">{% icon "eye" "size-4" %}</span><span x-show="show2" x-cloak>{% icon "eye-off" "size-4" %}</span>
+        </button>
+      </div>
+      {% for e in reg_form.password.errors %}<p class="field-error">{{ e }}</p>{% empty %}<p class="field-hint">دست‌کم ۸ نویسه، نه فقط عدد و نه شبیه نام کاربری.</p>{% endfor %}
+      <button class="btn-push is-block mt-6"><span class="shadow"></span><span class="edge"></span><span class="front">ساخت حساب و دریافت کد{% icon "arrow-left" "size-4" %}</span></button>
+      <p class="auth-terms">ثبت‌نام شما به معنای پذیرش <a href="{% url 'core:rules' %}">قوانین لوطی</a> است.</p>
+    </form>
+  </div>
+
+  <ul class="mt-8 flex flex-wrap justify-center gap-x-6 gap-y-3 text-xs text-espresso-500">
+    <li class="flex items-center gap-2">{% icon "eye-off" "size-4 text-ember" %}شماره و ایمیلت به هیچ کاربری نشان داده نمی‌شود</li>
+    <li class="flex items-center gap-2">{% icon "lock" "size-4 text-ember" %}هر معامله با واسط امن انجام می‌شود</li>
+  </ul>
+</div>
+{% endblock %}

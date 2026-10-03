@@ -1,0 +1,90 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}همه آگهی‌ها{% endblock %}
+{% block crumb %}همه آگهی‌ها{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>همه آگهی‌ها</h1>
+    <p>انتشار، رد یا توقف هر آگهی؛ فروشنده با دلیل شما اعلان می‌گیرد.</p>
+  </div>
+  {% if counts.listings %}<a href="{% url 'panel:listings' %}" class="btn-grad is-saffron is-sm">{% icon "megaphone" "size-4" %}{{ counts.listings|fa }} آگهی منتظر تأیید</a>{% endif %}
+</div>
+
+<section class="adm-card overflow-hidden">
+  <nav class="tabs-line px-3" aria-label="وضعیت آگهی">
+    {% for key, label, n in tabs %}
+    <a href="?s={{ key }}{% if game %}&g={{ game }}{% endif %}{% if q %}&q={{ q|urlencode }}{% endif %}" class="{% if key == tab %}is-active{% endif %}"{% if key == tab %} aria-current="page"{% endif %}>{{ label }}<span class="tab-count fa-num">{{ n|fa }}</span></a>
+    {% endfor %}
+  </nav>
+  <form class="adm-filter border-b border-sand-100" method="get">
+    <input type="hidden" name="s" value="{{ tab }}">
+    <label class="relative min-w-0 flex-1 sm:max-w-sm">
+      <span class="sr-only">جستجوی آگهی</span>
+      <span class="pointer-events-none absolute inset-y-0 start-3 grid place-items-center text-espresso-300">{% icon "search" "size-4" %}</span>
+      <input class="adm-input w-full !ps-9" name="q" value="{{ q }}" placeholder="عنوان، کد آگهی یا موبایل فروشنده">
+    </label>
+    <label class="flex items-center gap-2 text-xs text-espresso-400">بازی
+      <select class="adm-input" name="g" onchange="this.form.submit()">
+        <option value="">همه بازی‌ها</option>
+        {% for g in games %}<option value="{{ g.slug }}"{% if g.slug == game %} selected{% endif %}>{{ g.name }}</option>{% endfor %}
+      </select>
+    </label>
+    <button class="btn-ghost is-sm">اعمال</button>
+  </form>
+
+  <div class="adm-table-wrap">
+    <table class="adm-table">
+      <thead><tr><th>آگهی</th><th>فروشنده</th><th class="num">قیمت (تومان)</th><th>وضعیت</th><th class="num">بازدید</th><th>ثبت</th><th><span class="sr-only">اقدام</span></th></tr></thead>
+      <tbody>
+        {% for l in page.object_list %}
+        <tr>
+          <td class="max-w-[22rem]">
+            <a href="{{ l.get_absolute_url }}" target="_blank" rel="noopener" class="row-link flex min-w-0 items-center gap-3">
+              {% if l.cover %}<img src="{{ l.cover.image.url }}" alt="" class="size-10 shrink-0 rounded-lg object-cover">{% else %}<span class="grid size-10 shrink-0 place-items-center rounded-lg" style="background: color-mix(in srgb, {{ l.game.tone }} 14%, transparent); color: {{ l.game.tone }}">{% icon l.game.icon "size-5" %}</span>{% endif %}
+              <span class="min-w-0">
+                <span class="block truncate font-medium">{{ l.title }}</span>
+                <span class="flex items-center gap-1.5 text-xs text-espresso-400"><span class="code">{{ l.code }}</span><span class="sep" aria-hidden="true"></span>{{ l.game.name }}{% if l.n_reports %}<span class="chip is-danger !py-0 text-[10px]">{% icon "flag" "size-3" %}{{ l.n_reports|fa }} گزارش</span>{% endif %}</span>
+              </span>
+            </a>
+          </td>
+          <td><a href="{% url 'panel:user' l.seller_id %}" class="row-link text-espresso-600">{{ l.seller }}</a></td>
+          <td class="num font-semibold">{{ l.price|toman }}</td>
+          <td>{% listing_status l %}{% if l.reject_reason and l.status == 'rejected' or l.reject_reason and l.status == 'archived' %}<span class="mt-1 block max-w-[12rem] truncate text-[11px] text-espresso-400" title="{{ l.reject_reason }}">{{ l.reject_reason }}</span>{% endif %}</td>
+          <td class="num text-espresso-500">{{ l.views|fa }}</td>
+          <td class="text-xs text-espresso-400" title="{{ l.created_at|jdatetime_fa }}">{{ l.created_at|ago }}</td>
+          <td class="!ps-0">
+            <div class="flex justify-end gap-1" x-data="{ open: false }">
+              {% if l.status == "pending" or l.status == "rejected" or l.status == "archived" %}
+              <form method="post" action="{% url 'panel:listing_action' l.code %}">{% csrf_token %}<input type="hidden" name="action" value="activate"><input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button class="icon-btn !size-8 hover:!text-sage-700" title="انتشار" aria-label="انتشار {{ l.code }}">{% icon "check" "size-4" %}</button>
+              </form>
+              {% endif %}
+              {% if l.status == "pending" or l.status == "active" %}
+              <button type="button" class="icon-btn !size-8 hover:!text-danger-600" @click="open = !open" :aria-expanded="open" title="رد یا توقف" aria-label="رد یا توقف {{ l.code }}">{% icon "ban" "size-4" %}</button>
+              <template x-teleport="body">
+                <div x-show="open" x-transition.opacity x-cloak class="fixed inset-0 z-[70] grid place-items-center bg-[rgb(20_14_11/.5)] p-4 backdrop-blur-sm" @click.self="open = false" @keydown.escape.window="open = false">
+                  <form method="post" action="{% url 'panel:listing_action' l.code %}" class="w-full max-w-sm space-y-3 rounded-2xl border border-sand-200 bg-surface p-5 shadow-lift" role="dialog" aria-modal="true" aria-label="رد یا توقف آگهی {{ l.code }}">
+                    {% csrf_token %}<input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    <div><h3 class="font-display font-bold">رد یا توقف آگهی</h3><p class="mt-1 truncate text-xs text-espresso-400">{{ l.title }} · <span class="code">{{ l.code }}</span></p></div>
+                    <label class="block"><span class="adm-label">دلیل (برای فروشنده فرستاده می‌شود)</span><textarea class="adm-input w-full" name="reason" rows="3" maxlength="200" placeholder="مغایرت با قوانین لوطی"></textarea></label>
+                    <div class="flex gap-2 [&>button]:flex-1">
+                      {% if l.status == "pending" %}<button name="action" value="reject" class="btn-ghost is-sm is-danger">{% icon "x" "size-4" %}رد آگهی</button>{% endif %}
+                      <button name="action" value="archive" class="btn-ghost is-sm{% if l.status == 'active' %} is-danger{% endif %}">{% icon "pause" "size-4" %}توقف آگهی</button>
+                      <button type="button" class="btn-ghost is-sm" @click="open = false">انصراف</button>
+                    </div>
+                  </form>
+                </div>
+              </template>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7"><div class="adm-empty"><span class="feed-ic">{% icon "layout-grid" "size-5" %}</span>آگهی‌ای با این شرایط پیدا نشد.</div></td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "panel/_pager.html" %}
+</section>
+{% endblock %}

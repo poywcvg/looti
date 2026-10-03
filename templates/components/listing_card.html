@@ -1,0 +1,50 @@
+{# کارت آگهی — uiverse.io/Prince4fff/slippery-baboon-37 (go-card) #}
+<article class="go-card group h-full">
+  <a href="{{ l.get_absolute_url }}" class="go-link">
+    <div class="go-media relative aspect-[4/3] overflow-hidden" style="--tone: {{ l.game.tone }}">
+      {% with c=l.cover %}
+      {% if c %}
+        <img src="{{ c.image.url }}" alt="{{ l.title }}" loading="lazy" class="size-full object-cover transition duration-500 group-hover:scale-[1.04]">
+      {% elif l.game.cover_url %}
+        <img src="{{ l.game.cover_url }}" alt="" loading="lazy" decoding="async" class="size-full object-cover saturate-[.8] transition duration-500 group-hover:scale-[1.04]">
+        <span class="absolute inset-0 bg-gradient-to-t from-ink/60 via-ink/10 to-transparent" aria-hidden="true"></span>
+        <span class="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-ink/55 px-1.5 py-0.5 text-[10px] text-paper backdrop-blur-sm" title="فروشنده عکسی از اکانت نگذاشته">{% icon "image-off" "size-3" %}<span class="go-media-note">تصویر بازی</span></span>
+      {% else %}
+        <div class="grid size-full place-items-center" style="background: linear-gradient(135deg, {{ l.game.tone }}22, {{ l.game.tone }}55)">
+          <span style="color: {{ l.game.tone }}">{% icon l.game.icon "size-14 opacity-80" "1.5" %}</span>
+        </div>
+      {% endif %}
+      {% endwith %}
+      <div class="absolute inset-x-2 top-2 flex items-start justify-between gap-2">
+        <span class="chip bg-surface/90 backdrop-blur" style="color: {{ l.game.tone }}">{% icon l.game.icon "size-3.5" %}{{ l.game.name }}</span>
+        {% if l.is_boosted %}<span class="chip is-saffron">{% icon "rocket" "size-3.5" %}نردبان</span>{% endif %}
+      </div>
+      {% if l.status == 'reserved' %}<div class="absolute inset-x-0 bottom-0 bg-ink/75 py-1.5 text-center text-xs text-white">در حال معامله امن</div>{% endif %}
+    </div>
+    <div class="go-body p-4">
+      <h3 class="line-clamp-1 font-sans text-[0.95rem] font-semibold">{{ l.title }}</h3>
+      <p class="go-desc mt-1.5 text-xs leading-6 text-espresso-500">{{ l.description|truncatechars:180 }}</p>
+      <div class="go-chips mt-2 flex flex-wrap gap-1.5 text-[11px]">
+        <span class="chip is-muted">{% icon l.platform_icon "size-3" %}{{ l.get_platform_display }}</span>
+        {% if l.first_owner %}<span class="chip is-sage">{% icon "user-round-check" "size-3" %}مالک اول</span>{% endif %}
+        {% if l.email_access == 'full' %}<span class="chip is-sage">{% icon "mail-check" "size-3" %}ایمیل اصلی</span>{% endif %}
+        {% if l.open_to_trade %}<span class="chip is-sage">{% icon "arrow-left-right" "size-3" %}قابل معاوضه</span>{% endif %}
+      </div>
+      <div class="go-foot mt-3 flex items-end justify-between">
+        <div>
+          <div class="go-price font-display text-lg font-bold fa-num">{{ l.price|toman }}</div>
+          {% if l.negotiable %}<div class="text-[11px] text-espresso-400">قابل مذاکره</div>{% endif %}
+          {% if l.open_to_trade and not l.negotiable %}<div class="text-[11px] text-sage-700">قابل معاوضه</div>{% endif %}
+        </div>
+        <span class="shrink-0 whitespace-nowrap text-[11px] text-espresso-400">{{ l.bumped_at|ago }}</span>
+      </div>
+    </div>
+  </a>
+  <span class="go-corner" aria-hidden="true">{% icon "arrow-up-left" %}</span>
+  {% if show_actions %}
+  <div class="go-actions absolute left-2 top-11 z-[4] flex flex-col gap-1.5 opacity-100 transition lg:opacity-0 lg:group-hover:opacity-100">
+    {% include "listings/_bookmark_btn.html" with variant="icon" %}
+    {% include "listings/_compare_btn.html" %}
+  </div>
+  {% endif %}
+</article>

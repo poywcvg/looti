@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}قوانین و راهنما — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="mx-auto grid max-w-5xl gap-10 px-4 pt-12 lg:grid-cols-[220px_1fr]">
+  <aside class="hidden lg:block">
+    <nav class="hdr-follow sticky top-24 space-y-1 text-sm">
+      <a href="#general" class="flex items-center gap-2 rounded-lg px-3 py-2 text-espresso-500 hover:bg-sand hover:text-espresso">{% icon "book-open" "size-4" %}قوانین کلی</a>
+      <a href="#prohibited" class="flex items-center gap-2 rounded-lg px-3 py-2 text-espresso-500 hover:bg-sand hover:text-espresso">{% icon "ban" "size-4" %}موارد ممنوع</a>
+      <a href="#disputes" class="flex items-center gap-2 rounded-lg px-3 py-2 text-espresso-500 hover:bg-sand hover:text-espresso">{% icon "scale" "size-4" %}حل مشکل</a>
+      <a href="#safety" class="flex items-center gap-2 rounded-lg px-3 py-2 text-espresso-500 hover:bg-sand hover:text-espresso">{% icon "shield-alert" "size-4" %}نکات امنیتی</a>
+      <a href="#privacy" class="flex items-center gap-2 rounded-lg px-3 py-2 text-espresso-500 hover:bg-sand hover:text-espresso">{% icon "lock" "size-4" %}حریم خصوصی</a>
+    </nav>
+  </aside>
+  <article class="space-y-12 leading-8 text-espresso-700">
+    <header>
+      <h1 class="font-display text-3xl font-black">قوانین و راهنمای لوطی</h1>
+      <p class="mt-3 text-espresso-500">کوتاه نوشتیم که واقعاً خوانده شود.</p>
+    </header>
+    <section id="general" class="scroll-mt-24">
+      <h2 class="flex items-center gap-2 font-display text-xl font-bold text-espresso">{% icon "book-open" "size-5 text-ember" %}قوانین کلی</h2>
+      <ul class="mt-4 list-disc space-y-2 pr-5 marker:text-sand-300">
+        <li>هر معامله فقط از مسیر «خرید امن» انجام می‌شود. توافق و پرداخت بیرون از لوطی، از حمایت واسط خارج است.</li>
+        <li>مشخصات آگهی باید دقیق باشد. فرق داشتن مشخصات با واقعیت، دلیل کافی برای برگشت پول به خریدار است.</li>
+        <li>هر اکانت فقط یک‌بار آگهی شود. آگهی‌های تکراری حذف می‌شوند.</li>
+        <li>کارمزد واسط {{ FEE_PERCENT|fa }}٪ است و در آگهی مشخص می‌شود چه کسی آن را می‌پردازد.</li>
+      </ul>
+    </section>
+    <section id="prohibited" class="scroll-mt-24">
+      <h2 class="flex items-center gap-2 font-display text-xl font-bold text-espresso">{% icon "ban" "size-5 text-ember" %}موارد ممنوع</h2>
+      <ul class="mt-4 list-disc space-y-2 pr-5 marker:text-sand-300">
+        <li>فروش اکانت هک‌شده، دزدی یا ساخته‌شده با روش‌های غیرمجاز.</li>
+        <li>گذاشتن شماره تماس، آیدی شبکه‌های اجتماعی یا لینک در آگهی و گفتگو.</li>
+        <li>فروش چیت، هک یا سرویس‌هایی که به بن شدن خریدار منجر شود.</li>
+      </ul>
+    </section>
+    <section id="disputes" class="scroll-mt-24">
+      <h2 class="flex items-center gap-2 font-display text-xl font-bold text-espresso">{% icon "scale" "size-5 text-ember" %}حل مشکل</h2>
+      <p class="mt-4">خریدار تا {{ INSPECTION_HOURS|fa }} ساعت بعد از تحویل می‌تواند مشکل را گزارش کند. در این مدت پول پیش لوطی می‌ماند. واسط پیام‌ها و شواهد دو طرف را بررسی و تصمیم را با دلیل ثبت می‌کند. تصمیم واسط نهایی است و در کارنامه اعتماد فروشنده اثر می‌گذارد.</p>
+    </section>
+    <section id="safety" class="scroll-mt-24">
+      <h2 class="flex items-center gap-2 font-display text-xl font-bold text-espresso">{% icon "shield-alert" "size-5 text-ember" %}نکات امنیتی برای خریدار</h2>
+      <div class="mt-4 grid gap-3 sm:grid-cols-2">
+        <div class="rounded-2xl bg-sage-50 p-4 text-sm text-sage-700"><div class="mb-1 flex items-center gap-2 font-semibold">{% icon "key-round" "size-4" %}فوراً رمز را عوض کنید</div>رمز اکانت و ایمیل متصل را همان روز تحویل تغییر دهید.</div>
+        <div class="rounded-2xl bg-sage-50 p-4 text-sm text-sage-700"><div class="mb-1 flex items-center gap-2 font-semibold">{% icon "smartphone" "size-4" %}تأیید دومرحله‌ای را فعال کنید</div>با شماره یا اپ خودتان، نه فروشنده.</div>
+        <div class="rounded-2xl bg-danger-50 p-4 text-sm text-danger-700"><div class="mb-1 flex items-center gap-2 font-semibold">{% icon "circle-x" "size-4" %}قبل از بررسی تأیید نزنید</div>تأیید یعنی رفتن پول به فروشنده؛ با عجله تأیید نکنید.</div>
+        <div class="rounded-2xl bg-danger-50 p-4 text-sm text-danger-700"><div class="mb-1 flex items-center gap-2 font-semibold">{% icon "phone-off" "size-4" %}پشتیبانی هرگز کد نمی‌خواهد</div>لوطی هیچ‌وقت کد ورود شما را نمی‌پرسد.</div>
+      </div>
+    </section>
+    <section id="privacy" class="scroll-mt-24">
+      <h2 class="flex items-center gap-2 font-display text-xl font-bold text-espresso">{% icon "lock" "size-5 text-ember" %}حریم خصوصی</h2>
+      <p class="mt-4">شماره موبایل شما برای هیچ کاربری نمایش داده نمی‌شود. اطلاعات ورود اکانت‌ها رمزنگاری‌شده ذخیره می‌شود و فقط واسط همان سفارش و خریدار نهایی به آن دسترسی دارند.</p>
+    </section>
+  </article>
+</div>
+{% endblock %}

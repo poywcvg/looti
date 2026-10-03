@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}پیام‌ها — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="mx-auto max-w-3xl px-4 pt-8">
+  <div class="flex items-end justify-between gap-4">
+    <div>
+      <h1 class="font-display text-2xl font-bold">پیام‌ها</h1>
+      <p class="mt-1 text-sm text-espresso-500">گفتگوها زیر نظر «محافظ لوطی» هستند تا کسی شما را به معامله بیرون از واسط نکشاند.</p>
+    </div>
+  </div>
+  {% if items %}
+  <div class="panel mt-6 overflow-hidden" x-data="{ q: '' }">
+    <div class="border-b border-sand-100 p-3">
+      <div class="gsearch">
+        <label for="gs-inbox">جستجو در گفتگوها</label>
+        <input id="gs-inbox" class="input" type="search" x-model="q" placeholder="جستجو در نام یا آگهی…" autocomplete="off" @input="$root.querySelectorAll('li').forEach(li => li.hidden = q && !li.textContent.includes(q))">
+        <span class="caret" aria-hidden="true"></span>
+      </div>
+    </div>
+    {% include "chat/_list.html" %}
+  </div>
+  {% else %}
+    {% url 'listings:list' as list_url %}
+    {% empty_state "صندوق پیام خالی است" "از صفحه هر آگهی می‌توانی با فروشنده گفتگو کنی؛ سؤال‌ها را قبل از خرید بپرس." "begin-chat" list_url "دیدن آگهی‌ها" %}
+  {% endif %}
+</div>
+{% endblock %}

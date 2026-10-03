@@ -1,0 +1,57 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}بررسی اکانت{% endblock %}
+{% block crumb %}بررسی اکانت{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>بررسی اکانت‌های تحویل‌شده</h1>
+    <p>وارد اکانت شوید و مشخصات را با آگهی تطبیق دهید؛ با تأیید شما اطلاعات ورود برای خریدار باز می‌شود.</p>
+  </div>
+  <span class="chip is-muted">{% icon "lock" "size-3.5" %}اطلاعات ورود رمزنگاری‌شده نگهداری می‌شود</span>
+</div>
+
+<div class="space-y-4">
+  {% for row in rows %}{% with o=row.o d=row.data %}
+  <article class="adm-card overflow-hidden" x-data="{ show: false }">
+    <div class="flex flex-wrap items-start justify-between gap-3 p-5">
+      <div class="flex min-w-0 gap-3">
+        <span class="grid size-11 shrink-0 place-items-center rounded-xl" style="background: color-mix(in srgb, {{ o.listing.game.tone }} 14%, transparent); color: {{ o.listing.game.tone }}">{% icon o.listing.game.icon "size-5" %}</span>
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-2 text-xs text-espresso-400"><a href="{% url 'panel:order' o.code %}" class="code row-link">{{ o.code }}</a><span class="sep" aria-hidden="true"></span><span>{{ o.listing.game.name }}</span><span class="sep" aria-hidden="true"></span><span>ارسال {{ o.credential.submitted_at|ago }}</span></div>
+          <a href="{{ o.listing.get_absolute_url }}" target="_blank" rel="noopener" class="mt-0.5 block font-semibold hover:text-ember">{{ o.listing.title }}</a>
+          <div class="mt-1 flex flex-wrap items-center text-xs text-espresso-500">فروشنده: <a href="{% url 'panel:user' o.seller_id %}" class="row-link ms-1">{{ o.seller }}</a><span class="sep" aria-hidden="true"></span>خریدار: <a href="{% url 'panel:user' o.buyer_id %}" class="row-link ms-1">{{ o.buyer }}</a></div>
+        </div>
+      </div>
+      <button type="button" class="btn-ghost is-sm" @click="show = !show" :aria-expanded="show"><span x-show="!show">{% icon "eye" "size-4" %}</span><span x-show="show" x-cloak>{% icon "eye-off" "size-4" %}</span>اطلاعات ورود</button>
+    </div>
+    <div class="px-5" x-show="show" x-collapse x-cloak>
+      <dl class="mb-4 grid gap-3 rounded-xl border border-saffron-100 bg-saffron-50/50 p-4 text-sm sm:grid-cols-2">
+        <div><dt class="text-xs text-espresso-400">نام کاربری</dt><dd class="ltr mt-0.5 select-all text-right font-mono">{{ d.login|default:"—" }}</dd></div>
+        <div><dt class="text-xs text-espresso-400">رمز</dt><dd class="ltr mt-0.5 select-all text-right font-mono">{{ d.password|default:"—" }}</dd></div>
+        <div><dt class="text-xs text-espresso-400">ایمیل</dt><dd class="ltr mt-0.5 select-all text-right font-mono">{{ d.email|default:"—" }}</dd></div>
+        <div><dt class="text-xs text-espresso-400">رمز ایمیل</dt><dd class="ltr mt-0.5 select-all text-right font-mono">{{ d.email_password|default:"—" }}</dd></div>
+        {% if d.recovery %}<div class="sm:col-span-2"><dt class="text-xs text-espresso-400">بازیابی</dt><dd class="ltr mt-0.5 text-right whitespace-pre-line font-mono text-xs">{{ d.recovery }}</dd></div>{% endif %}
+        {% if d.notes %}<div class="sm:col-span-2"><dt class="text-xs text-espresso-400">توضیح فروشنده</dt><dd>{{ d.notes }}</dd></div>{% endif %}
+      </dl>
+    </div>
+    <div class="mx-5 rounded-xl border border-sand-200 p-4 text-xs">
+      <div class="mb-2 font-semibold text-espresso-500">ادعاهای آگهی برای تطبیق</div>
+      <div class="flex flex-wrap gap-2">
+        {% for ic, label, val in o.listing.attr_rows %}<span class="chip is-muted">{% icon ic "size-3.5" %}{{ label }}: {{ val|fa }}</span>{% endfor %}
+        {% for ic, label, ok, desc in o.listing.health.items %}<span class="chip {% if ok %}is-sage{% else %}is-muted{% endif %}">{% icon ic "size-3.5" %}{{ label }}</span>{% endfor %}
+      </div>
+    </div>
+    <form method="post" action="{% url 'panel:verify_decide' o.code %}" class="mt-4 flex flex-col gap-3 border-t border-sand-100 bg-sand-50/50 p-5 sm:flex-row sm:items-center">
+      {% csrf_token %}
+      <input class="adm-input flex-1" name="note" maxlength="300" placeholder="یادداشت برای خریدار یا فروشنده (اختیاری)" aria-label="یادداشت بررسی">
+      <div class="flex flex-wrap gap-2 [&>button]:flex-1 sm:[&>button]:flex-none">
+        <button name="decision" value="approve" class="btn-grad is-sage is-sm">{% icon "shield-check" "size-4" %}تأیید و تحویل</button>
+        <button name="decision" value="reject" class="btn-ghost is-sm is-danger">{% icon "undo-2" "size-4" %}برگشت به فروشنده</button>
+      </div>
+    </form>
+  </article>
+  {% endwith %}{% empty %}
+  <section class="adm-card"><div class="adm-empty !py-16"><span class="feed-ic">{% icon "scan-search" "size-5" %}</span><b class="text-espresso">اکانتی منتظر بررسی نیست</b>وقتی فروشنده‌ای اطلاعات ورود را بفرستد، این‌جا ظاهر می‌شود.</div></section>
+  {% endfor %}
+</div>
+{% endblock %}

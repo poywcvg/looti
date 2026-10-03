@@ -1,0 +1,65 @@
+{% comment %}فوتر کل سایت — اقتباس از فوتر prebuiltui.com: ستون معرفی با خط محوشونده، دو ستون لینک، کادر قرصی با دکمه گرادیانی، و ردیف پایانی.
+   تغییرها: راست‌به‌چپ و فارسی، رنگ قهوه‌ای گرم به‌جای مشکی، دکمه سفالی به‌جای بنفش، فونت خود سایت؛
+   به‌جای خبرنامه (که سایت ندارد) جستجوی سریع آگهی، و به‌جای شبکه‌های اجتماعی لینک‌های معامله امن.{% endcomment %}
+<footer class="pb-foot{% if flush %} !mt-0{% endif %}">
+  <div class="wrap">
+    <div class="flex flex-wrap justify-between gap-y-10 lg:gap-x-8">
+
+      <div class="flex w-full flex-col items-center text-center md:w-[45%] md:items-start md:text-start lg:w-[35%]">
+        <a href="{% url 'core:landing' %}" class="flex items-center gap-3" aria-label="معرفی {{ SITE_NAME }}">
+          <span class="grid size-11 place-items-center rounded-2xl bg-ember text-[#FFF8F4]">{% logo_mark "size-10" %}</span>
+          <span class="flex flex-col">
+            <span class="wordmark -my-1 text-[1.75rem] text-[#FBF3EA]">{{ SITE_NAME }}</span>
+            <span dir="ltr" class="text-[0.6rem] font-semibold uppercase tracking-[0.42em] text-[#FBF3EA]/45">{{ SITE_NAME_EN }}</span>
+          </span>
+        </a>
+        <div class="pb-foot-line mt-7 max-w-52"></div>
+        <p class="mt-5 max-w-sm text-sm leading-7 text-[#FBF3EA]/60">
+          <b class="font-semibold text-[#FBF3EA]">پول بیرون از لوطی نده.</b> تا وقتی اکانت را تحویل بگیری و تأیید کنی، پولت پیش لوطی می‌ماند.
+        </p>
+      </div>
+
+      <div class="flex w-1/2 flex-col items-center text-center md:w-[45%] md:items-start md:text-start lg:w-[15%]">
+        <h3 class="text-sm font-medium text-[#FBF3EA]">لینک‌های مهم</h3>
+        <div class="mt-5 flex flex-col gap-2">
+          <a href="{% url 'listings:list' %}">همه آگهی‌ها</a>
+          <a href="{% url 'listings:create_pick' %}">ثبت آگهی</a>
+          <a href="{% url 'listings:saved' %}">ذخیره‌ها</a>
+          <a href="{% url 'listings:compare' %}">مقایسه</a>
+          <a href="{% url 'core:landing' %}">معرفی لوطی</a>
+          <a href="{% url 'core:how' %}#faq">سؤالات پرتکرار</a>
+        </div>
+      </div>
+
+      <div class="flex w-1/2 flex-col items-center text-center md:w-[45%] md:items-start md:text-start lg:w-[15%]">
+        <h3 class="text-sm font-medium text-[#FBF3EA]">معامله امن</h3>
+        <div class="mt-5 flex flex-col gap-2">
+          <a href="{% url 'core:how' %}">مراحل خرید امن</a>
+          <a href="{% url 'core:how' %}#fees">کارمزد</a>
+          <a href="{% url 'core:rules' %}#safety">نکات امنیتی</a>
+          <a href="{% url 'core:rules' %}#disputes">حل مشکل</a>
+        </div>
+      </div>
+
+      <div class="flex w-full flex-col items-center text-center md:w-[45%] md:items-start md:text-start lg:w-[25%]">
+        <h3 class="text-sm font-medium text-[#FBF3EA]">جستجوی سریع</h3>
+        <form action="{% url 'listings:list' %}" method="get" role="search" class="pb-foot-field mt-4">
+          <input type="search" name="q" placeholder="اسم بازی، اسکین یا کد آگهی…" aria-label="جستجو در آگهی‌ها" enterkeyhint="search">
+          <button type="submit">{% icon "search" "size-4" %}جستجو</button>
+        </form>
+      </div>
+
+    </div>
+
+    <div class="pb-foot-line mb-4 mt-12"></div>
+
+    <div class="flex flex-col items-center justify-between gap-4 md:flex-row">
+      <p class="text-xs text-[#FBF3EA]/60">© {% jyear %} {{ SITE_NAME }}</p>
+      <div class="flex items-center gap-6">
+        <a href="{% url 'core:rules' %}" class="text-xs">قوانین</a>
+        <div class="h-4 w-px bg-[#FBF3EA]/20"></div>
+        <a href="{% url 'core:rules' %}#privacy" class="text-xs">حریم خصوصی</a>
+      </div>
+    </div>
+  </div>
+</footer>

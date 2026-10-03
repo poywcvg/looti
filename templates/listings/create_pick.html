@@ -1,0 +1,39 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}ثبت آگهی — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="wrap pt-10">
+  <div class="flex flex-col items-center text-center">
+    <img src="{% static 'img/illustrations/select-character.svg' %}" alt="" class="h-36">
+    <span class="mt-6 chip is-ember">{% icon "circle-dot" "size-3.5" %}مرحله ۱ از ۲</span>
+    <h1 class="mt-3 font-display text-2xl font-bold md:text-3xl">اکانت کدام بازی را می‌فروشی؟</h1>
+    <p class="mt-2 text-espresso-500">بازی را انتخاب کن تا فرم، فیلدهای مخصوص همان بازی را نشانت بدهد.</p>
+  </div>
+
+  <div class="mt-10 grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5" x-data="{ q: '' }">
+    <div class="gsearch col-span-full mx-auto max-w-md">
+      <label for="gs-pick">جستجوی بازی</label>
+      <input id="gs-pick" class="input" type="search" x-model="q" placeholder="اسم بازی…" autocomplete="off">
+      <span class="caret" aria-hidden="true"></span>
+    </div>
+    {% for g in games %}
+    {# Card — uiverse.io/Prince4fff/slippery-baboon-37 (go-card نوع پرشونده) #}
+    <a href="{% url 'listings:create' g.slug %}" class="go-card go-fill game-card" style="--tone: {{ g.tone }}"
+       x-show="!q || '{{ g.name|escapejs }} {{ g.name_en|lower|escapejs }}'.includes(q.toLowerCase())">
+      {% include "components/game_cover.html" %}
+      <div class="px-4 pb-4 sm:px-5 sm:pb-5">
+        <span class="go-icon relative -mt-6 grid size-11 place-items-center rounded-xl transition">{% icon g.icon "size-6" %}</span>
+        <h2 class="go-tint mt-3 font-sans text-base font-bold transition sm:text-lg">{{ g.name }}</h2>
+        <p class="go-tint-soft ltr mt-0.5 text-right text-xs text-espresso-400 transition">{{ g.name_en }}</p>
+      </div>
+      <span class="go-corner" aria-hidden="true">{% icon "arrow-up-left" %}</span>
+    </a>
+    {% endfor %}
+  </div>
+
+  <div class="mx-auto mt-12 grid max-w-3xl gap-4 sm:grid-cols-3">
+    <div class="flex items-start gap-3"><span class="grid size-10 shrink-0 place-items-center rounded-xl bg-sage-50 text-sage-700">{% icon "badge-percent" "size-5" %}</span><div><div class="text-sm font-semibold">ثبت آگهی رایگان</div><div class="text-xs leading-6 text-espresso-400">کارمزد فقط وقتی فروختی</div></div></div>
+    <div class="flex items-start gap-3"><span class="grid size-10 shrink-0 place-items-center rounded-xl bg-saffron-50 text-saffron-700">{% icon "lock-keyhole" "size-5" %}</span><div><div class="text-sm font-semibold">رمز را این‌جا نمی‌خواهیم</div><div class="text-xs leading-6 text-espresso-400">اطلاعات ورود فقط بعد از پرداخت خریدار</div></div></div>
+    <div class="flex items-start gap-3"><span class="grid size-10 shrink-0 place-items-center rounded-xl bg-ember-50 text-ember-700">{% icon "banknote" "size-5" %}</span><div><div class="text-sm font-semibold">پول تضمین‌شده</div><div class="text-xs leading-6 text-espresso-400">خریدار قبل از تحویل پرداخت کرده</div></div></div>
+  </div>
+</div>
+{% endblock %}

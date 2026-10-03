@@ -1,0 +1,27 @@
+{# کلید روز/شب — اقتباس از uiverse.io (سوییچ خورشید و ماه)؛ کلاس‌محور تا چند نسخه در یک صفحه کار کند و رنگ‌ها گرم شده‌اند #}
+<label class="theme-sw {{ cls }}" title="حالت روز / شب">
+  <input class="ts-input" type="checkbox" role="switch" aria-label="حالت شب"
+         :checked="$store.theme.dark" @change="$store.theme.set($event.target.checked, $event.target)">
+  <span class="ts-slider" aria-hidden="true">
+    <span class="ts-orb">
+      <svg class="ts-dot d1" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-dot d2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-dot d3" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-ray r1" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-ray r2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-ray r3" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-cloud is-back c1" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-cloud is-back c2" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-cloud is-back c3" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-cloud c4" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-cloud c5" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+      <svg class="ts-cloud c6" viewBox="0 0 100 100"><circle cx="50" cy="50" r="50"/></svg>
+    </span>
+    <span class="ts-stars">
+      <svg class="ts-star s1" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+      <svg class="ts-star s2" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+      <svg class="ts-star s3" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+      <svg class="ts-star s4" viewBox="0 0 20 20"><path d="M 0 10 C 10 10,10 10 ,0 10 C 10 10 , 10 10 , 10 20 C 10 10 , 10 10 , 20 10 C 10 10 , 10 10 , 10 0 C 10 10,10 10 ,0 10 Z"/></svg>
+    </span>
+  </span>
+</label>

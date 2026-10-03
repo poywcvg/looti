@@ -1,0 +1,115 @@
+{% extends "base.html" %}{% load static %}
+{% block title %}معامله امن چطور کار می‌کند — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<section class="mx-auto max-w-4xl px-4 pt-12 text-center">
+  <span class="chip is-sage">{% icon "scale" "size-3.5" %}خرید امن با واسط</span>
+  <h1 class="mt-4 font-display text-3xl font-black leading-[1.5] md:text-4xl">لوطی وسط می‌ایستد<br class="sm:hidden"> تا هیچ‌کس ضرر نکند.</h1>
+  <p class="mx-auto mt-4 max-w-2xl leading-8 text-espresso-500">در معامله مستقیم، یکی باید اول اعتماد کند: یا خریدار پول را اول بدهد یا فروشنده اکانت را. در لوطی هیچ‌کدام لازم نیست؛ پول و اکانت هر دو اول به دست واسط می‌رسند.</p>
+  <img src="{% static 'img/illustrations/handshake-deal.svg' %}" alt="" class="mx-auto mt-8 h-52">
+</section>
+
+<section class="mx-auto mt-14 max-w-3xl px-4">
+  <ol class="relative border-r-2 border-dashed border-sand-300 pr-8">
+    <li class="relative pb-10">
+      <span class="absolute -right-[3.05rem] grid size-10 place-items-center rounded-full bg-saffron text-ink ring-4 ring-cream">{% icon "wallet" "size-5" %}</span>
+      <h2 class="font-sans text-lg font-bold">پرداخت امن</h2>
+      <p class="mt-2 leading-8 text-espresso-500">خریدار روی «خرید امن» می‌زند و مبلغ آگهی به‌علاوه سهم کارمزدش را می‌پردازد. این پول در حساب امانی لوطی قفل می‌شود و فروشنده فقط پیامِ «پرداخت انجام شد» را می‌بیند.</p>
+    </li>
+    <li class="relative pb-10">
+      <span class="absolute -right-[3.05rem] grid size-10 place-items-center rounded-full bg-ember text-white ring-4 ring-cream">{% icon "package" "size-5" %}</span>
+      <h2 class="font-sans text-lg font-bold">تحویل اطلاعات به واسط</h2>
+      <p class="mt-2 leading-8 text-espresso-500">فروشنده {{ seller_hours|fa }} ساعت فرصت دارد اطلاعات ورود را در فرم امن سفارش ثبت کند. اطلاعات با رمزنگاری ذخیره می‌شود؛ حتی در پیام‌ها هم ردوبدل نمی‌شود. اگر فروشنده در مهلت تحویل ندهد، خریدار می‌تواند سفارش را لغو کند و پولش فوراً برمی‌گردد.</p>
+    </li>
+    <li class="relative pb-10">
+      <span class="absolute -right-[3.05rem] grid size-10 place-items-center rounded-full bg-sage text-white ring-4 ring-cream">{% icon "scan-search" "size-5" %}</span>
+      <h2 class="font-sans text-lg font-bold">بررسی کارشناس لوطی</h2>
+      <p class="mt-2 leading-8 text-espresso-500">یک واسط وارد اکانت می‌شود و تطابق آن با آگهی را چک می‌کند: لول، اسکین‌ها، رنک، دسترسی ایمیل. اگر چیزی درست نبود، سفارش برای اصلاح به فروشنده برمی‌گردد.</p>
+    </li>
+    <li class="relative pb-10">
+      <span class="absolute -right-[3.05rem] grid size-10 place-items-center rounded-full bg-ink text-paper ring-4 ring-cream">{% icon "user-check" "size-5" %}</span>
+      <h2 class="font-sans text-lg font-bold">{{ INSPECTION_HOURS|fa }} ساعت فرصت بررسی خریدار</h2>
+      <p class="mt-2 leading-8 text-espresso-500">اطلاعات تأییدشده برای خریدار باز می‌شود. ایمیل و رمز را عوض کنید و اکانت را امتحان کنید. اگر مشکلی بود، «گزارش مشکل» را بزنید تا بررسی شروع شود؛ اگر همه‌چیز درست بود، تأیید کنید.</p>
+    </li>
+    <li class="relative">
+      <span class="absolute -right-[3.05rem] grid size-10 place-items-center rounded-full bg-sage-600 text-white ring-4 ring-cream">{% icon "badge-check" "size-5" %}</span>
+      <h2 class="font-sans text-lg font-bold">پرداخت به فروشنده</h2>
+      <p class="mt-2 leading-8 text-espresso-500">با تأیید خریدار (یا پایان مهلت بدون گزارش مشکل) مبلغ به کیف پول فروشنده واریز می‌شود. فروشنده هر وقت بخواهد به شبای خودش برداشت می‌کند.</p>
+    </li>
+  </ol>
+</section>
+
+{# ─── ماشین‌حساب کارمزد ─── #}
+<section id="fees" class="mx-auto mt-16 max-w-3xl scroll-mt-24 px-4">
+  <div class="panel p-6 md:p-8" x-data="feeCalc({ percent: {{ FEE_PERCENT }}, min: {{ fee_min }}, max: {{ fee_max }}, price: 1500000 })">
+    <div class="flex items-center gap-3">
+      <span class="grid size-11 place-items-center rounded-xl bg-saffron-50 text-saffron-700">{% icon "calculator" %}</span>
+      <div>
+        <h2 class="font-display text-xl font-bold">کارمزد چقدر می‌شود؟</h2>
+        <p class="text-sm text-espresso-500">{{ FEE_PERCENT|fa }}٪ مبلغ؛ حداقل {{ fee_min|toman }} و حداکثر {{ fee_max|toman }}</p>
+      </div>
+    </div>
+    <div class="mt-6 grid gap-5 md:grid-cols-2">
+      <div x-data="moneyInput('1500000')" x-effect="price = value">
+        <div class="field">
+          <input class="field-input fa-num ltr text-left" inputmode="numeric" placeholder=" " id="calc-price" :value="shown" @input="set($event.target.value); $event.target.value = shown">
+          <label class="field-label" for="calc-price">قیمت اکانت</label>
+          <span class="field-suffix">تومان</span>
+        </div>
+        <p class="field-hint" x-text="words"></p>
+      </div>
+      <div>
+        <div class="mb-2 text-sm text-espresso-500">کارمزد را چه کسی بدهد؟</div>
+        {# Radio — uiverse.io/00Kubi/smooth-termite-31 #}
+        <div class="seg">
+          <label class="seg-item"><input type="radio" name="payer" value="buyer" x-model="payer"><span class="seg-name">خریدار</span></label>
+          <label class="seg-item"><input type="radio" name="payer" value="split" x-model="payer"><span class="seg-name">نصف‌نصف</span></label>
+          <label class="seg-item"><input type="radio" name="payer" value="seller" x-model="payer"><span class="seg-name">فروشنده</span></label>
+        </div>
+      </div>
+    </div>
+    <dl class="mt-6 grid grid-cols-3 divide-x divide-x-reverse divide-sand-200 rounded-xl bg-cream text-center">
+      <div class="p-4"><dt class="text-xs text-espresso-400">کارمزد واسط</dt><dd class="mt-1 font-display font-bold fa-num" x-text="m(fee) + ' ت'"></dd></div>
+      <div class="p-4"><dt class="text-xs text-espresso-400">خریدار می‌پردازد</dt><dd class="mt-1 font-display font-bold fa-num text-ember" x-text="m(buyerTotal) + ' ت'"></dd></div>
+      <div class="p-4"><dt class="text-xs text-espresso-400">فروشنده می‌گیرد</dt><dd class="mt-1 font-display font-bold fa-num text-sage-700" x-text="m(sellerGets) + ' ت'"></dd></div>
+    </dl>
+  </div>
+</section>
+
+{# ─── سؤالات پرتکرار ─── #}
+<section id="faq" class="mx-auto mt-16 max-w-3xl scroll-mt-24 px-4">
+  <h2 class="font-display text-2xl font-bold">سؤال‌هایی که معمولاً می‌پرسند</h2>
+  <div class="mt-6 divide-y divide-sand-200 rounded-2xl border border-sand-200 bg-surface" x-data="{ open: 0 }">
+    <div>
+      <button class="flex w-full items-center justify-between gap-4 p-5 text-right font-medium" @click="open = open === 1 ? 0 : 1" :aria-expanded="open === 1">
+        اگر فروشنده بعد از فروش اکانت را پس بگیرد چه؟
+        <span class="transition" :class="open === 1 && 'rotate-180'">{% icon "chevron-down" "size-4 text-espresso-400" %}</span>
+      </button>
+      <div x-show="open === 1" x-collapse><p class="px-5 pb-5 leading-8 text-espresso-500">به همین دلیل اکانت‌های با «ایمیل اصلی» امتیاز سلامت بیشتری دارند. اگر در مهلت بررسی اکانت پس گرفته شد، «گزارش مشکل» را بزنید؛ پول هنوز پیش ماست. برای فروشندگان متخلف هم حساب بسته و سابقه ثبت می‌شود.</p></div>
+    </div>
+    <div>
+      <button class="flex w-full items-center justify-between gap-4 p-5 text-right font-medium" @click="open = open === 2 ? 0 : 2" :aria-expanded="open === 2">
+        واسط‌ها به اطلاعات اکانت من دسترسی دارند؟
+        <span class="transition" :class="open === 2 && 'rotate-180'">{% icon "chevron-down" "size-4 text-espresso-400" %}</span>
+      </button>
+      <div x-show="open === 2" x-collapse><p class="px-5 pb-5 leading-8 text-espresso-500">فقط واسطِ همان سفارش و فقط برای بررسی. اطلاعات رمزنگاری‌شده ذخیره می‌شود و توصیه می‌کنیم خریدار همان اول بعد از تحویل، رمز و ایمیل را تغییر دهد.</p></div>
+    </div>
+    <div>
+      <button class="flex w-full items-center justify-between gap-4 p-5 text-right font-medium" @click="open = open === 3 ? 0 : 3" :aria-expanded="open === 3">
+        چرا نباید بیرون از لوطی معامله کنم؟
+        <span class="transition" :class="open === 3 && 'rotate-180'">{% icon "chevron-down" "size-4 text-espresso-400" %}</span>
+      </button>
+      <div x-show="open === 3" x-collapse><p class="px-5 pb-5 leading-8 text-espresso-500">چون بیرون از لوطی هیچ واسطی پول شما را نگه نمی‌دارد. بیشتر کلاهبرداری‌ها با جمله «بیا تلگرام، ارزان‌تر حساب می‌کنم» شروع می‌شود. محافظ گفتگو این پیام‌ها را خودکار می‌پوشاند.</p></div>
+    </div>
+    <div>
+      <button class="flex w-full items-center justify-between gap-4 p-5 text-right font-medium" @click="open = open === 4 ? 0 : 4" :aria-expanded="open === 4">
+        بررسی مشکل چقدر طول می‌کشد؟
+        <span class="transition" :class="open === 4 && 'rotate-180'">{% icon "chevron-down" "size-4 text-espresso-400" %}</span>
+      </button>
+      <div x-show="open === 4" x-collapse><p class="px-5 pb-5 leading-8 text-espresso-500">معمولاً کمتر از ۲۴ ساعت. واسط شواهد هر دو طرف را در گفتگوی سفارش می‌بیند و تصمیم را با دلیل برای هر دو نفر ثبت می‌کند.</p></div>
+    </div>
+  </div>
+  <div class="mt-10 text-center">
+    <a href="{% url 'listings:list' %}" class="btn-push"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "shopping-bag" "size-5" %}برو سراغ آگهی‌ها</span></a>
+  </div>
+</section>
+{% endblock %}

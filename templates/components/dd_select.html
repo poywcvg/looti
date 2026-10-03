@@ -1,0 +1,20 @@
+{% comment %}دراپ‌داون انتخابی سفارشی به‌جای select بومی؛ هنگام باز شدن پرده‌وار از بالا باز می‌شود و گزینه‌ها پشت‌سرهم می‌آیند.
+   include "components/dd_select.html" with name="sort" form="filters" options=sorts value=params.sort|default:"new" icon_name="arrow-down-up" label="مرتب‌سازی"
+   placeholder="..." یک گزینه «همه» با مقدار خالی اول فهرست می‌گذارد.{% endcomment %}
+<div class="dd-select {{ cls }}" x-data="ddSelect('{{ value|default:''|escapejs }}')" @click.outside="open = false"
+     @keydown.escape="if (open) { open = false; $refs.btn.focus() }" @keydown.down.prevent="open ? move(1) : toggle()" @keydown.up.prevent="open && move(-1)">
+  <input type="hidden" x-ref="input" name="{{ name }}" {% if form %}form="{{ form }}"{% endif %} value="{{ value|default:'' }}" :value="val">
+  <button type="button" x-ref="btn" class="dd-trigger" :class="open && 'is-open'" @click="toggle()" :aria-expanded="open" aria-haspopup="listbox" aria-label="{{ label }}">
+    {% if icon_name %}{% icon icon_name "size-4 shrink-0 text-espresso-400" %}{% endif %}
+    <span class="dd-value" x-ref="label">{% if placeholder and not value %}{{ placeholder }}{% else %}{% for k, v in options %}{% if k == value %}{{ v }}{% endif %}{% endfor %}{% endif %}</span>
+    {% icon "chevron-down" "dd-chev size-4" %}
+  </button>
+  <div x-cloak x-show="open" role="listbox" aria-label="{{ label }}" class="dd-panel dd-motion"
+       x-transition:enter="dd-enter" x-transition:enter-start="dd-from" x-transition:enter-end="dd-to"
+       x-transition:leave="dd-leave" x-transition:leave-start="dd-to" x-transition:leave-end="dd-out">
+    {% if placeholder %}<button type="button" role="option" class="dd-opt" :aria-selected="val === ''" @click="pick('', $el)">{{ placeholder }}{% icon "check" "dd-tick size-4" %}</button>{% endif %}
+    {% for k, v in options %}
+    <button type="button" role="option" class="dd-opt" :aria-selected="val === '{{ k|escapejs }}'" @click="pick('{{ k|escapejs }}', $el)">{{ v }}{% icon "check" "dd-tick size-4" %}</button>
+    {% endfor %}
+  </div>
+</div>

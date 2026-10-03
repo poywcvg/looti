@@ -1,0 +1,10 @@
+{# کاور رسمی بازی (g) بالای کارت؛ اگر فایلش نبود، گرادیان رنگ بازی با آیکن #}
+<div class="game-cover relative aspect-[16/10] overflow-hidden" style="background: linear-gradient(135deg, {{ g.tone }}26, {{ g.tone }}66)">
+  {% if g.cover_url %}
+    <img src="{{ g.cover_url }}" alt="تصویر رسمی {{ g.name }}" width="1200" height="750" loading="lazy" decoding="async" class="size-full object-cover">
+  {% else %}
+    <span class="grid size-full place-items-center" style="color: {{ g.tone }}">{% icon g.icon "size-10 opacity-70" "1.5" %}</span>
+  {% endif %}
+  <span class="absolute inset-0 bg-gradient-to-t from-ink/55 via-transparent to-transparent" aria-hidden="true"></span>
+  <span class="absolute bottom-2 left-2 rounded-md bg-surface/90 px-1.5 py-0.5 text-[11px] font-medium text-espresso backdrop-blur-sm fa-num">{{ g.active_count|fa }} آگهی</span>
+</div>

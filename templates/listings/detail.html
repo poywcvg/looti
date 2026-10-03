@@ -1,0 +1,331 @@
+{% extends "base.html" %}
+{% block title %}{{ l.title }} — {{ SITE_NAME }}{% endblock %}
+{% block description %}{{ l.description|truncatechars:150 }}{% endblock %}
+{% block content %}
+<div class="wrap pt-6">
+  <nav class="flex flex-wrap items-center gap-1.5 text-sm text-espresso-400">
+    <a href="{% url 'listings:list' %}" class="hover:text-ember">آگهی‌ها</a>{% icon "chevron-left" "size-3.5" %}
+    <a href="{{ l.game.get_absolute_url }}" class="hover:text-ember">{{ l.game.name }}</a>{% icon "chevron-left" "size-3.5" %}
+    <span class="ltr text-espresso-500">{{ l.code }}</span>
+  </nav>
+
+  {% if is_owner and l.status != 'active' %}
+  <div class="mt-4 flex flex-wrap items-center gap-3 rounded-2xl p-4 text-sm {% if l.status == 'rejected' %}bg-danger-50 text-danger-700{% else %}bg-warn-50 text-warn-700{% endif %}">
+    {% icon "info" "size-5 shrink-0" %}
+    <span class="flex-1">وضعیت آگهی: <b>{{ l.get_status_display }}</b>{% if l.status == 'pending' %} — بعد از بررسی کارشناس منتشر می‌شود.{% elif l.reject_reason %} — {{ l.reject_reason }}{% endif %}</span>
+    {% if l.status != 'reserved' and l.status != 'sold' %}<a href="{% url 'listings:edit' l.code %}" class="btn-ghost is-sm">{% icon "pencil" "size-4" %}ویرایش</a>{% endif %}
+  </div>
+  {% endif %}
+
+  <div class="mt-5 grid gap-x-8 gap-y-6 lg:grid-cols-[1fr_22.5rem] 2xl:gap-x-12">
+    {# ─── گالری و عنوان ─── #}
+    <section class="min-w-0">
+      {% with imgs=l.images.all %}
+      <div x-data="{ i: 0, n: {{ imgs|length }} }" class="overflow-hidden rounded-3xl border border-sand-200 bg-surface">
+        <div class="relative aspect-[16/10] max-h-[min(72svh,46rem)] w-full" style="background: linear-gradient(135deg, {{ l.game.tone }}1f, {{ l.game.tone }}4d)">
+          {% for img in imgs %}
+          <img src="{{ img.image.url }}" alt="تصویر {{ forloop.counter }} از {{ l.title }}" class="absolute inset-0 size-full object-contain" x-show="i === {{ forloop.counter0 }}" x-transition.opacity {% if not forloop.first %}x-cloak loading="lazy"{% endif %}>
+          {% empty %}
+          <div class="grid size-full place-items-center" style="color: {{ l.game.tone }}">
+            <div class="text-center">{% icon l.game.icon "size-20 mx-auto opacity-80" "1.25" %}<p class="mt-3 text-sm text-espresso-500">فروشنده تصویری ثبت نکرده</p></div>
+          </div>
+          {% endfor %}
+          {% if imgs|length > 1 %}
+          <button class="absolute right-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-surface/90 shadow-soft hover:bg-surface" @click="i = (i - 1 + n) % n" aria-label="قبلی">{% icon "chevron-right" "size-5" %}</button>
+          <button class="absolute left-3 top-1/2 grid size-10 -translate-y-1/2 place-items-center rounded-full bg-surface/90 shadow-soft hover:bg-surface" @click="i = (i + 1) % n" aria-label="بعدی">{% icon "chevron-left" "size-5" %}</button>
+          <span class="absolute bottom-3 left-3 rounded-full bg-ink/70 px-2.5 py-1 text-xs text-white fa-num" x-text="gm.toFa(i + 1) + ' / ' + gm.toFa(n)"></span>
+          {% endif %}
+          {% if l.status == 'reserved' %}<span class="absolute right-3 top-3 chip is-saffron">{% icon "lock" "size-3.5" %}در حال معامله امن</span>{% elif l.status == 'sold' %}<span class="absolute right-3 top-3 chip is-muted">{% icon "badge-check" "size-3.5" %}فروخته شد</span>{% endif %}
+        </div>
+        {% if imgs|length > 1 %}
+        <div class="no-scrollbar flex gap-2 overflow-x-auto p-3">
+          {% for img in imgs %}
+          <button class="size-16 shrink-0 overflow-hidden rounded-xl ring-2 transition" :class="i === {{ forloop.counter0 }} ? 'ring-ember' : 'ring-transparent opacity-70 hover:opacity-100'" @click="i = {{ forloop.counter0 }}" aria-label="تصویر {{ forloop.counter }}">
+            <img src="{{ img.image.url }}" alt="" class="size-full object-cover" loading="lazy">
+          </button>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endwith %}
+
+      <div class="mt-6">
+        <div class="flex flex-wrap gap-2">
+          <span class="chip" style="background: {{ l.game.tone }}1a; color: {{ l.game.tone }}">{% icon l.game.icon "size-3.5" %}{{ l.game.name }}</span>
+          <span class="chip is-muted">{% icon l.platform_icon "size-3.5" %}{{ l.get_platform_display }}</span>
+          {% if l.region %}<span class="chip is-muted">{% icon "globe" "size-3.5" %}{{ l.region }}</span>{% endif %}
+          {% if l.open_to_trade %}<span class="chip is-sage">{% icon "arrow-left-right" "size-3.5" %}قابل معاوضه</span>{% endif %}
+          {% if l.is_boosted %}<span class="chip is-saffron">{% icon "rocket" "size-3.5" %}نردبان</span>{% endif %}
+        </div>
+        <h1 class="mt-4 font-display text-2xl font-bold leading-[1.6] md:text-3xl">{{ l.title }}</h1>
+        <div class="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-espresso-400">
+          <span class="flex items-center gap-1">{% icon "clock" "size-3.5" %}{{ l.bumped_at|ago }}</span>
+          <span class="flex items-center gap-1">{% icon "eye" "size-3.5" %}<span class="fa-num">{{ l.views|fa }}</span> بازدید</span>
+          {% if watchers %}<span class="flex items-center gap-1 text-ember-700">{% icon "bookmark" "size-3.5" %}<span class="fa-num">{{ watchers|fa }}</span> نفر ذخیره‌اش کرده‌اند</span>{% endif %}
+          <button x-data="copy('{{ l.code }}')" @click="run()" class="flex items-center gap-1 hover:text-ember">
+            <span x-show="!done" class="flex items-center gap-1">{% icon "hash" "size-3.5" %}<span class="ltr">{{ l.code }}</span></span>
+            <span x-show="done" x-cloak class="flex items-center gap-1 text-sage-700">{% icon "check" "size-3.5" %}کپی شد</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    {# ─── ستون خرید ─── #}
+    <aside class="space-y-4 lg:sticky lg:top-24 hdr-follow lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
+      <div class="panel p-5">
+        <div class="flex items-end justify-between gap-3">
+          <div>
+            <div class="text-xs text-espresso-400">قیمت</div>
+            <div class="mt-1 font-display text-3xl font-black fa-num">{{ l.price|toman }} <span class="text-sm font-normal text-espresso-400">تومان</span></div>
+          </div>
+          {% if l.negotiable %}<span class="chip is-saffron">{% icon "messages-square" "size-3.5" %}قابل مذاکره</span>{% endif %}
+          {% if l.open_to_trade %}<span class="chip is-sage">{% icon "arrow-left-right" "size-3.5" %}قابل معاوضه</span>{% endif %}
+        </div>
+        {% if l.open_to_trade and l.trade_with %}
+        <div class="mt-3 flex items-start gap-2 rounded-xl bg-sage-50 p-3 text-sm text-espresso-700">
+          {% icon "repeat" "size-4 shrink-0 mt-0.5 text-sage-700" %}
+          <span>معاوضه با: {{ l.trade_with }}</span>
+        </div>
+        {% endif %}
+
+        {% if verdict %}
+        <div class="mt-5">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-semibold {% if verdict.tone == 'sage' %}text-sage-700{% elif verdict.tone == 'danger' %}text-danger-700{% else %}text-warn-700{% endif %}">{{ verdict.label }}</span>
+            <span class="text-espresso-400">میانه بازار <span class="fa-num">{{ verdict.median|toman }}</span></span>
+          </div>
+          <div class="relative mt-2 h-2 rounded-full bg-gradient-to-r from-danger-200 via-warn-100 to-sage-100" dir="rtl">
+            <span class="absolute top-1/2 size-4 -translate-y-1/2 translate-x-1/2 rounded-full border-[3px] border-surface shadow-soft {% if verdict.tone == 'sage' %}bg-sage{% elif verdict.tone == 'danger' %}bg-danger{% else %}bg-warn{% endif %}" style="right: {{ verdict.pos }}%"></span>
+          </div>
+          <div class="mt-1 flex justify-between text-[10px] text-espresso-400"><span>ارزان‌تر</span><span>گران‌تر</span></div>
+        </div>
+        {% endif %}
+
+        <dl class="mt-5 space-y-2 rounded-xl bg-cream p-4 text-sm">
+          <div class="flex justify-between"><dt class="text-espresso-500">کارمزد واسط</dt><dd class="fa-num">{{ fee|toman }} <span class="text-[11px] text-espresso-400">({{ l.get_fee_payer_display }})</span></dd></div>
+          <div class="flex justify-between border-t border-dashed border-sand-300 pt-2 font-semibold"><dt>پرداخت تو</dt><dd class="fa-num text-ember">{{ buyer_total|toman }} تومان</dd></div>
+        </dl>
+
+        <div class="mt-5 space-y-3">
+          {% if is_owner %}
+            <a href="{% url 'listings:edit' l.code %}" class="btn-ghost w-full">{% icon "pencil" "size-4" %}ویرایش آگهی</a>
+            {% if l.status == 'active' %}
+            <form method="post" action="{% url 'listings:boost' l.code %}" data-confirm="نردبان این آگهی؟" data-confirm-text="هزینه از کیف پول کم می‌شود و آگهی ۲۴ ساعت بالای فهرست می‌ماند." data-confirm-ok="نردبان کن">
+              {% csrf_token %}<button class="btn-grad is-saffron w-full">{% icon "rocket" "size-4" %}نردبان آگهی</button>
+            </form>
+            {% endif %}
+          {% elif l.is_available %}
+            {% if user.is_authenticated %}
+              {% if my_offer and my_offer.status == 'accepted' %}
+              <form method="post" action="{% url 'escrow:buy' l.code %}" data-confirm="خرید با قیمت توافقی؟" data-confirm-text="سفارش امانی با مبلغ {{ my_offer.amount|toman }} تومان ساخته می‌شود؛ تا تأیید خودت پول آزاد نمی‌شود." data-confirm-tone="sage" data-confirm-ok="ساخت سفارش امن">
+                {% csrf_token %}<input type="hidden" name="offer" value="{{ my_offer.pk }}">
+                <button class="btn-push is-sage is-block"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "handshake" "size-5" %}خرید با <span class="fa-num">{{ my_offer.amount|toman }}</span></span></button>
+              </form>
+              {% endif %}
+              <form method="post" action="{% url 'escrow:buy' l.code %}" data-confirm="خرید امن این اکانت؟" data-confirm-text="یک سفارش امانی ساخته می‌شود. پولت تا وقتی خودت اکانت را تأیید نکنی، پیش لوطی می‌ماند." data-confirm-tone="sage" data-confirm-ok="ساخت سفارش امن">
+                {% csrf_token %}
+                <button class="btn-push is-block"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "shield-check" "size-5" %}خرید امن با واسط</span></button>
+              </form>
+              <div class="grid grid-cols-2 gap-2">
+                <form method="post" action="{% url 'chat:start' l.code %}">{% csrf_token %}<button class="btn-ghost w-full">{% icon "message-circle" "size-4" %}گفتگو</button></form>
+                {% include "listings/_bookmark_btn.html" with variant="full" %}
+              </div>
+            {% else %}
+              <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="btn-push is-block"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "log-in" "size-5" %}برای خرید وارد شو</span></a>
+            {% endif %}
+          {% else %}
+            <div class="rounded-xl bg-sand/60 p-4 text-center text-sm text-espresso-500">این اکانت {% if l.status == 'sold' %}فروخته شده{% else %}فعلاً در دسترس نیست{% endif %}. <a href="{{ l.game.get_absolute_url }}" class="font-semibold text-ember hover:underline">آگهی‌های مشابه</a></div>
+          {% endif %}
+        </div>
+
+        {% if l.negotiable and l.is_available and user.is_authenticated and not is_owner %}
+        <div class="mt-4 border-t border-sand-200 pt-4" x-data="{ open: false }">
+          {% if my_offer %}
+          <div class="flex items-center justify-between gap-2 text-sm">
+            <span class="text-espresso-500">پیشنهاد تو: <b class="fa-num text-espresso">{{ my_offer.amount|toman }}</b></span>
+            <span class="chip {% if my_offer.status == 'accepted' %}is-sage{% elif my_offer.status == 'declined' %}is-muted{% else %}is-warn{% endif %}">{{ my_offer.get_status_display }}</span>
+          </div>
+          {% endif %}
+          {% if not my_offer or my_offer.status != 'accepted' %}
+          <button class="mt-2 flex w-full items-center justify-between text-sm font-medium text-espresso-700 hover:text-ember" @click="open = !open">
+            <span class="flex items-center gap-2">{% icon "hand-coins" "size-4" %}{% if my_offer %}پیشنهاد تازه{% else %}پیشنهاد قیمت بده{% endif %}</span>
+            <span class="transition" :class="open && 'rotate-180'">{% icon "chevron-down" "size-4" %}</span>
+          </button>
+          <form x-show="open" x-collapse method="post" action="{% url 'listings:offer' l.code %}" x-data="moneyInput('')">
+            {% csrf_token %}<input type="hidden" name="amount" :value="raw">
+            <div class="pt-3">
+              <div class="field">
+                <input class="field-input fa-num ltr text-left" id="offer" inputmode="numeric" placeholder=" " :value="shown" @input="set($event.target.value); $event.target.value = shown">
+                <label class="field-label" for="offer">مبلغ پیشنهادی</label><span class="field-suffix">تومان</span>
+              </div>
+              <p class="field-hint">بین نصف قیمت تا کمتر از قیمت آگهی</p>
+              <div class="mt-2 flex gap-2">
+                <button type="button" class="chip is-muted" @click="set('{% widthratio l.price 100 95 %}')">٪۵ کمتر</button>
+                <button type="button" class="chip is-muted" @click="set('{% widthratio l.price 100 90 %}')">٪۱۰ کمتر</button>
+              </div>
+              <button class="btn-grad is-saffron is-sm mt-3 w-full" :disabled="value < {% widthratio l.price 2 1 %} || value >= {{ l.price }}">ارسال پیشنهاد</button>
+            </div>
+          </form>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      {# فروشنده #}
+      <div class="panel p-5">
+        <a href="{% url 'accounts:profile' l.seller.pk %}" class="flex items-center gap-3">
+          <span class="relative">{% include "components/avatar.html" with u=l.seller size="size-12" %}{% if l.seller.is_online %}<span class="absolute bottom-0 left-0 size-3 rounded-full bg-sage ring-2 ring-surface"></span>{% endif %}</span>
+          <div class="min-w-0 flex-1">
+            <div class="truncate font-semibold">{{ l.seller.display_name }}</div>
+            <div class="text-xs text-espresso-400">{% if l.seller.is_online %}آنلاین{% else %}عضو از {{ l.seller.date_joined|jdate:"%B %Y" }}{% endif %}</div>
+          </div>
+          {% include "components/trust_badge.html" with u=l.seller %}
+        </a>
+        <dl class="mt-4 grid grid-cols-3 gap-2 text-center">
+          <div class="rounded-xl bg-cream py-2"><dt class="text-[10px] text-espresso-400">فروش موفق</dt><dd class="font-bold fa-num">{{ l.seller.sales_count|fa }}</dd></div>
+          <div class="rounded-xl bg-cream py-2"><dt class="text-[10px] text-espresso-400">امتیاز</dt><dd class="flex items-center justify-center gap-1 font-bold fa-num">{% if l.seller.rating %}{{ l.seller.rating|fa }}{% icon "star" "size-3.5 fill-current text-saffron" %}{% else %}—{% endif %}</dd></div>
+          <div class="rounded-xl bg-cream py-2"><dt class="text-[10px] text-espresso-400">آگهی دیگر</dt><dd class="font-bold fa-num">{{ seller_other|fa }}</dd></div>
+        </dl>
+        {% if l.has_contact %}
+        <div class="mt-4 border-t border-sand-200 pt-4" x-data="{ open: false }">
+          {% if is_owner %}
+            <div class="flex items-center gap-2 text-xs text-espresso-500">{% icon l.contact_icon "size-4" %}راه ارتباطی تو: {{ l.get_contact_app_display }} <span class="ltr latin">{{ l.contact_display }}</span></div>
+          {% elif user.is_authenticated %}
+            <button type="button" class="btn-ghost w-full" @click="open = !open" :aria-expanded="open">
+              {% icon l.contact_icon "size-4" %}<span x-text="open ? 'بستن' : 'گفتگو در {{ l.get_contact_app_display }}'">گفتگو در {{ l.get_contact_app_display }}</span>
+            </button>
+            <div x-show="open" x-collapse x-cloak>
+              {% alert variant="warning" appearance="light" size="sm" icon_name="shield-alert" title="قبل از پیام دادن بخوان" cls="mt-3" %}
+                <ul class="space-y-0.5">
+                  <li>هیچ پولی را مستقیم کارت‌به‌کارت نکن؛ اگر پول بیرون از لوطی برود، لوطی نمی‌تواند کمکت کند.</li>
+                  <li>برای پرداخت، همیشه از دکمه «خرید امن با واسط» همین آگهی استفاده کن.</li>
+                </ul>
+              {% endalert %}
+              <div class="mt-3 flex items-center gap-2 rounded-xl bg-cream p-2 ps-3">
+                <span class="ltr latin min-w-0 flex-1 truncate text-sm">{{ l.contact_display }}</span>
+                <button type="button" x-data="copy('{{ l.contact_display|escapejs }}')" @click="run()" class="grid size-9 place-items-center rounded-lg text-espresso-500 transition hover:bg-sand hover:text-espresso" :aria-label="done ? 'کپی شد' : 'کپی'">
+                  <span x-show="!done">{% icon "copy" "size-4" %}</span><span x-show="done" x-cloak>{% icon "check" "size-4 text-sage-700" %}</span>
+                </button>
+                {% if l.contact_url %}<a href="{{ l.contact_url }}" target="_blank" rel="noopener noreferrer nofollow" class="btn-grad is-sm">{% icon "external-link" "size-4" %}باز کردن</a>{% endif %}
+              </div>
+            </div>
+          {% else %}
+            <a href="{% url 'accounts:login' %}?next={{ request.path|urlencode }}" class="flex items-center justify-center gap-2 rounded-xl border border-dashed border-sand-300 py-2.5 text-xs text-espresso-500 transition hover:border-ember hover:text-ember">{% icon l.contact_icon "size-4" %}برای دیدن آیدی {{ l.get_contact_app_display }} وارد شو</a>
+          {% endif %}
+        </div>
+        {% endif %}
+      </div>
+
+      {# اطمینان #}
+      <div class="rounded-2xl border border-sage-100 bg-sage-50 p-5">
+        <div class="flex items-center gap-2 font-semibold text-sage-700">{% icon "vault" "size-5" %}پولت پیش ما امن است</div>
+        <ol class="mt-3 space-y-2 text-sm text-espresso-700">
+          <li class="flex gap-2"><span class="fa-num font-bold text-sage-700">۱.</span>پرداخت به حساب امانی لوطی</li>
+          <li class="flex gap-2"><span class="fa-num font-bold text-sage-700">۲.</span>بررسی اکانت توسط واسط</li>
+          <li class="flex gap-2"><span class="fa-num font-bold text-sage-700">۳.</span><span class="fa-num">{{ INSPECTION_HOURS|fa }}</span> ساعت فرصت تست برای تو</li>
+          <li class="flex gap-2"><span class="fa-num font-bold text-sage-700">۴.</span>پرداخت به فروشنده، فقط بعد از تأیید تو</li>
+        </ol>
+        <a href="{% url 'core:how' %}" class="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-sage-700 hover:underline">جزئیات معامله امن{% icon "arrow-left" "size-3.5" %}</a>
+      </div>
+
+      <div class="flex items-center justify-between px-1 text-sm">
+        <div class="flex items-center gap-1">
+          {% include "listings/_compare_btn.html" %}
+          <span class="text-xs text-espresso-400">مقایسه</span>
+        </div>
+        <button x-data="copy('{{ request.build_absolute_uri }}')" @click="run()" class="flex items-center gap-1.5 text-espresso-500 hover:text-ember">
+          <span x-show="!done">{% icon "share-2" "size-4" %}</span><span x-show="done" x-cloak>{% icon "check" "size-4 text-sage-700" %}</span>
+          <span x-text="done ? 'لینک کپی شد' : 'اشتراک‌گذاری'">اشتراک‌گذاری</span>
+        </button>
+        {% if user.is_authenticated and not is_owner %}
+        <button class="flex items-center gap-1.5 text-espresso-400 hover:text-ember" @click="$dispatch('open-report')">{% icon "flag" "size-4" %}گزارش</button>
+        {% endif %}
+      </div>
+    </aside>
+
+    {# ─── جزئیات ─── #}
+    <div class="min-w-0 space-y-6">
+      {# شناسنامه سلامت #}
+      <section class="panel p-6">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h2 class="flex items-center gap-2 font-sans text-lg font-bold">{% icon "heart-pulse" "size-5 text-ember" %}شناسنامه سلامت اکانت</h2>
+            <p class="mt-1 text-xs text-espresso-400">بر اساس اطلاعات فروشنده؛ واسط پیش از تحویل همه را بررسی می‌کند.</p>
+          </div>
+          <div class="relative size-16 shrink-0">
+            <svg viewBox="0 0 36 36" class="size-16 -rotate-90"><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-sand-200)" stroke-width="3"/><circle cx="18" cy="18" r="15.5" fill="none" stroke="var(--color-{% if health.score >= 75 %}sage{% elif health.score >= 45 %}saffron{% else %}ember{% endif %})" stroke-width="3" stroke-linecap="round" pathLength="100" stroke-dasharray="{{ health.score }} 100"/></svg>
+            <span class="absolute inset-0 grid place-items-center font-display font-bold fa-num">{{ health.score|fa }}</span>
+          </div>
+        </div>
+        <ul class="mt-5 grid gap-3 sm:grid-cols-2">
+          {% for ic, label, ok, text in health.items %}
+          <li class="flex items-start gap-3 rounded-xl border p-3 {% if ok %}border-sage-100 bg-sage-50/60{% else %}border-sand-200{% endif %}">
+            <span class="grid size-9 shrink-0 place-items-center rounded-lg {% if ok %}bg-sage text-white{% else %}bg-sand text-espresso-400{% endif %}">{% icon ic "size-4" %}</span>
+            <div><div class="text-sm font-medium">{{ label }}</div><div class="text-xs text-espresso-400">{{ text }}</div></div>
+          </li>
+          {% endfor %}
+        </ul>
+      </section>
+
+      {% with rows=l.attr_rows %}
+      {% if rows or l.level %}
+      <section class="panel p-6">
+        <h2 class="flex items-center gap-2 font-sans text-lg font-bold">{% icon "list-checks" "size-5 text-saffron-700" %}مشخصات</h2>
+        <dl class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
+          {% if l.level %}<div class="rounded-xl bg-cream p-3"><dt class="flex items-center gap-1.5 text-xs text-espresso-400">{% icon "trending-up" "size-3.5" %}لول / رنک</dt><dd class="mt-1 font-semibold fa-num">{{ l.level|fa }}</dd></div>{% endif %}
+          {% for ic, label, val in rows %}
+          <div class="rounded-xl bg-cream p-3"><dt class="flex items-center gap-1.5 text-xs text-espresso-400">{% icon ic "size-3.5" %}{{ label }}</dt><dd class="mt-1 font-semibold fa-num">{{ val|fa }}</dd></div>
+          {% endfor %}
+        </dl>
+      </section>
+      {% endif %}
+      {% endwith %}
+
+      <section class="panel p-6">
+        <h2 class="flex items-center gap-2 font-sans text-lg font-bold">{% icon "file-text" "size-5 text-espresso-400" %}توضیحات فروشنده</h2>
+        <div class="mt-4 whitespace-pre-line text-[0.95rem] leading-8 text-espresso-700">{{ l.description }}</div>
+      </section>
+
+      {% url 'core:rules' as rules_url %}{% alert variant="primary" appearance="stroke" icon_name="triangle-alert" title="معامله فقط داخل لوطی" action_url=rules_url|add:"#safety" action_label="نکات امنیتی" %}اگر فروشنده خواست بیرون از لوطی (تلگرام، کارت‌به‌کارت) معامله کنید، قبول نکنید و گزارش دهید. فقط معامله داخل سایت تحت حمایت واسط است.{% endalert %}
+    </div>
+  </div>
+
+  {% if similar %}
+  <section class="mt-14">
+    <div class="flex items-center justify-between">
+      <h2 class="font-display text-xl font-bold">اکانت‌های مشابه {{ l.game.name }}</h2>
+      <a href="{{ l.game.get_absolute_url }}" class="text-sm text-ember hover:underline">همه</a>
+    </div>
+    <div class="mt-5 grid grid-cols-2 gap-4 md:grid-cols-4 xl:gap-5">
+      {% for l in similar %}{% include "components/listing_card.html" %}{% endfor %}
+    </div>
+  </section>
+  {% endif %}
+</div>
+
+{% if user.is_authenticated and not is_owner %}
+{# گزارش تخلف #}
+<div x-data="{ open: false }" @open-report.window="open = true" x-show="open" x-cloak class="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4" @keydown.escape.window="open = false">
+  <form method="post" action="{% url 'listings:report' l.code %}" class="panel w-full max-w-md p-6 shadow-lift" @click.outside="open = false" x-transition>
+    {% csrf_token %}
+    <div class="flex items-center justify-between">
+      <h2 class="flex items-center gap-2 font-display text-lg font-bold">{% icon "flag" "size-5 text-ember" %}گزارش این آگهی</h2>
+      <button type="button" class="grid size-8 place-items-center rounded-full hover:bg-sand" @click="open = false" aria-label="بستن">{% icon "x" "size-4" %}</button>
+    </div>
+    <div class="mt-4 space-y-2.5">
+      {% for v, label in report_form.fields.reason.choices %}{% if v %}
+      <div>
+        <input type="radio" class="gm-check" id="r-{{ v }}" name="reason" value="{{ v }}" required>
+        <label class="gm-check-label" for="r-{{ v }}"><span class="gm-check-box !rounded-full"><span class="gm-check-fill"></span><span class="gm-check-mark">{% icon "check" "" "3" %}</span><span class="gm-check-ripple"></span></span>{{ label }}</label>
+      </div>
+      {% endif %}{% endfor %}
+    </div>
+    <div class="field mt-4">
+      <textarea class="field-input !min-h-[90px]" name="text" id="r-text" placeholder=" " maxlength="300"></textarea>
+      <label class="field-label" for="r-text">توضیح (اختیاری)</label>
+    </div>
+    <button class="btn-grad mt-4 w-full">ارسال گزارش</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

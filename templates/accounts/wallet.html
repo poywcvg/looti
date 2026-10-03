@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}کیف پول — {{ SITE_NAME }}{% endblock %}
+{% block content %}
+<div class="wrap pt-8">
+  <h1 class="font-display text-2xl font-bold">کیف پول</h1>
+
+  <div class="mt-6 grid gap-4 md:grid-cols-[1.4fr_1fr_1fr]">
+    <div class="relative overflow-hidden rounded-3xl bg-ink p-6 text-paper shadow-lift">
+      <div class="pointer-events-none absolute -left-10 -top-10 size-44 rounded-full bg-ember/30 blur-2xl"></div>
+      <div class="pointer-events-none absolute -bottom-16 left-24 size-40 rounded-full bg-saffron/20 blur-2xl"></div>
+      <div class="relative flex items-center gap-2 text-sm text-paper/70">{% icon "wallet" "size-4" %}موجودی قابل استفاده</div>
+      <div class="relative mt-3 font-display text-4xl font-black fa-num">{{ request.user.wallet_balance|toman }}<span class="mr-2 text-base font-normal text-paper/60">تومان</span></div>
+      <div class="relative mt-6 flex items-center gap-2 text-xs text-paper/60">{% icon "shield-check" "size-4 text-[#DAE6DB]" %}هر برداشت فقط به شبای ثبت‌شده به نام خودت انجام می‌شود.</div>
+    </div>
+    <div class="panel p-5">
+      <div class="flex items-center gap-2 text-sm text-espresso-500">{% icon "lock" "size-4 text-saffron-700" %}پیش لوطی (خریدها)</div>
+      <div class="mt-3 font-display text-2xl font-bold fa-num">{{ held|toman }}</div>
+      <p class="mt-2 text-xs leading-6 text-espresso-400">پولی که برای خرید پرداخته‌ای و تا تأیید تو پیش لوطی می‌ماند.</p>
+    </div>
+    <div class="panel p-5">
+      <div class="flex items-center gap-2 text-sm text-espresso-500">{% icon "hourglass" "size-4 text-sage-700" %}در راه (فروش‌ها)</div>
+      <div class="mt-3 font-display text-2xl font-bold fa-num">{{ incoming|toman }}</div>
+      <p class="mt-2 text-xs leading-6 text-espresso-400">بعد از تأیید خریدار به موجودی‌ات اضافه می‌شود.</p>
+    </div>
+  </div>
+
+  <div class="mt-6 panel p-6" x-data="{ mode: 'deposit' }">
+    {# Radio — uiverse.io/00Kubi/smooth-termite-31 #}
+    <div class="seg max-w-xs">
+      <label class="seg-item"><input type="radio" value="deposit" x-model="mode"><span class="seg-name">شارژ</span></label>
+      <label class="seg-item"><input type="radio" value="withdraw" x-model="mode"><span class="seg-name">برداشت</span></label>
+    </div>
+
+    <form x-show="mode === 'deposit'" method="post" action="{% url 'accounts:deposit' %}" class="mt-6" x-data="moneyInput('')">
+      {% csrf_token %}
+      <input type="hidden" name="amount" :value="raw">
+      <div class="grid gap-5 md:grid-cols-[1fr_auto] md:items-start">
+        <div>
+          <div class="field">
+            <input class="field-input fa-num ltr text-left" id="dep" inputmode="numeric" placeholder=" " required :value="shown" @input="set($event.target.value); $event.target.value = shown">
+            <label class="field-label" for="dep">مبلغ شارژ</label>
+            <span class="field-suffix">تومان</span>
+          </div>
+          <p class="field-hint" x-text="words || 'حداقل ۱۰ هزار تومان'"></p>
+          <div class="mt-3 flex flex-wrap gap-2">
+            {% for p in presets %}<button type="button" class="chip is-muted !px-3 !py-1.5 hover:bg-saffron-50" @click="set('{{ p }}')"><span class="fa-num">{{ p|toman }}</span></button>{% endfor %}
+          </div>
+        </div>
+        <button class="btn-push" :disabled="value < 10000"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "credit-card" "size-5" %}رفتن به درگاه</span></button>
+      </div>
+    </form>
+
+    <form x-show="mode === 'withdraw'" x-cloak method="post" action="{% url 'accounts:withdraw' %}" class="mt-6" x-data="moneyInput('')"
+          data-confirm="برداشت از کیف پول؟" data-confirm-text="مبلغ به شبای ثبت‌شده‌ات واریز می‌شود." data-confirm-tone="sage" data-confirm-ok="ثبت درخواست">
+      {% csrf_token %}
+      <input type="hidden" name="amount" :value="raw">
+      {% if request.user.sheba %}
+      <div class="grid gap-5 md:grid-cols-[1fr_auto] md:items-start">
+        <div>
+          <div class="field">
+            <input class="field-input fa-num ltr text-left" id="wd" inputmode="numeric" placeholder=" " required :value="shown" @input="set($event.target.value); $event.target.value = shown">
+            <label class="field-label" for="wd">مبلغ برداشت</label>
+            <span class="field-suffix">تومان</span>
+          </div>
+          <p class="field-hint">به شبای <span class="ltr fa-num">…{{ request.user.sheba|slice:"-4:" }}</span><span class="sep" aria-hidden="true"></span>حداقل ۵۰ هزار تومان
+            <button type="button" class="mr-2 font-semibold text-ember hover:underline" @click="set('{{ request.user.wallet_balance }}')">کل موجودی</button></p>
+        </div>
+        <button class="btn-push is-sage" :disabled="value < 50000 || value > {{ request.user.wallet_balance }}"><span class="shadow"></span><span class="edge"></span><span class="front">{% icon "banknote-arrow-up" "size-5" %}درخواست تسویه</span></button>
+      </div>
+      {% else %}
+      <div class="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-warn-50 p-4">
+        <p class="flex items-center gap-2 text-sm text-warn-700">{% icon "info" "size-4" %}برای برداشت، اول شماره شبا را ثبت کن.</p>
+        <a href="{% url 'accounts:settings' %}" class="btn-ghost is-sm">ثبت شبا</a>
+      </div>
+      {% endif %}
+    </form>
+  </div>
+
+  <section class="mt-10">
+    <h2 class="font-sans text-lg font-bold">گردش حساب</h2>
+    {% if page.object_list %}
+    <div class="mt-4 divide-y divide-sand-200 rounded-2xl border border-sand-200 bg-surface">
+      {% for t in page %}
+      <div class="flex items-center gap-4 p-4">
+        <span class="grid size-10 shrink-0 place-items-center rounded-xl {% if t.amount > 0 %}bg-sage-50 text-sage-700{% else %}bg-danger-50 text-danger-700{% endif %}">{% icon t.icon "size-5" %}</span>
+        <div class="min-w-0 flex-1">
+          <div class="text-sm font-medium">{{ t.get_kind_display }}</div>
+          <div class="truncate text-xs text-espresso-400">{% if t.order %}<a href="{{ t.order.get_absolute_url }}" class="hover:text-ember">{{ t.description|default:t.order.code }}</a>{% else %}{{ t.description }}{% endif %}<span class="sep" aria-hidden="true"></span>{{ t.created_at|jdatetime_fa }}</div>
+        </div>
+        <div class="text-left">
+          <div class="font-display font-bold fa-num ltr {% if t.amount > 0 %}text-sage-700{% else %}text-danger-700{% endif %}">{% if t.amount > 0 %}+{% endif %}{{ t.amount|toman }}</div>
+          <div class="text-[11px] text-espresso-400">مانده <span class="fa-num">{{ t.balance_after|toman }}</span></div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% if page.has_other_pages %}
+    <div class="mt-4 flex items-center justify-center gap-3 text-sm">
+      {% if page.has_previous %}<a href="?page={{ page.previous_page_number }}" class="btn-ghost is-sm">{% icon "chevron-right" "size-4" %}قبلی</a>{% endif %}
+      <span class="fa-num text-espresso-500">صفحه {{ page.number|fa }} از {{ page.paginator.num_pages|fa }}</span>
+      {% if page.has_next %}<a href="?page={{ page.next_page_number }}" class="btn-ghost is-sm">بعدی{% icon "chevron-left" "size-4" %}</a>{% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+      {% empty_state "هنوز تراکنشی نداری" "شارژ، خرید، فروش و نردبان آگهی‌ها همه این‌جا ثبت می‌شوند." "empty-wallet" %}
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

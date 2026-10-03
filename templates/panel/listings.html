@@ -1,0 +1,49 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}تأیید آگهی{% endblock %}
+{% block crumb %}تأیید آگهی{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>آگهی‌های منتظر انتشار</h1>
+    <p>عکس‌ها، قیمت و راه تماس را با قوانین تطبیق دهید؛ دلیل رد برای فروشنده فرستاده می‌شود.</p>
+  </div>
+  <span class="chip {% if SITE_CONF.listing_auto_approve %}is-sage{% else %}is-muted{% endif %}">{% icon "zap" "size-3.5" %}انتشار خودکار {% if SITE_CONF.listing_auto_approve %}روشن{% else %}خاموش{% endif %}</span>
+</div>
+
+<div class="space-y-4">
+  {% for l in items %}
+  <article class="adm-card" x-data="{ reject: false }">
+    <div class="flex flex-col gap-4 p-5 sm:flex-row">
+      <div class="flex gap-2 overflow-x-auto sm:w-64 sm:shrink-0">
+        {% for img in l.images.all|slice:":3" %}<a href="{{ img.image.url }}" target="_blank" rel="noopener" class="size-20 shrink-0 overflow-hidden rounded-xl ring-1 ring-sand-200"><img src="{{ img.image.url }}" alt="" class="size-full object-cover transition hover:scale-105"></a>
+        {% empty %}<span class="grid size-20 place-items-center rounded-xl bg-sand-100 text-espresso-300">{% icon "image-off" "size-6" %}</span>{% endfor %}
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex flex-wrap items-center gap-2 text-xs text-espresso-400">
+          <span class="inline-flex items-center gap-1 font-medium" style="color: {{ l.game.tone }}">{% icon l.game.icon "size-3.5" %}{{ l.game.name }}</span><span class="sep" aria-hidden="true"></span><span>{{ l.get_platform_display }}</span><span class="sep" aria-hidden="true"></span><span class="code">{{ l.code }}</span><span class="sep" aria-hidden="true"></span><span>{{ l.created_at|ago }}</span>
+        </div>
+        <a href="{{ l.get_absolute_url }}" target="_blank" rel="noopener" class="mt-1 block font-semibold hover:text-ember">{{ l.title }}</a>
+        <p class="mt-1 line-clamp-2 text-sm leading-6 text-espresso-500">{{ l.description }}</p>
+        <div class="mt-2.5 flex flex-wrap items-center gap-2 text-xs">
+          <span class="chip is-muted fa-num">{{ l.price|toman }} تومان</span>
+          <a href="{% url 'panel:user' l.seller_id %}" class="chip is-muted hover:!text-ember">{% icon "user-round" "size-3.5" %}{{ l.seller }}<span class="sep" aria-hidden="true"></span>اعتماد <span class="fa-num">{{ l.seller.trust_score|fa }}</span></a>
+          {% with v=l.price_verdict %}{% if v %}<span class="chip is-{{ v.tone }}">{{ v.label }}</span>{% endif %}{% endwith %}
+          {% if l.has_contact %}<span class="chip is-saffron">{% icon l.contact_icon "size-3.5" %}{{ l.get_contact_app_display }}: <span class="ltr latin">{{ l.contact_display }}</span></span>{% endif %}
+        </div>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-2 border-t border-sand-100 bg-sand-50/50 px-5 py-3">
+      <form method="post" action="{% url 'panel:listing_decide' l.code %}">{% csrf_token %}<input type="hidden" name="decision" value="approve"><button class="btn-grad is-sage is-sm">{% icon "check" "size-4" %}انتشار</button></form>
+      <button type="button" class="btn-ghost is-sm is-danger" @click="reject = !reject; $nextTick(() => reject && $refs.reason.focus())" :aria-expanded="reject">{% icon "x" "size-4" %}رد</button>
+      <form method="post" action="{% url 'panel:listing_decide' l.code %}" class="flex w-full gap-2 pt-1" x-show="reject" x-collapse x-cloak>
+        {% csrf_token %}<input type="hidden" name="decision" value="reject">
+        <input x-ref="reason" class="adm-input flex-1" name="reason" maxlength="200" placeholder="دلیل رد (برای فروشنده نمایش داده می‌شود)" aria-label="دلیل رد">
+        <button class="btn-grad is-sm">ثبت رد</button>
+      </form>
+    </div>
+  </article>
+  {% empty %}
+  <section class="adm-card"><div class="adm-empty !py-16"><span class="feed-ic tone-sage">{% icon "circle-check" "size-5" %}</span><b class="text-espresso">صف خالی است</b>آگهی منتظر بررسی‌ای وجود ندارد.</div></section>
+  {% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "panel/_base.html" %}{% load ui adm %}
+{% block page_title %}جستجو: {{ q }}{% endblock %}
+{% block crumb %}جستجو{% endblock %}
+{% block panel %}
+<div class="adm-head">
+  <div>
+    <h1>نتایج «{{ q }}»</h1>
+    <p>{{ orders|length|fa }} سفارش<span class="sep" aria-hidden="true"></span>{{ users|length|fa }} کاربر<span class="sep" aria-hidden="true"></span>{{ listings|length|fa }} آگهی</p>
+  </div>
+</div>
+
+{% if not orders and not users and not listings %}
+<section class="adm-card"><div class="adm-empty !py-16"><span class="feed-ic">{% icon "search-x" "size-5" %}</span>چیزی پیدا نشد. کد سفارش، شماره موبایل یا بخشی از عنوان آگهی را امتحان کنید.</div></section>
+{% else %}
+<div class="grid gap-5 xl:grid-cols-3">
+  <div class="space-y-5 xl:col-span-2">
+    {% if orders %}
+    <section class="adm-card overflow-hidden">
+      <div class="adm-card-h"><div><h2>{% icon "receipt-text" "size-[18px] text-espresso-400" %}سفارش‌ها</h2></div><a href="{% url 'panel:orders' %}?q={{ q|urlencode }}" class="adm-more">همه نتایج{% icon "chevron-left" "size-3.5" %}</a></div>
+      {% include "panel/_orders_table.html" with rows=orders %}
+    </section>
+    {% endif %}
+    {% if listings %}
+    <section class="adm-card overflow-hidden">
+      <div class="adm-card-h"><div><h2>{% icon "layout-grid" "size-[18px] text-espresso-400" %}آگهی‌ها</h2></div><a href="{% url 'panel:listings_all' %}?q={{ q|urlencode }}" class="adm-more">همه نتایج{% icon "chevron-left" "size-3.5" %}</a></div>
+      <ul class="divide-y divide-sand-100">
+        {% for l in listings %}
+        <li><a href="{{ l.get_absolute_url }}" target="_blank" rel="noopener" class="flex items-center gap-3 px-5 py-3 text-sm transition hover:bg-sand-50">
+          <span class="grid size-9 shrink-0 place-items-center rounded-xl" style="background: color-mix(in srgb, {{ l.game.tone }} 14%, transparent); color: {{ l.game.tone }}">{% icon l.game.icon "size-[18px]" %}</span>
+          <span class="min-w-0 flex-1"><span class="block truncate font-medium">{{ l.title }}</span><span class="text-xs text-espresso-400"><span class="code">{{ l.code }}</span><span class="sep" aria-hidden="true"></span>{{ l.seller }}</span></span>
+          <span class="hidden fa-num font-semibold sm:block">{{ l.price|toman }}</span>
+          {% listing_status l %}
+        </a></li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
+  </div>
+  {% if users %}
+  <section class="adm-card overflow-hidden self-start">
+    <div class="adm-card-h"><div><h2>{% icon "users-round" "size-[18px] text-espresso-400" %}کاربران</h2></div><a href="{% url 'panel:users' %}?q={{ q|urlencode }}" class="adm-more">همه نتایج{% icon "chevron-left" "size-3.5" %}</a></div>
+    <ul class="divide-y divide-sand-100">
+      {% for u in users %}
+      <li><a href="{% url 'panel:user' u.pk %}" class="flex items-center gap-3 px-5 py-3 transition hover:bg-sand-50">
+        {% include "components/avatar.html" with u=u size="size-9" %}
+        <span class="min-w-0 flex-1"><span class="block truncate text-sm font-semibold">{{ u }}</span><span class="block text-xs text-espresso-400 ltr text-end fa-num">{{ u.phone|mask_phone }}</span></span>
+        {% if not u.is_active %}<span class="st is-danger"><i></i>بسته</span>{% elif u.is_staff %}<span class="st is-sage"><i></i>واسط</span>{% endif %}
+      </a></li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}
